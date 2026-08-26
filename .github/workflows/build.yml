@@ -33,23 +33,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Rename Release Files
+      - name: Copy and Standardize File Names
         run: |
           mkdir -p release_out
           cp release/*.dmg release_out/Wavely-Mac.dmg || true
           cp release/*.zip release_out/Wavely-Mac.zip || true
+          cp release/*.dmg release_out/ || true
+          cp release/*.zip release_out/ || true
+          ls -la release_out/
 
-      - name: Upload macOS DMG Artifact
+      - name: Upload Artifacts to Actions Tab
         uses: actions/upload-artifact@v4
         with:
           name: Wavely-macOS-DMG
           path: release_out/*
 
-      - name: Release to GitHub (If Tagged)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: release_out/*
+      - name: Publish to GitHub Releases Assets
+        run: |
+          gh release create v1.0.6 release_out/* --title "Wavely Desktop v1.0.6" --notes "Official macOS DMG and Windows release" --clobber || gh release upload v1.0.6 release_out/* --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -76,22 +77,23 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Rename Windows Files
+      - name: Copy and Standardize File Names
         run: |
-          mkdir release_out
+          mkdir -p release_out
           Copy-Item release/*.exe release_out/Wavely-Setup.exe -ErrorAction SilentlyContinue
           Copy-Item release/*.zip release_out/Wavely-Portable.zip -ErrorAction SilentlyContinue
+          Copy-Item release/*.exe release_out/ -ErrorAction SilentlyContinue
+          Copy-Item release/*.zip release_out/ -ErrorAction SilentlyContinue
+          Get-ChildItem release_out
 
-      - name: Upload Windows Artifacts
+      - name: Upload Artifacts to Actions Tab
         uses: actions/upload-artifact@v4
         with:
           name: Wavely-Windows-Builds
           path: release_out/*
 
-      - name: Release to GitHub (If Tagged)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: release_out/*
+      - name: Publish to GitHub Releases Assets
+        run: |
+          gh release create v1.0.6 (Get-ChildItem release_out\* | Select-Object -ExpandProperty FullName) --title "Wavely Desktop v1.0.6" --notes "Official macOS DMG and Windows release" --clobber; if ($LASTEXITCODE -ne 0) { gh release upload v1.0.6 (Get-ChildItem release_out\* | Select-Object -ExpandProperty FullName) --clobber }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
