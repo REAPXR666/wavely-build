@@ -1,0 +1,44 @@
+/* --- SIGNUP / LOGIN BOX --- */
+
+.form-container-card {
+    display: flex;
+    justify-content: center;
+    padding: 60px 0;
+}
+.form-card {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.form-group label {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+.form-error-msg {
+    color: var(--error);
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+.form-footer-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+}
+.form-footer-text a {
+    color: var(--primary-hover);
+    text-decoration: none;
+    font-weight: 600;
+}
+.form-footer-text a:hover {
+    text-decoration: underline;
+}

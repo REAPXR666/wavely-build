@@ -1,0 +1,201 @@
+/* --- DOCS PAGE LAYOUT --- */
+
+.docs-layout {
+    display: flex;
+    gap: 40px;
+    margin-top: 20px;
+}
+.docs-sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 120px;
+    height: fit-content;
+}
+.sidebar-section {
+    margin-bottom: 30px;
+}
+.sidebar-section h4 {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+}
+.sidebar-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.sidebar-link {
+    display: block;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 8px 0;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color var(--transition-speed);
+}
+.sidebar-link:hover, .sidebar-link.active {
+    color: var(--primary-hover);
+}
+.docs-main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 60px;
+    min-width: 0;
+}
+.section-title-wrap h2 {
+    font-family: var(--font-heading);
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+.section-title-wrap .subtitle {
+    color: var(--text-muted);
+    font-size: 16px;
+}
+.doc-block {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 40px;
+}
+.doc-block:last-child {
+    border-bottom: none;
+}
+.doc-block h3 {
+    font-family: var(--font-heading);
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+.doc-block p {
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+.endpoint-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+}
+.badge-get {
+    background-color: var(--primary);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+.endpoint-badge code {
+    color: var(--text-main);
+    font-size: 14px;
+}
+.note-box {
+    background: rgba(139, 92, 246, 0.06);
+    border-left: 4px solid var(--primary);
+    padding: 16px 20px !important;
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+.params-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0 30px 0;
+}
+.params-table th, .params-table td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+.params-table th {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-weight: 700;
+}
+.params-table td {
+    font-size: 14px;
+}
+.params-table td code {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.req {
+    color: var(--error);
+    font-weight: bold;
+}
+
+/* --- TABBED CODE BLOCKS --- */
+.code-tab-container {
+    background: #0b0819;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+.code-tabs {
+    display: flex;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--border-color);
+}
+.code-tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    border-right: 1px solid var(--border-color);
+}
+.code-tab-btn:hover, .code-tab-btn.active {
+    color: var(--primary-hover);
+    background: rgba(255, 255, 255, 0.03);
+}
+.code-panes {
+    position: relative;
+}
+.code-pane {
+    display: none;
+    padding: 20px;
+    overflow-x: auto;
+}
+.code-pane.active {
+    display: block;
+}
+.btn-copy-code {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+}
+.btn-copy-code:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+}
+
+@media (max-width: 1024px) {
+    .docs-layout {
+        flex-direction: column;
+    }
+    .docs-sidebar {
+        width: 100%;
+        position: static;
+        margin-bottom: 30px;
+    }
+}

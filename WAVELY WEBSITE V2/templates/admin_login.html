@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Admin Sign In — Wavely{% endblock %}
+{% block content %}
+<section class="auth-page">
+  <div class="auth-art"><span class="auth-meta">Restricted access</span><div class="auth-quote">Wavely operations console.</div><span class="auth-meta">Authorised personnel only</span></div>
+  <div class="auth-form-wrap"><div class="auth-card">
+    <span class="page-eyebrow">Admin portal</span><h1>Authorise session.</h1><p>Enter your administrator credentials.</p>
+    <form method="POST" action="{{ url_for('admin_login_page') }}">
+      <div class="field"><label class="form-label" for="admin-username">Admin username</label><input id="admin-username" type="text" name="username" required autocomplete="username" placeholder="Username" class="form-input"></div>
+      <div class="field"><label class="form-label" for="admin-password">Admin password</label><input id="admin-password" type="password" name="password" required autocomplete="current-password" placeholder="Password" class="form-input"></div>
+      <button type="submit" class="btn btn-primary auth-submit">Authorise <span>↗</span></button>
+    </form>
+  </div></div>
+</section>
+{% endblock %}
+

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Wavely — Find the sound. Keep the flow.{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="shell hero-grid">
+    <div>
+      <span class="eyebrow">Desktop browser · v1.0.5</span>
+      <h1>Find the sound.<br><em>Keep the flow.</em></h1>
+      <p class="hero-copy">Millions of samples and synth presets, auditioned in tempo and ready to land exactly on your DAW grid. No dead air. No credit maths. No broken momentum.</p>
+      <div class="hero-actions">
+        <a href="{{ url_for('pricing_page') }}" class="btn btn-primary btn-lg">Start making for $4.99 <span aria-hidden="true">↗</span></a>
+        <a href="{{ url_for('download_page') }}" class="btn btn-secondary btn-lg"><i class="fa-solid fa-download"></i> Download desktop</a>
+      </div>
+      <div class="hero-note"><span class="status-dot" style="color:var(--green)"></span> Windows & macOS · Unlimited downloads</div>
+    </div>
+
+    <div class="hero-product">
+      <span class="product-orbit-label">Live interface preview</span>
+      <div class="studio-browser-frame">
+        <div class="studio-toolbar">
+          <div class="studio-logo"><i class="fa-solid fa-wave-square"></i> wavely</div>
+          <div class="studio-search-pill"><i class="fa-solid fa-magnifying-glass"></i>&nbsp; UK garage vocal · 134 bpm · f# min</div>
+          <div class="studio-count">4,820 RESULTS</div>
+        </div>
+        <div class="studio-filter-row"><span class="mini-filter active">ALL SOUNDS</span><span class="mini-filter">LOOPS</span><span class="mini-filter">ONE SHOTS</span><span class="mini-filter">PRESETS</span></div>
+        <div class="audio-track-list">
+          {% set tracks = [
+            (1, 293.66, 134, 'Overmono 2-Step Vocal Chop', '134 BPM', 'F# MIN · 11A', 'Drag to DAW', [20,35,60,80,50,30,65,85,45,25,55,75,90,50,40,60,75,55,30,25,50,65,80,60,45,35,70,85,55,35]),
+            (2, 220.00, 174, 'Heavyweight Reese Loop', '174 BPM', 'D MIN · 7A', 'Drag to DAW', [45,60,75,85,90,80,70,60,50,40,55,70,80,85,90,75,65,50,40,35,50,65,80,85,90,75,60,50,40,35]),
+            (3, 440.00, 150, 'Hyperpop Piercing Lead .fxp', 'SERUM', 'LEAD · PLUCK', 'Save preset', [15,25,45,65,40,20,50,70,35,20,45,60,75,40,30,50,60,45,25,20,40,55,70,50,35,25,55,70,45,25]),
+            (4, 329.63, 128, 'Late Night Percussion Top', '128 BPM', 'E MIN · 9A', 'Drag to DAW', [35,20,70,45,80,30,60,90,40,25,65,45,75,35,55,85,30,20,60,40,70,30,80,50,25,65,45,75,35,55])
+          ] %}
+          {% for id, freq, bpm, title, tag1, tag2, action, bars in tracks %}
+          <div class="audio-track-item">
+            <button class="track-play-btn" id="play-btn-{{ id }}" onclick="handleTrackPlay({{ id }}, {{ freq }}, {{ bpm }})" title="Play audio preview" aria-label="Play {{ title }}"><i class="fa-solid fa-play" id="play-icon-{{ id }}"></i></button>
+            <div class="track-meta"><div class="track-title">{{ title }}</div><div class="track-tags-row"><span>{{ tag1 }}</span><span>·</span><span>{{ tag2 }}</span></div></div>
+            <div class="track-waveform-strip">{% for h in bars %}<span class="waveform-bar bar-{{ id }}" style="height:{{ h }}%"></span>{% endfor %}</div>
+            <div class="track-drag-handle"><i class="fa-solid fa-grip-lines-vertical"></i><span>{{ action }}</span></div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ticker" aria-hidden="true"><div class="ticker-track">
+    {% for _ in range(2) %}<span>ACID tempo metadata</span><span>Zero-silence trim</span><span>Serum & Vital presets</span><span>Unlimited downloads</span><span>Drag straight to DAW</span>{% endfor %}
+  </div></div>
+</section>
+
+<section class="section section--paper">
+  <div class="shell">
+    <div class="section-heading">
+      <div><span class="kicker">Built around your session</span><h2>Less friction.<br>More instinct.</h2></div>
+      <p>Wavely removes the tiny interruptions that quietly kill a good studio session. Search, audition, drag, and keep moving.</p>
+    </div>
+    <div class="bento-grid">
+      <article class="bento-card"><span class="bento-index">01 / ON THE GRID</span><div><div class="wave-art">{% for h in [20,40,65,92,56,35,76,48,86,30,62,95,46,72,30,58] %}<span style="height:{{ h }}%"></span>{% endfor %}</div><h3>Every loop arrives in time.</h3><p>Embedded tempo data tells Ableton, FL Studio, and Logic exactly how to place it—before you touch a warp marker.</p></div></article>
+      <article class="bento-card bento-card--accent"><span class="bento-index">02 / ZERO DEAD AIR</span><div><span class="bento-data">0.00ms</span><h3>The transient starts now.</h3><p>Automatic zero-crossing trim removes the silence before the first hit.</p></div></article>
+      <article class="bento-card bento-card--dark"><span class="bento-index">03 / THE LIBRARY</span><div><span class="bento-data">2.5M+</span><h3>Sounds worth finishing with.</h3><p>Loops, one-shots, textures, vocals, drums and more—without rationing credits.</p></div></article>
+      <article class="bento-card"><span class="bento-index">04 / HARMONIC SEARCH</span><div><h3>Search the way musicians think.</h3><p>Filter by exact BPM, genre, instrument, key, or Camelot position. Relative-key matching keeps useful sounds in reach without filling the results with noise.</p></div></article>
+      <article class="bento-card"><span class="bento-index">05 / PRESET HUB</span><div><span class="bento-data">45K+</span><h3>Your synths, one shelf.</h3><p>Serum, Vital, Massive and PhasePlant patches saved to the right place in one click.</p></div></article>
+      <article class="bento-card bento-card--accent"><span class="bento-index">06 / FULL PACKS</span><div><h3>Take the whole pack. No checkout maze.</h3><p>Parallel ZIP downloads, accurate sizes, unlimited pulls. Build a library that is actually yours to use.</p></div></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell proof-grid">
+    <div class="proof-stat"><span class="kicker">A simpler deal</span><span class="proof-number">$4.99</span><p>One flat monthly price for the complete library. No credit packs, no artificial scarcity, no second guessing a snare.</p><a href="{{ url_for('pricing_page') }}" class="arrow-link">See pricing <span>↗</span></a></div>
+    <div class="comparison-list">
+      <div class="comparison-row comparison-row--head"><span>What matters</span><span>Wavely Pro</span><span>Typical sample service</span></div>
+      <div class="comparison-row"><strong>Downloads</strong><span class="win">Unlimited</span><span>Credit capped</span></div>
+      <div class="comparison-row"><strong>DAW alignment</strong><span class="win">Embedded ACID data</span><span>Manual warping</span></div>
+      <div class="comparison-row"><strong>Leading silence</strong><span class="win">Trimmed automatically</span><span>Manual editing</span></div>
+      <div class="comparison-row"><strong>Synth presets</strong><span class="win">45,000+ included</span><span>Limited or separate</span></div>
+      <div class="comparison-row"><strong>Full pack download</strong><span class="win">One click</span><span>Sound by sound</span></div>
+      <div class="comparison-row"><strong>Devices</strong><span class="win">2–4 studio machines</span><span>Varies</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band"><div class="shell cta-grid"><h2>Your next idea is already in here.</h2><a href="{{ url_for('pricing_page') }}" class="btn btn-primary btn-lg">Unlock Wavely Pro <span>↗</span></a></div></section>
+
+<script>
+let activeCtx=null,activeOsc=null,activeGain=null,currentPlayingId=null,animInterval=null;
+function handleTrackPlay(id,freq,bpm){const btn=document.getElementById(`play-btn-${id}`),icon=document.getElementById(`play-icon-${id}`),bars=document.querySelectorAll(`.bar-${id}`);if(currentPlayingId===id){stopCurrentAudio();return}stopCurrentAudio();try{activeCtx=new(window.AudioContext||window.webkitAudioContext)();const filter=activeCtx.createBiquadFilter();filter.type='lowpass';filter.frequency.setValueAtTime(1200,activeCtx.currentTime);activeOsc=activeCtx.createOscillator();activeGain=activeCtx.createGain();activeOsc.type=id===2?'sawtooth':'triangle';activeOsc.frequency.setValueAtTime(freq,activeCtx.currentTime);activeGain.gain.setValueAtTime(.08,activeCtx.currentTime);activeOsc.connect(filter);filter.connect(activeGain);activeGain.connect(activeCtx.destination);activeOsc.start();currentPlayingId=id;btn.classList.add('playing');icon.className='fa-solid fa-pause';let step=0;animInterval=setInterval(()=>{step++;bars.forEach((b,i)=>{b.style.height=`${25+Math.sin(i*.5+step*.2)*35}%`;b.classList.add('active')})},60)}catch(err){console.error('Audio preview error:',err)}}
+function stopCurrentAudio(){if(currentPlayingId!==null){const btn=document.getElementById(`play-btn-${currentPlayingId}`),icon=document.getElementById(`play-icon-${currentPlayingId}`),bars=document.querySelectorAll(`.bar-${currentPlayingId}`);if(btn)btn.classList.remove('playing');if(icon)icon.className='fa-solid fa-play';bars.forEach(b=>b.classList.remove('active'));if(activeGain&&activeCtx)activeGain.gain.setTargetAtTime(0,activeCtx.currentTime,.05);clearInterval(animInterval);currentPlayingId=null}}
+</script>
+{% endblock %}

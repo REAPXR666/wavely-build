@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/admin.css">
+{% endblock %}
+
+{% block content %}
+<section id="tab-admin" class="tab-content active">
+    <div class="admin-dashboard-wrap">
+        <div class="admin-header">
+            <h2><i class="fa-solid fa-user-shield"></i> Administration Console</h2>
+            <p class="desc-text">Manage developer accounts, global traffic metrics, and security firewalls.</p>
+        </div>
+        
+        <!-- Admin Sub Navigation -->
+        <div class="admin-subnav">
+            <button class="subnav-btn active" onclick="switchAdminSubTab('users')"><i class="fa-solid fa-users"></i> Users</button>
+            <button class="subnav-btn" onclick="switchAdminSubTab('ips')"><i class="fa-solid fa-ban"></i> IP Bans</button>
+            <button class="subnav-btn" onclick="switchAdminSubTab('logs')"><i class="fa-solid fa-list-check"></i> Global Logs</button>
+        </div>
+
+        <!-- Admin Content Areas -->
+        <div class="admin-body">
+            <!-- SUBTAB: USERS -->
+            <div id="admin-subtab-users" class="admin-subtab-content active">
+                <div class="card">
+                    <div class="card-header-btn">
+                        <h3>Registered Developers</h3>
+                        <span class="count-badge" id="admin-users-count">0</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>API Keys</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-table-body">
+                                <!-- Injected dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBTAB: IPS -->
+            <div id="admin-subtab-ips" class="admin-subtab-content">
+                <div class="admin-ip-grid">
+                    <div class="card">
+                        <h3>Ban New IP Address</h3>
+                        <p class="desc-text">Blocks registration, login, and all API actions from the given IP.</p>
+                        <form onsubmit="handleIpBan(event)" class="generate-key-form">
+                            <input type="text" id="ban-ip-address" placeholder="e.g. 192.168.1.100" required class="input-form">
+                            <button type="submit" class="btn btn-primary">Ban IP Address</button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <h3>Banned IP Registry</h3>
+                        <div class="table-container">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>IP Address</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-ips-table-body">
+                                    <!-- Injected dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBTAB: LOGS -->
+            <div id="admin-subtab-logs" class="admin-subtab-content">
+                <div class="card">
+                    <div class="logs-header-actions">
+                        <h3>Global System Audits (Last 200 Actions)</h3>
+                        <input type="text" id="admin-log-search" oninput="filterAdminLogs()" placeholder="Filter global logs..." class="input-form input-sm">
+                    </div>
+                    <div class="table-container">
+                        <table class="logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>IP Address</th>
+                                    <th>Type</th>
+                                    <th>Route</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-logs-table-body">
+                                <!-- Injected dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

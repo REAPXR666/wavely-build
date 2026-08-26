@@ -1,0 +1,289 @@
+{
+  "servers": [
+    {
+      "id": "ceb3bc71-f3a6-4c23-9f7b-38b3b85a1bc2",
+      "name": "test",
+      "icon_url": "/static/placeholder-art.png",
+      "owner": "testuser",
+      "invite_code": "srv_vaKLvE2fJZg",
+      "roles": [
+        {
+          "id": "role-mod",
+          "name": "Moderator",
+          "color": "#e74c3c",
+          "permissions": [
+            "manage_channels",
+            "kick_members",
+            "ban_members"
+          ]
+        }
+      ],
+      "members": {
+        "testuser": [
+          "role-mod"
+        ]
+      },
+      "banned_users": [],
+      "categories": [
+        {
+          "id": "cat-general",
+          "name": "Text Channels"
+        }
+      ],
+      "channels": [
+        {
+          "id": "chan-general",
+          "category_id": "cat-general",
+          "name": "general",
+          "slowmode": 0,
+          "locked": false,
+          "allowed_roles": []
+        }
+      ],
+      "messages": []
+    },
+    {
+      "id": "7ee308ff-ef9f-495b-98e7-6a412b7152f5",
+      "name": "Wavely",
+      "icon_url": "/static/uploads/servers/server_3197834e.png",
+      "owner": "admin",
+      "invite_code": "srv_a0VZGM0rsKg",
+      "roles": [
+        {
+          "id": "role-mod",
+          "name": "Moderator",
+          "color": "#e74c3c",
+          "permissions": [
+            "manage_channels",
+            "kick_members",
+            "ban_members"
+          ]
+        }
+      ],
+      "members": {
+        "admin": [
+          "role-mod"
+        ],
+        "test": []
+      },
+      "banned_users": [],
+      "categories": [
+        {
+          "id": "cat-general",
+          "name": "Text Channels"
+        },
+        {
+          "id": "category-068683f0",
+          "name": "TEST"
+        }
+      ],
+      "channels": [
+        {
+          "id": "chan-general",
+          "category_id": "cat-general",
+          "name": "general",
+          "slowmode": 0,
+          "locked": false,
+          "allowed_roles": []
+        },
+        {
+          "id": "channel-dd468e7f",
+          "category_id": "category-068683f0",
+          "name": "test",
+          "slowmode": 0,
+          "locked": false,
+          "allowed_roles": [
+            "role-mod"
+          ]
+        }
+      ],
+      "messages": [
+        {
+          "id": "def1643c-cec5-41f4-9133-0105c95ea194",
+          "channel_id": "chan-general",
+          "username": "admin",
+          "content": "sup",
+          "created_at": "2026-05-27T16:36:59.853921Z"
+        },
+        {
+          "id": "58c92bdb-570b-40ea-9fa2-77b35fbe598c",
+          "channel_id": "channel-dd468e7f",
+          "username": "admin",
+          "content": "sup",
+          "created_at": "2026-05-27T16:37:24.934310Z"
+        },
+        {
+          "id": "a5faa29c-8a91-403f-8ec9-ff02ef355823",
+          "channel_id": "chan-general",
+          "username": "test",
+          "content": "suppp",
+          "created_at": "2026-05-27T16:38:14.358646Z"
+        },
+        {
+          "id": "3abdb91b-750d-4309-b7a5-ad4799abd24c",
+          "channel_id": "chan-general",
+          "username": "admin",
+          "content": "http://127.0.0.1:5000/#dashboard?joinserver=srv_a0VZGM0rsKg",
+          "created_at": "2026-05-31T21:25:20.392979Z"
+        },
+        {
+          "id": "2f2604ae-c3d8-491f-9453-11b4c82c0918",
+          "channel_id": "chan-general",
+          "username": "admin",
+          "content": "http://127.0.0.1:5000/#dashboard?joinserver=srv_a0VZGM0rsKg",
+          "created_at": "2026-05-31T21:25:23.331255Z"
+        },
+        {
+          "id": "fdf6d428-8974-4f38-b8e5-882111bfc2f5",
+          "channel_id": "chan-general",
+          "username": "admin",
+          "content": "http://127.0.0.1:5000/#dashboard?joinserver=srv_a0VZGM0rsKg",
+          "created_at": "2026-05-31T21:25:23.352772Z"
+        },
+        {
+          "id": "4cfba683-aa0a-49db-9f6c-cf2c9ac024fa",
+          "channel_id": "chan-general",
+          "username": "admin",
+          "content": "http://127.0.0.1:5000/#dashboard?joinserver=srv_a0VZGM0rsKg",
+          "created_at": "2026-05-31T21:25:23.444950Z"
+        }
+      ]
+    },
+    {
+      "id": "b5e3153d-784d-42a8-beca-424f42d56002",
+      "name": "tester",
+      "icon_url": "/static/uploads/servers/server_822a2a74.png",
+      "owner": "admin2",
+      "invite_code": "srv_aCd1mfNrPYk",
+      "roles": [
+        {
+          "id": "role-mod",
+          "name": "Moderator",
+          "color": "#e74c3c",
+          "position": 0,
+          "show_separately": true,
+          "permissions": [
+            "manage_channels",
+            "kick_members",
+            "ban_members",
+            "view_channels",
+            "send_messages",
+            "manage_messages",
+            "manage_server"
+          ]
+        }
+      ],
+      "members": {
+        "admin2": [
+          "role-mod"
+        ]
+      },
+      "banned_users": [],
+      "categories": [
+        {
+          "id": "cat-general",
+          "name": "Text Channels",
+          "position": 0,
+          "allowed_roles": []
+        }
+      ],
+      "channels": [
+        {
+          "id": "chan-general",
+          "category_id": "cat-general",
+          "name": "general",
+          "position": 0,
+          "slowmode": 0,
+          "locked": false,
+          "allowed_roles": [],
+          "permission_synced": true
+        }
+      ],
+      "messages": [
+        {
+          "id": "c8247daf-00c5-4c84-880b-3b59705d8d95",
+          "channel_id": "chan-general",
+          "username": "admin2",
+          "content": "hi",
+          "created_at": "2026-06-01T19:51:11.518020Z"
+        },
+        {
+          "id": "5281fb14-f94a-4b2f-b3aa-e3ed9e27b7e4",
+          "channel_id": "chan-general",
+          "username": "admin2",
+          "content": "http://127.0.0.1:5000/#dashboard?joinserver=srv_aCd1mfNrPYk",
+          "created_at": "2026-06-01T19:51:17.254578Z"
+        }
+      ]
+    },
+    {
+      "id": "22704aa9-81de-42d9-bbf3-024c9d1d7a1b",
+      "name": "June Studio Room",
+      "icon_url": "/static/placeholder-art.png",
+      "owner": "tester_june_2",
+      "invite_code": "srv_LeIdPxYS1tM",
+      "roles": [
+        {
+          "id": "role-mod",
+          "name": "Moderator",
+          "color": "#e74c3c",
+          "position": 0,
+          "show_separately": true,
+          "permissions": [
+            "manage_channels",
+            "kick_members",
+            "ban_members",
+            "view_channels",
+            "send_messages",
+            "manage_messages",
+            "manage_server"
+          ]
+        }
+      ],
+      "members": {
+        "tester_june_2": [
+          "role-mod"
+        ],
+        "verify_user_1": [],
+        "verify_user_2": []
+      },
+      "banned_users": [],
+      "categories": [
+        {
+          "id": "cat-general",
+          "name": "Text Channels",
+          "position": 0,
+          "allowed_roles": []
+        }
+      ],
+      "channels": [
+        {
+          "id": "chan-general",
+          "category_id": "cat-general",
+          "name": "general",
+          "position": 0,
+          "slowmode": 0,
+          "locked": false,
+          "allowed_roles": [],
+          "permission_synced": true
+        }
+      ],
+      "messages": [
+        {
+          "id": "435517bf-4ca3-4ca4-8382-f649eab9cf43",
+          "channel_id": "chan-general",
+          "username": "verify_user_1",
+          "content": "Hello from automated verification by verify_user_1!",
+          "created_at": "2026-06-02T08:51:18.257480Z"
+        },
+        {
+          "id": "58b92163-3855-4d1e-ad91-a872bd9d9898",
+          "channel_id": "chan-general",
+          "username": "verify_user_2",
+          "content": "Hello from automated verification by verify_user_2!",
+          "created_at": "2026-06-02T08:51:18.289134Z"
+        }
+      ]
+    }
+  ]
+}

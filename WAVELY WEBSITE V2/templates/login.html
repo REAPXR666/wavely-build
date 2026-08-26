@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Sign In — Wavely{% endblock %}
+{% block content %}
+<section class="auth-page">
+  <div class="auth-art"><span class="auth-meta">Wavely studio access</span><div class="auth-quote">The fastest route back to your flow.</div><span class="auth-meta">2.5M+ sounds · Zero credit caps</span></div>
+  <div class="auth-form-wrap"><div class="auth-card">
+    <h1>Welcome back.</h1><p>Sign in to your library and desktop licence.</p>
+    <form method="POST" action="{{ url_for('login_page') }}">
+      <div class="field"><label class="form-label" for="username">Username</label><input id="username" type="text" name="username" value="{{ username or '' }}" required autocomplete="username" placeholder="Your username" class="form-input"></div>
+      <div class="field"><label class="form-label" for="password">Password</label><input id="password" type="password" name="password" required autocomplete="current-password" placeholder="Your password" class="form-input"></div>
+      <div class="captcha-box">
+        <div class="captcha-head"><span class="form-label">Security check</span><button id="captcha-refresh-btn" type="button"><i class="fa-solid fa-rotate-right"></i> New challenge</button></div>
+        <input type="hidden" id="captcha-token-input" name="captcha_token" value=""><div id="captcha-image-container"></div>
+        <input type="text" id="captcha-answer-input" name="captcha_answer" required autocomplete="off" placeholder="Enter the answer" class="form-input font-mono">
+      </div>
+      <button type="submit" class="btn btn-primary auth-submit">Sign in <span>↗</span></button>
+    </form>
+    <div class="auth-switch">New to Wavely? <a href="{{ url_for('register_page') }}">Create an account</a></div>
+  </div></div>
+</section>
+{% endblock %}
+

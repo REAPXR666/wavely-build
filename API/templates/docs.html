@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/docs.css">
+{% endblock %}
+
+{% block content %}
+<section id="tab-docs" class="tab-content active">
+    <div class="docs-layout">
+        <!-- DOCS SIDEBAR NAVIGATION -->
+        <aside class="docs-sidebar">
+            <div class="sidebar-section">
+                <h4>Getting Started</h4>
+                <ul>
+                    <li><a href="#doc-auth" class="sidebar-link active" onclick="scrollToDocSection(event, 'doc-auth')">Authentication</a></li>
+                    <li><a href="#doc-errors" class="sidebar-link" onclick="scrollToDocSection(event, 'doc-errors')">Errors & Logging</a></li>
+                </ul>
+            </div>
+            <div class="sidebar-section">
+                <h4>API Reference</h4>
+                <ul>
+                    <li><a href="#endpoint-search" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-search')">GET /api/search</a></li>
+                    <li><a href="#endpoint-decrypt" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-decrypt')">GET /api/decrypted-audio</a></li>
+                </ul>
+            </div>
+            <div class="sidebar-section">
+                <h4>Guides</h4>
+                <ul>
+                    <li><a href="#guide-search-scrape" class="sidebar-link" onclick="scrollToDocSection(event, 'guide-search-scrape')">Scrape Search Counts</a></li>
+                    <li><a href="#guide-download-stream" class="sidebar-link" onclick="scrollToDocSection(event, 'guide-download-stream')">Download & Stream Preview</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- DOCS MAIN CONTENT -->
+        <div class="docs-main-content">
+            <div class="section-title-wrap">
+                <h2>Wavely API Developer Reference</h2>
+                <p class="subtitle">API Reference documentation for integrating Wavely audio search & decryption capabilities directly into your custom apps.</p>
+            </div>
+
+            <!-- SECTION: AUTHENTICATION -->
+            <div class="doc-block" id="doc-auth">
+                <h3>Authentication</h3>
+                <p>All incoming API requests to the Wavely catalog proxy system must include a valid API key passed as an HTTP header token. You can generate and revoke API keys inside your developer dashboard panel.</p>
+                <div class="note-box">
+                    <strong>Header Format:</strong> <code>X-API-Key: wv_&lt;your_key_hash&gt;</code>
+                </div>
+            </div>
+
+            <!-- SECTION: ERRORS & LOGGING -->
+            <div class="doc-block" id="doc-errors">
+                <h3>Errors & Logging</h3>
+                <p>We log every incoming API response along with timestamps, calling IP address, endpoint paths, and success outcomes. These logs are accessible via the dashboard for troubleshooting.</p>
+                
+                <h4 style="margin-top: 24px; margin-bottom: 12px;">HTTP Status Codes</h4>
+                <table class="params-table" style="margin-top:0;">
+                    <thead>
+                        <tr>
+                            <th width="120">Code</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>200 OK</code></td>
+                            <td>Request succeeded. Returns requested data payload.</td>
+                        </tr>
+                        <tr>
+                            <td><code>401 Unauthorized</code></td>
+                            <td>API key is missing or revoked. Check the <code>X-API-Key</code> header value.</td>
+                        </tr>
+                        <tr>
+                            <td><code>403 Forbidden</code></td>
+                            <td>Your calling IP address has been banned by the administrator console.</td>
+                        </tr>
+                        <tr>
+                            <td><code>404 Not Found</code></td>
+                            <td>The requested resource, asset, or decryption UUID could not be located.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ENDPOINT: GET SEARCH -->
+            <div class="doc-block" id="endpoint-search">
+                <h3>Search Catalog</h3>
+                <div class="endpoint-badge">
+                    <span class="badge-get">GET</span>
+                    <code>/api/search</code>
+                </div>
+                <p>Queries the external Splice library preview system in real-time, matching queries, root keys, and instrument categories.</p>
+
+                <h4>Query Parameters</h4>
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th width="150">Parameter</th>
+                            <th width="100">Type</th>
+                            <th width="100">Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>q</code></td>
+                            <td><code>string</code></td>
+                            <td><span class="req">Yes</span></td>
+                            <td>The query term (e.g. <code>synth loop</code>).</td>
+                        </tr>
+                        <tr>
+                            <td><code>key</code></td>
+                            <td><code>string</code></td>
+                            <td>No</td>
+                            <td>The key to search for (e.g. <code>Cmin</code>, <code>G#maj</code>).</td>
+                        </tr>
+                        <tr>
+                            <td><code>instrument</code></td>
+                            <td><code>string</code></td>
+                            <td>No</td>
+                            <td>Filter by category (e.g. <code>synth</code>, <code>drums</code>, <code>bass</code>).</td>
+                        </tr>
+                        <tr>
+                            <td><code>type</code></td>
+                            <td><code>string</code></td>
+                            <td>No</td>
+                            <td>Filter by type: <code>oneshot</code> or <code>loop</code>.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'node')">Node.js</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code class="language-python">import requests
+
+url = "http://127.0.0.1:5000/api/search"
+headers = {"X-API-Key": "wv_YOUR_API_KEY"}
+params = {"q": "synth loop", "instrument": "synth"}
+
+response = requests.get(url, headers=headers, params=params)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="node">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code class="language-javascript">const fetch = require('node-fetch');
+
+fetch('http://127.0.0.1:5000/api/search?q=synth+loop&instrument=synth', {
+  headers: { 'X-API-Key': 'wv_YOUR_API_KEY' }
+})
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code class="language-bash">curl -H "X-API-Key: wv_YOUR_API_KEY" \
+  "http://127.0.0.1:5000/api/search?q=synth+loop&instrument=synth"</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ENDPOINT: GET DECRYPT -->
+            <div class="doc-block" id="endpoint-decrypt">
+                <h3>Decrypted Preview Audio</h3>
+                <div class="endpoint-badge">
+                    <span class="badge-get">GET</span>
+                    <code>/api/decrypted-audio/&lt;uuid&gt;</code>
+                </div>
+                <p>Retrieves the decrypted preview audio binary matching the requested sample UUID. Transcodes dynamically on-demand.</p>
+
+                <h4>Path Variables</h4>
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th width="150">Variable</th>
+                            <th width="100">Type</th>
+                            <th width="100">Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>uuid</code></td>
+                            <td><code>string</code></td>
+                            <td><span class="req">Yes</span></td>
+                            <td>The UUID of the sample to pull and decrypt.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Query Parameters</h4>
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th width="150">Parameter</th>
+                            <th width="100">Type</th>
+                            <th width="100">Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>format</code></td>
+                            <td><code>string</code></td>
+                            <td>No</td>
+                            <td>The output file format. Allowed values: <code>mp3</code>, <code>wav</code>. WAV format provides raw PCM transcoding.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'node')">Node.js</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code class="language-python">import requests
+
+uuid = "085bd422-bf47-4144-9c9d-a74ee502c368"
+# Request as WAV format
+url = f"http://127.0.0.1:5000/api/decrypted-audio/{uuid}?format=wav"
+headers = {"X-API-Key": "wv_YOUR_API_KEY"}
+
+response = requests.get(url, headers=headers)
+with open("decrypted_sample.wav", "wb") as f:
+    f.write(response.content)
+print("Saved decrypted WAV sample successfully!")</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="node">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code class="language-javascript">const fetch = require('node-fetch');
+const fs = require('fs');
+
+const uuid = '085bd422-bf47-4144-9c9d-a74ee502c368';
+fetch(`http://127.0.0.1:5000/api/decrypted-audio/${uuid}?format=mp3`, {
+  headers: { 'X-API-Key': 'wv_YOUR_API_KEY' }
+})
+.then(res => res.buffer())
+.then(buffer => {
+  fs.writeFileSync('decrypted_sample.mp3', buffer);
+  console.log('Saved decrypted MP3 sample!');
+});</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code class="language-bash">curl -H "X-API-Key: wv_YOUR_API_KEY" \
+  "http://127.0.0.1:5000/api/decrypted-audio/085bd422-bf47-4144-9c9d-a74ee502c368?format=wav" \
+  -o sample.wav</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GUIDE: Search Scrape -->
+            <div class="doc-block" id="guide-search-scrape">
+                <h3>Guide: Scrape Search Counts</h3>
+                <p>Learn how to query the search API, parse the results, and inspect the total number of matched samples from the Splice catalog catalogued for query pagination.</p>
+                
+                <div class="interactive-preview no-margins">
+                    <div class="preview-header">Example: Querying and Scraping Search Counts (Python)</div>
+                    <div class="preview-body padded">
+                        <pre><code class="language-python">import requests
+
+url = "http://127.0.0.1:5000/api/search"
+headers = {"X-API-Key": "wv_YOUR_API_KEY"}
+params = {
+    "q": "Synth lead",
+    "category": "loop"
+}
+
+# 1. Fetch Search Results
+response = requests.get(url, headers=headers, params=params)
+data = response.json()
+
+# 2. Extract Count & Results
+total_found = data.get("count", 0)
+samples = data.get("results", [])
+
+print(f"Total samples found: {total_found}")
+for i, sample in enumerate(samples[:5]):
+    print(f"[{i+1}] {sample['name']} | BPM: {sample['bpm']} | Key: {sample['key']}")</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GUIDE: Download & Stream -->
+            <div class="doc-block" id="guide-download-stream">
+                <h3>Guide: Download & Stream Audio</h3>
+                <p>This guide covers how to stream decrypted audio previews dynamically inside browser elements or download files directly onto your disk storage.</p>
+                
+                <h4>1. Web Streaming (HTML5 Audio Player)</h4>
+                <p>To stream real-time decrypted audio directly inside a client web application, set the source URL of an HTML5 <code>&lt;audio&gt;</code> element to the decryption API endpoint, passing your key in the query string:</p>
+                
+                <div class="interactive-preview no-margins">
+                    <div class="preview-header">HTML Embed Template</div>
+                    <div class="preview-body padded">
+                        <pre><code class="language-html">&lt;audio controls&gt;
+  &lt;source src="http://127.0.0.1:5000/api/decrypted-audio/085bd422-bf47-4144-9c9d-a74ee502c368?api_key=wv_YOUR_API_KEY" type="audio/mpeg"&gt;
+  Your browser does not support the audio tag.
+&lt;/audio&gt;</code></pre>
+                    </div>
+                </div>
+                
+                <h4 style="margin-top: 24px;">2. Dynamic Chunk Streaming (Node.js)</h4>
+                <p>For script integrations, stream the file in chunks rather than buffering everything in memory to ensure low resource usage:</p>
+                
+                <div class="interactive-preview no-margins">
+                    <div class="preview-header">Dynamic Streaming in Node.js</div>
+                    <div class="preview-body padded">
+                        <pre><code class="language-javascript">const http = require('http');
+const fs = require('fs');
+
+const url = 'http://127.0.0.1:5000/api/decrypted-audio/085bd422-bf47-4144-9c9d-a74ee502c368?format=wav';
+const options = {
+  headers: { 'X-API-Key': 'wv_YOUR_API_KEY' }
+};
+
+http.get(url, options, (res) => {
+  if (res.statusCode !== 200) {
+    console.error(`Request Failed. Status: ${res.statusCode}`);
+    return;
+  }
+
+  const fileStream = fs.createWriteStream('sample.wav');
+  res.pipe(fileStream);
+
+  fileStream.on('finish', () => {
+    fileStream.close();
+    console.log('Download complete!');
+  });
+});</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

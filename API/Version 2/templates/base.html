@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wavely — Premium Audio API & Producer Community</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="dark-theme">
+
+<div class="global-bg-container" aria-hidden="true">
+    <div data-us-project="XKOypOfa1PB1AP8SFWUj" class="global-unicorn-bg"></div>
+</div>
+
+<header class="app-header">
+    <div class="nav-container">
+        <div class="logo-area" onclick="switchTab('home')" role="button" tabindex="0">
+            <div class="logo-icon-wrap"><i class="fa-solid fa-circle-nodes logo-icon"></i></div>
+            <span class="logo-text">Wavely<span class="accent-text">.</span></span>
+        </div>
+        <div class="api-status"><span class="status-dot"></span><span class="status-label">Online</span></div>
+        <nav class="nav-links" id="desktop-nav">
+            <button class="nav-btn {% if tab == 'home' %}active{% endif %}" onclick="switchTab('home')">Home</button>
+            <button class="nav-btn {% if tab == 'browser' %}active{% endif %}" onclick="switchTab('browser')"><i class="fa-solid fa-compact-disc"></i> Browser</button>
+            <button class="nav-btn {% if tab == 'docs' %}active{% endif %}" onclick="switchTab('docs')">Docs</button>
+            <button id="nav-community-btn" class="nav-btn {% if tab == 'community' %}active{% endif %}" onclick="switchTab('community')"><i class="fa-solid fa-users"></i> Community</button>
+            <button id="nav-dashboard-btn" class="nav-btn {% if tab == 'dashboard' %}active{% endif %}" onclick="switchTab('dashboard')">Dashboard</button>
+            <button id="nav-admin-btn" class="nav-btn {% if tab == 'admin' %}active{% endif %}" style="display:none;" onclick="switchTab('admin')">Admin</button>
+        </nav>
+        <div class="auth-actions" id="header-auth-section">
+            <button class="btn btn-ghost btn-sm" onclick="switchTab('login')">Sign In</button>
+            <button class="btn btn-primary btn-sm" onclick="switchTab('signup')">Register</button>
+        </div>
+        <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileMenu()" aria-label="Menu">
+            <span class="hamburger-line"></span><span class="hamburger-line"></span><span class="hamburger-line"></span>
+        </button>
+    </div>
+    <div class="mobile-menu" id="mobile-menu">
+        <nav class="mobile-nav-links">
+            <button class="mobile-nav-btn {% if tab == 'home' %}active{% endif %}" onclick="switchTab('home')"><i class="fa-solid fa-house"></i> Home</button>
+            <button class="mobile-nav-btn {% if tab == 'browser' %}active{% endif %}" onclick="switchTab('browser')"><i class="fa-solid fa-compact-disc"></i> Browser</button>
+            <button class="mobile-nav-btn {% if tab == 'docs' %}active{% endif %}" onclick="switchTab('docs')"><i class="fa-solid fa-book"></i> Docs</button>
+            <button class="mobile-nav-btn {% if tab == 'community' %}active{% endif %}" onclick="switchTab('community')"><i class="fa-solid fa-users"></i> Community</button>
+            <button class="mobile-nav-btn {% if tab == 'dashboard' %}active{% endif %}" onclick="switchTab('dashboard')"><i class="fa-solid fa-gauge"></i> Dashboard</button>
+            <button id="mobile-nav-admin-btn" class="mobile-nav-btn" style="display:none;" onclick="switchTab('admin')"><i class="fa-solid fa-shield-halved"></i> Admin</button>
+        </nav>
+        <div class="mobile-auth-actions" id="mobile-auth-section">
+            <button class="btn btn-ghost btn-block" onclick="switchTab('login')">Sign In</button>
+            <button class="btn btn-primary btn-block" onclick="switchTab('signup')">Register</button>
+        </div>
+    </div>
+</header>
+
+<main class="app-main">
+    {% block content %}{% endblock %}
+</main>
+
+<div class="bottom-player-bar" id="persistent-player">
+    <div class="player-container">
+        <div class="player-info"><img id="player-art" src="/static/placeholder-art.png" alt="Cover" class="player-art-img"><div class="player-text"><div class="player-name" id="player-sample-name">No Sample</div><div class="player-pack" id="player-sample-pack">Select a sample</div></div></div>
+        <div class="player-controls">
+            <button class="player-control-btn main-play-btn" id="player-play-toggle" onclick="togglePlayerPlay()"><i class="fa-solid fa-play"></i></button>
+            <div class="player-progress-wrap"><span class="player-time" id="player-time-current">0:00</span><input type="range" id="player-progress" min="0" max="100" value="0" oninput="seekPlayer(this.value)"><span class="player-time" id="player-time-total">0:00</span></div>
+        </div>
+        <div class="player-utils">
+            <i class="fa-solid fa-volume-high volume-icon"></i><input type="range" id="player-volume" min="0" max="100" value="80" oninput="setPlayerVolume(this.value)" class="volume-slider">
+            <button class="player-control-btn" id="player-fav-btn" onclick="togglePlayerFavorite()"><i class="fa-regular fa-star"></i></button>
+            <div class="download-action-cell"><button class="btn btn-primary btn-sm" id="player-download-mp3" onclick="downloadCurrentPlayerSample('mp3')">MP3</button><button class="btn btn-ghost btn-sm" id="player-download-wav" onclick="downloadCurrentPlayerSample('wav')">WAV</button></div>
+        </div>
+    </div>
+</div>
+
+<footer class="app-footer">
+    <div class="footer-container">
+        <div class="footer-brand"><span class="logo-text" style="font-size:18px;">Wavely<span class="accent-text">.</span></span><p>&copy; 2026 Wavely Technologies</p></div>
+        <div class="footer-links">
+            <div class="footer-col"><h4>Product</h4><a href="/browser">Browser</a><a href="/docs">API Docs</a><a href="/dashboard">Dashboard</a></div>
+            <div class="footer-col"><h4>Community</h4><a href="/community">Servers</a><a href="/dashboard">Beat Battles</a></div>
+        </div>
+    </div>
+</footer>
+
+<div id="battle-winner-modal" class="modal-overlay" style="display:none;"><div class="modal-card celebrate-card" style="text-align:center;padding:40px 20px;"><div style="font-size:64px;margin-bottom:20px;">🏆</div><h2>BATTLE WINNER!</h2><p id="celebrate-message" style="font-size:18px;margin:15px 0 25px;"></p><button class="btn btn-primary btn-lg" onclick="dismissAnnouncement()">Collect +50 ELO</button></div></div>
+<div id="webrtc-call-overlay" class="webrtc-call-widget" style="display:none;position:fixed;bottom:100px;right:20px;width:320px;background:rgba(18,14,28,0.95);border:1px solid rgba(139,92,246,0.4);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.5);padding:20px;z-index:10000;text-align:center;backdrop-filter:blur(10px);"><div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:15px;font-size:14px;color:var(--primary);"><i class="fa-solid fa-phone-volume" style="animation:pulse 1s infinite;"></i><h4 id="call-status-label" style="margin:0;">Call in Progress</h4></div><div style="margin-bottom:20px;"><img id="call-partner-pfp" src="/static/placeholder-art.png" class="user-avatar-medium" alt="" style="width:70px;height:70px;border-radius:50%;border:2px solid var(--primary);margin-bottom:10px;"><h3 id="call-partner-name" style="margin:5px 0;">User</h3><div id="screenshare-container" style="display:none;margin-top:15px;position:relative;background:#000;border-radius:6px;overflow:hidden;aspect-ratio:16/9;"><video id="remote-video" autoplay playsinline style="width:100%;height:100%;object-fit:contain;"></video><video id="local-video" autoplay playsinline muted style="position:absolute;bottom:5px;right:5px;width:30%;border:1px solid #fff;border-radius:4px;"></video></div></div><div style="display:flex;justify-content:center;gap:12px;"><button id="btn-call-mute" class="btn btn-ghost" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;" onclick="toggleMuteCall()"><i class="fa-solid fa-microphone"></i></button><button id="btn-call-share" class="btn btn-ghost" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;" onclick="toggleScreenshareCall()"><i class="fa-solid fa-desktop"></i></button><button class="btn" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ef4444;color:#fff;" onclick="endCurrentCall()"><i class="fa-solid fa-phone-slash"></i></button></div></div>
+<div id="webrtc-incoming-modal" class="modal-overlay" style="display:none;"><div class="modal-card" style="text-align:center;padding:30px;"><div style="font-size:40px;color:var(--primary);animation:pulse 1s infinite;margin-bottom:15px;"><i class="fa-solid fa-phone"></i></div><h3 id="incoming-caller-name">Incoming Call...</h3><p id="incoming-call-type" style="opacity:0.7;margin-bottom:25px;">Voice Call</p><div style="display:flex;justify-content:center;gap:15px;"><button class="btn btn-primary btn-sm" onclick="acceptIncomingCall()"><i class="fa-solid fa-check"></i> Accept</button><button class="btn btn-sm" style="background:#ef4444;color:#fff;" onclick="rejectIncomingCall()"><i class="fa-solid fa-xmark"></i> Decline</button></div></div></div>
+<div id="profile-hovercard" class="profile-hovercard" style="display:none;position:absolute;z-index:99999;width:260px;background:rgba(18,14,28,0.97);border:1px solid rgba(139,92,246,0.4);border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.6);padding:15px;pointer-events:auto;backdrop-filter:blur(12px);"></div>
+{% block modals %}{% endblock %}
+
+<script type="text/javascript">
+!function(){if(!window.UnicornStudio){window.UnicornStudio={isInitialized:!1};var i=document.createElement("script");i.src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.29/dist/unicornStudio.umd.js",i.onload=function(){window.UnicornStudio.isInitialized||(UnicornStudio.init(),window.UnicornStudio.isInitialized=!0)},(document.head||document.body).appendChild(i)}}();
+</script>
+<script src="/static/app.js"></script>
+</body>
+</html>

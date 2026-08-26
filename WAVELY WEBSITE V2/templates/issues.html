@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Support — Wavely{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <header class="workspace-header">
+    <div><span class="page-eyebrow">Wavely helpdesk</span><h1>How can we help?</h1><p>Bug reports, DAW sync questions, feature ideas and account support.</p></div>
+    {% if current_user %}<a href="{{ url_for('new_issue') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Open a ticket</a>{% else %}<a href="{{ url_for('login_page') }}" class="btn btn-primary">Sign in to open a ticket</a>{% endif %}
+  </header>
+  <nav class="filter-row" aria-label="Ticket categories">
+    <a href="{{ url_for('issues_page', category='all') }}" class="btn {% if current_cat == 'all' %}btn-secondary{% else %}btn-ghost{% endif %} btn-sm">All</a>
+    <a href="{{ url_for('issues_page', category='Bug Report') }}" class="btn {% if current_cat == 'Bug Report' %}btn-secondary{% else %}btn-ghost{% endif %} btn-sm">Bug reports</a>
+    <a href="{{ url_for('issues_page', category='DAW Sync') }}" class="btn {% if current_cat == 'DAW Sync' %}btn-secondary{% else %}btn-ghost{% endif %} btn-sm">DAW sync</a>
+    <a href="{{ url_for('issues_page', category='Feature Request') }}" class="btn {% if current_cat == 'Feature Request' %}btn-secondary{% else %}btn-ghost{% endif %} btn-sm">Feature requests</a>
+    <a href="{{ url_for('issues_page', category='Billing') }}" class="btn {% if current_cat == 'Billing' %}btn-secondary{% else %}btn-ghost{% endif %} btn-sm">Billing</a>
+  </nav>
+  {% if issues %}
+  <div class="ticket-list">
+    {% for it in issues %}
+    <a href="{{ url_for('issue_detail_page', issue_id=it['id']) }}" class="ticket-row">
+      <div><div class="ticket-title">{{ it['title'] }}</div><div class="ticket-meta"><span>{{ it['category'] }}</span><span>·</span><span>by {{ it['username'] }}</span><span>·</span><span>{{ it['created_at'] }}</span></div></div>
+      {% if it['status'] == 'resolved' %}<span class="status-pill status-pill-green">Resolved</span>{% elif it['status'] == 'in_progress' %}<span class="status-pill status-pill-cyan">In progress</span>{% else %}<span class="status-pill status-pill-purple">Open</span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="fa-solid fa-check"></i><h2>Nothing here right now.</h2><p>There are no tickets in this category.</p></div>
+  {% endif %}
+</div>
+{% endblock %}
+

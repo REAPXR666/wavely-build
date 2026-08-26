@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Your Devices — Wavely{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <header class="workspace-header">
+    <div><span class="page-eyebrow">Studio licences</span><h1>Your devices.</h1><p>Computers currently authorised to use Wavely desktop.</p></div>
+    <a href="{{ url_for('dashboard_page') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+  </header>
+  <section class="panel">
+    <div class="panel-title"><h2>Authorised hardware</h2><i class="fa-solid fa-laptop"></i></div>
+    {% if devices %}<div class="device-list">{% for dev in devices %}
+      <div class="device-row"><div><div class="device-name">{{ dev['pc_name'] }} <span class="status-pill">{{ dev['os_info'] }}</span></div><div class="device-meta">HWID {{ dev['hwid'][:24] }}… · v{{ dev['app_version'] }} · Seen {{ dev['last_heartbeat'] }}</div></div><form method="POST" action="{{ url_for('revoke_device', device_id=dev['id']) }}"><button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Revoke this computer licence?')">Revoke</button></form></div>
+    {% endfor %}</div>{% else %}<div class="empty-state"><i class="fa-solid fa-laptop"></i><h2>No devices yet.</h2><p>Sign in to the Wavely desktop app to register this computer.</p><a href="{{ url_for('download_page') }}" class="btn btn-primary">Download desktop</a></div>{% endif %}
+  </section>
+</div>
+{% endblock %}

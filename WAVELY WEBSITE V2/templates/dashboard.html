@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Studio Dashboard — Wavely{% endblock %}
+{% block content %}
+<div class="page-shell page-shell--wide">
+  <header class="workspace-header">
+    <div><span class="page-eyebrow">Your Wavely account</span><h1>Studio dashboard.</h1><p>Welcome back, <strong>{{ user['username'] }}</strong>. Your plan, devices and billing in one place.</p></div>
+    <a href="{{ url_for('download_page') }}" class="btn btn-secondary"><i class="fa-solid fa-download"></i> Get desktop app</a>
+  </header>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-top"><span class="stat-label">Membership</span>{% if sub and sub['status'] == 'active' %}<span class="status-pill status-pill-green">Active</span>{% else %}<span class="status-pill">Inactive</span>{% endif %}</div>
+      <div class="stat-value">{% if sub and sub['status'] == 'active' %}{% if sub['plan'] == 'monthly_499' %}Pro monthly{% elif sub['plan'] == 'annual_45' %}Pro annual{% elif sub['plan'] == 'lifetime_vip' %}Lifetime VIP{% else %}{{ sub['plan'] }}{% endif %}{% else %}Free account{% endif %}</div>
+      <div class="stat-note">{% if sub and sub['status'] == 'active' %}Renews / expires {{ sub['expires_at'] }}{% else %}<a href="{{ url_for('pricing_page') }}">Upgrade to Pro →</a>{% endif %}</div>
+    </div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-label">Studio devices</span><i class="fa-solid fa-desktop"></i></div><div class="stat-value">{{ devices|length }} / {% if sub and sub['plan'] == 'annual_45' %}4{% else %}2{% endif %}</div><div class="stat-note">Authorised computers</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-label">Billing history</span><i class="fa-solid fa-receipt"></i></div><div class="stat-value">{{ payments|length }} invoice{% if payments|length != 1 %}s{% endif %}</div><div class="stat-note">Encrypted transaction records</div></div>
+  </div>
+  <div class="dashboard-grid">
+    <div class="stack">
+      <section class="panel">
+        <div class="panel-title"><h2>Authorised devices</h2><i class="fa-solid fa-laptop"></i></div>
+        {% if devices %}<div class="device-list">{% for dev in devices %}
+          <div class="device-row"><div><div class="device-name">{{ dev['pc_name'] }} <span class="status-pill">{{ dev['os_info'] }}</span></div><div class="device-meta">HWID {{ dev['hwid'][:24] }}… · v{{ dev['app_version'] }} · Seen {{ dev['last_heartbeat'] }}</div></div><form method="POST" action="{{ url_for('revoke_device', device_id=dev['id']) }}"><button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Revoke this computer licence?')">Revoke</button></form></div>
+        {% endfor %}</div>{% else %}<p class="panel-copy">No computers linked yet. Sign in to the Wavely desktop app to register this workstation.</p>{% endif %}
+      </section>
+      <section class="panel">
+        <div class="panel-title"><h2>Invoices</h2><i class="fa-solid fa-receipt"></i></div>
+        {% if payments %}<div class="table-scroll"><table class="data-table"><thead><tr><th>Invoice</th><th>Plan</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>{% for p in payments %}<tr><td class="highlight">{{ p['payment_id'] }}</td><td>{{ p['plan'] }}</td><td><strong>&#36;{{ "%.2f"|format(p['amount']) }}</strong></td><td><span class="status-pill status-pill-green">{{ p['status'] }}</span></td><td>{{ p['created_at'] }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="panel-copy">No payment transactions yet.</p>{% endif %}
+      </section>
+    </div>
+    <aside class="stack">
+      <section class="panel">
+        <div class="panel-title"><h2>Membership</h2><i class="fa-solid fa-wave-square"></i></div>
+        {% if sub and sub['status'] == 'active' %}
+          <p class="panel-copy">You have complete Pro access to the sound library, packs and synth presets.</p>
+          {% if sub['auto_renew'] %}<form method="POST" action="{{ url_for('cancel_subscription') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-secondary btn-sm" style="width:100%" onclick="return confirm('Disable auto-renew for your subscription?')">Disable auto-renew</button></form>{% else %}<span class="status-pill">Auto-renew is off</span>{% endif %}
+        {% else %}
+          <p class="panel-copy">Choose a plan to unlock Wavely desktop and unlimited downloads.</p><a href="{{ url_for('pricing_page') }}" class="btn btn-primary" style="width:100%">Get Pro · &#36;4.99</a>
+        {% endif %}
+      </section>
+      <section class="panel">
+        <div class="panel-title"><h2>Recent sign-ins</h2><i class="fa-solid fa-shield-halved"></i></div>
+        {% if logins %}<div class="login-list">{% for log in logins %}<div class="login-row"><div><div class="device-name">{{ log['ip_address'] }}</div><div class="device-meta">{{ log['timestamp'] }}</div></div><span class="status-pill {% if log['status'] == 'success' %}status-pill-green{% endif %}">{{ log['status'] }}</span></div>{% endfor %}</div>{% else %}<p class="panel-copy">No recent sign-ins recorded.</p>{% endif %}
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

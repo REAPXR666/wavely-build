@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Open a Support Ticket — Wavely{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="form-card">
+    <span class="page-eyebrow">Wavely helpdesk</span><h1>Open a ticket.</h1><p>Give us the useful details and the team will pick it up.</p>
+    <form method="POST" action="{{ url_for('new_issue') }}">
+      <div class="field"><label class="form-label" for="category">Category</label><select id="category" name="category" required class="form-input"><option value="Bug Report">Bug report</option><option value="DAW Sync">DAW sync & zero-silence audio</option><option value="Feature Request">Feature request</option><option value="Billing">Billing & subscription</option><option value="Other">General question</option></select></div>
+      <div class="field"><label class="form-label" for="priority">Priority</label><select id="priority" name="priority" class="form-input"><option value="normal">Normal</option><option value="high">High</option><option value="critical">Critical — app crash or download blocker</option></select></div>
+      <div class="field"><label class="form-label" for="title">Short summary</label><input id="title" type="text" name="title" required placeholder="e.g. FL Studio tempo mismatch at 174 BPM" class="form-input"></div>
+      <div class="field"><label class="form-label" for="description">What happened?</label><textarea id="description" name="description" rows="6" required placeholder="Include your DAW version, operating system, pack name and any error message." class="form-input"></textarea></div>
+      <div class="form-actions"><a href="{{ url_for('issues_page') }}" class="btn btn-ghost">Cancel</a><button type="submit" class="btn btn-primary">Submit ticket <span>↗</span></button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

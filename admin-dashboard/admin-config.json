@@ -1,0 +1,7 @@
+{
+  "adminPasswordHash": "94544b1be934c25d849ede87a96bbfa06ad300f48a30413ac618241811f99767",
+  "salt": "73f0d3733c595625bffd5da82193f1ef",
+  "sessionTimeoutHours": 24,
+  "bindLocalhostOnly": false,
+  "allowedAdminIps": []
+}

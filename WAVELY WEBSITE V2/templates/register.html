@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Create Your Wavely Account{% endblock %}
+{% block content %}
+<section class="auth-page">
+  <div class="auth-art"><span class="auth-meta">Join Wavely</span><div class="auth-quote">Your next favourite sound is waiting.</div><span class="auth-meta">$4.99 / month · Cancel any time</span></div>
+  <div class="auth-form-wrap"><div class="auth-card">
+    <h1>Create account.</h1><p>One account for the website and desktop app.</p>
+    <form method="POST" action="{{ url_for('register_page') }}">
+      <div class="field"><label class="form-label" for="username">Username</label><input id="username" type="text" name="username" value="{{ username or '' }}" required autocomplete="username" placeholder="Choose a username" class="form-input"></div>
+      <div class="field"><label class="form-label" for="email">Email address</label><input id="email" type="email" name="email" value="{{ email or '' }}" required autocomplete="email" placeholder="you@example.com" class="form-input"></div>
+      <div class="field"><label class="form-label" for="password">Password</label><input id="password" type="password" name="password" required autocomplete="new-password" placeholder="At least 6 characters" class="form-input"></div>
+      <div class="field"><label class="form-label" for="confirm-password">Confirm password</label><input id="confirm-password" type="password" name="confirm_password" required autocomplete="new-password" placeholder="Repeat your password" class="form-input"></div>
+      <div class="captcha-box">
+        <div class="captcha-head"><span class="form-label">Security check</span><button id="captcha-refresh-btn" type="button"><i class="fa-solid fa-rotate-right"></i> New challenge</button></div>
+        <input type="hidden" id="captcha-token-input" name="captcha_token" value=""><div id="captcha-image-container"></div>
+        <input type="text" id="captcha-answer-input" name="captcha_answer" required autocomplete="off" placeholder="Enter the answer" class="form-input font-mono">
+      </div>
+      <button type="submit" class="btn btn-primary auth-submit">Create account <span>↗</span></button>
+    </form>
+    <div class="auth-switch">Already have an account? <a href="{{ url_for('login_page') }}">Sign in</a></div>
+  </div></div>
+</section>
+{% endblock %}
+

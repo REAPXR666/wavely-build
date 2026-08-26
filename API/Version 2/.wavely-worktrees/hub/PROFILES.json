@@ -1,0 +1,61 @@
+{
+  "profiles": {
+    "tester": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 1
+    },
+    "admin": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 2,
+      "bio": "Stuff",
+      "socials": {
+        "soundcloud": "TRNDSTR",
+        "youtube": "",
+        "twitter": "",
+        "spotify": "TRNDSTR"
+      },
+      "pfp": "/static/uploads/pfps/pfp_admin_07177447.png"
+    },
+    "testuser123": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 3,
+      "pfp": "",
+      "bio": "Hello I am a test user",
+      "socials": {
+        "soundcloud": "https://sc.com/test",
+        "youtube": "",
+        "twitter": "",
+        "spotify": ""
+      }
+    },
+    "fixtest1": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 4,
+      "pfp": "",
+      "bio": "Fixed test bio",
+      "socials": {
+        "soundcloud": "https://sc.com/fix"
+      }
+    },
+    "test": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 5
+    }
+  },
+  "acknowledgements": {}
+}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/home.css">
+{% endblock %}
+
+{% block content %}
+<section id="tab-home" class="tab-content active">
+    <!-- Hero Header -->
+    <div class="hero-section">
+        <span class="badge-pill">
+            <span class="pill-glow"></span>
+            <i class="fa-solid fa-bolt"></i> Wavely API v2.0 Released
+        </span>
+        <h1 class="hero-title">Decrypted Audio Previews & <br><span class="gradient-text">Developer Catalog</span> Direct Access</h1>
+        <p class="hero-subtitle">Integrate the global Splice audio preview library directly into your DAWs, script bots, or audio processors using our decrypted audio pipeline APIs.</p>
+        <div class="hero-cta">
+            <button class="btn btn-primary btn-lg" onclick="switchTab('dashboard')"><i class="fa-solid fa-circle-play"></i> Get Free API Key</button>
+            <button class="btn btn-secondary btn-lg" onclick="switchTab('browser')"><i class="fa-solid fa-book"></i> Interactive Browser</button>
+        </div>
+    </div>
+
+    <!-- Core Features Grid -->
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <h3>Direct Catalog Search</h3>
+            <p>Query the entire Splice preview library in real-time. Search by key, BPM, instrumentation, loops or one-shots with zero rate limits.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-unlock-keyhole"></i></div>
+            <h3>Decryption Engine</h3>
+            <p>Bypass the encrypted audio wrapper block dynamically. Stream or download files immediately in pristine WAV or compressed MP3 format.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-network-wired"></i></div>
+            <h3>High Performance API</h3>
+            <p>Low latency CDN proxy network delivering audio packet payloads in under 80ms. Ideal for plugin integration or scraper scripts.</p>
+        </div>
+    </div>
+
+    <!-- Developer Playground Preview -->
+    <div class="interactive-preview">
+        <div class="preview-header">
+            <div class="dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+            <div class="preview-title">GET /api/search?q=synth+loop</div>
+        </div>
+        <div class="preview-body">
+            <pre><code class="language-json">{
+  "count": 1000,
+  "results": [
+    {
+      "id": "085bd422-bf47-4144-9c9d-a74ee502c368",
+      "name": "Wavely_C_Synth_Loop.wav",
+      "bpm": 128,
+      "key": "C Minor",
+      "instrument": "Synth",
+      "type": "loop",
+      "audio_preview_url": "http://127.0.0.1:5000/api/decrypted-audio/085bd422...mp3"
+    }
+  ]
+}</code></pre>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,220 @@
+/* --- ADMIN PANEL SYSTEM --- */
+
+.admin-dashboard-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    animation: fadeIn 0.4s ease-out;
+}
+.admin-header {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 20px;
+}
+.admin-header h2 {
+    font-family: var(--font-heading);
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    color: var(--text-main);
+}
+.admin-subnav {
+    display: flex;
+    gap: 10px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+.subnav-btn {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.subnav-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+    border-color: var(--border-color-hover);
+}
+.subnav-btn.active {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(167, 139, 250, 0.05) 100%);
+    color: var(--primary-hover);
+    border-color: var(--primary-hover);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.1);
+}
+.admin-subtab-content {
+    display: none;
+}
+.admin-subtab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.admin-table th, .admin-table td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+}
+.admin-table th {
+    background: rgba(255, 255, 255, 0.01);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    font-size: 12px;
+}
+.admin-table tr:hover {
+    background: rgba(255, 255, 255, 0.01);
+}
+.badge-role {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.badge-role.admin {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+.badge-role.developer {
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--primary-hover);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+}
+.badge-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.badge-status.active {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+.badge-status.banned {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+}
+.admin-ip-grid {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 30px;
+}
+.action-btn-group {
+    display: flex;
+    gap: 8px;
+}
+.btn-ban-toggle {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+}
+.btn-ban-toggle:hover {
+    background: var(--error);
+    color: #fff;
+}
+.btn-ban-toggle.btn-unban {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+.btn-ban-toggle.btn-unban:hover {
+    background: var(--success);
+    color: #fff;
+}
+
+/* --- LOGS TABLE STYLE --- */
+.logs-card {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.logs-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+.logs-header-actions .input-form {
+    max-width: 250px;
+}
+.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.logs-table th, .logs-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+.logs-table th {
+    background: rgba(255, 255, 255, 0.01);
+    font-family: var(--font-heading);
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-weight: 700;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+.logs-table td {
+    font-size: 13px;
+}
+.logs-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+.log-type {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.log-type.SUCCESS {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+.log-type.ERROR {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+}
+.log-timestamp {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+}
+.log-route {
+    font-family: var(--font-mono);
+    color: var(--text-main);
+}
+.log-details {
+    color: var(--text-muted);
+}
+
+@media (max-width: 1024px) {
+    .admin-ip-grid {
+        grid-template-columns: 1fr;
+    }
+}

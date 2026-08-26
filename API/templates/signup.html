@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/auth.css">
+{% endblock %}
+
+{% block content %}
+<section id="tab-signup" class="tab-content active">
+    <div class="form-container-card">
+        <div class="card form-card">
+            <h2>Create Developer Account</h2>
+            <p class="desc-text">Sign up to get instant access to the Wavely API keys dashboard.</p>
+            
+            <form onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="signup-username" required class="input-form" placeholder="developer">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="signup-email" required class="input-form" placeholder="dev@company.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signup-password" required class="input-form" placeholder="••••••••">
+                </div>
+                <div class="form-error-msg" id="signup-error"></div>
+                <button type="submit" class="btn btn-primary btn-block">Register Account</button>
+            </form>
+            <p class="form-footer-text">Already registered? <a href="#" onclick="switchTab('login')">Sign in instead</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavely API - Developer Dashboard & Documentation</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- ChartJS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="dark-theme">
+    <!-- Background Elements -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+
+    <!-- Navigation Header -->
+    <header class="app-header">
+        <div class="nav-container">
+            <div class="logo-area" style="cursor: pointer;" onclick="switchTab('home')">
+                <i class="fa-solid fa-circle-nodes logo-icon"></i>
+                <span class="logo-text">Wavely <span class="accent-text">API</span></span>
+            </div>
+            <div class="api-status">
+                <span class="status-indicator online"></span>
+                <span class="status-label">API Status: Online</span>
+            </div>
+            <nav class="nav-links">
+                <button class="nav-btn {% if tab == 'home' %}active{% endif %}" onclick="switchTab('home')">Home</button>
+                <button class="nav-btn {% if tab == 'browser' %}active{% endif %}" onclick="switchTab('browser')"><i class="fa-solid fa-compact-disc"></i> Sample Browser</button>
+                <button class="nav-btn {% if tab == 'docs' %}active{% endif %}" onclick="switchTab('docs')">Docs</button>
+                <button id="nav-community-btn" class="nav-btn {% if tab == 'community' %}active{% endif %}" onclick="switchTab('community')"><i class="fa-solid fa-users"></i> Community</button>
+                <button id="nav-dashboard-btn" class="nav-btn {% if tab == 'dashboard' %}active{% endif %}" onclick="switchTab('dashboard')">Dashboard</button>
+                <button id="nav-admin-btn" class="nav-btn {% if tab == 'admin' %}active{% endif %}" style="display:none;" onclick="switchTab('admin')">Admin</button>
+            </nav>
+            <div class="auth-actions" id="header-auth-section">
+                <!-- Swapped dynamically via app.js -->
+                <button class="btn btn-secondary btn-sm" onclick="switchTab('login')">Sign In</button>
+                <button class="btn btn-primary btn-sm" onclick="switchTab('signup')">Register</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- PERSISTENT BOTTOM PLAYER BAR (Splice-like) -->
+    <div class="bottom-player-bar" id="persistent-player">
+        <div class="player-container">
+            <!-- Info Section -->
+            <div class="player-info">
+                <img id="player-art" src="/static/placeholder-art.png" alt="Cover" class="player-art-img">
+                <div class="player-text">
+                    <div class="player-name" id="player-sample-name">No Sample Loaded</div>
+                    <div class="player-pack" id="player-sample-pack">Select a sample to play</div>
+                </div>
+            </div>
+
+            <!-- Controls Section -->
+            <div class="player-controls">
+                <button class="player-control-btn main-play-btn" id="player-play-toggle" onclick="togglePlayerPlay()">
+                    <i class="fa-solid fa-play"></i>
+                </button>
+                
+                <!-- Progress Slider -->
+                <div class="player-progress-wrap">
+                    <span class="player-time" id="player-time-current">0:00</span>
+                    <input type="range" id="player-progress" min="0" max="100" value="0" oninput="seekPlayer(this.value)">
+                    <span class="player-time" id="player-time-total">0:00</span>
+                </div>
+            </div>
+
+            <!-- Utilities Section -->
+            <div class="player-utils">
+                <!-- Volume control -->
+                <i class="fa-solid fa-volume-high volume-icon"></i>
+                <input type="range" id="player-volume" min="0" max="100" value="80" oninput="setPlayerVolume(this.value)" class="volume-slider">
+                
+                <!-- Favorite in player -->
+                <button class="player-control-btn" id="player-fav-btn" onclick="togglePlayerFavorite()">
+                    <i class="fa-regular fa-star"></i>
+                </button>
+                
+                <!-- Download in player -->
+                <div class="download-action-cell">
+                    <button class="btn btn-primary btn-sm" id="player-download-mp3" onclick="downloadCurrentPlayerSample('mp3')">
+                        MP3
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="player-download-wav" onclick="downloadCurrentPlayerSample('wav')">
+                        WAV
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <div class="footer-container">
+            <p>&copy; 2026 Wavely Technologies. All rights reserved.</p>
+            <p class="footer-meta">Powered by Splice Catalog direct connections.</p>
+        </div>
+    </footer>
+
+    <!-- COMMUNITY PORTAL OVERLAYS & MODALS -->
+
+    <!-- MODAL: CELEBRATORY BANNER -->
+    <div id="battle-winner-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-card celebrate-card" style="text-align: center; padding: 40px 20px;">
+            <div class="celebrate-sparkles" style="font-size: 64px; margin-bottom: 20px;">🏆</div>
+            <h2>BATTLE WINNER!</h2>
+            <p id="celebrate-message" style="font-size: 18px; margin: 15px 0 25px;"></p>
+            <button class="btn btn-primary btn-lg" onclick="dismissAnnouncement()">Collect +50 ELO & Close</button>
+        </div>
+    </div>
+
+    <!-- MODAL: WEBRTC CALL OVERLAY -->
+    <div id="webrtc-call-overlay" class="webrtc-call-widget" style="display:none; position: fixed; bottom: 100px; right: 20px; width: 320px; background: rgba(18, 14, 28, 0.95); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 20px; z-index: 10000; text-align: center; backdrop-filter: blur(10px);">
+        <div class="call-widget-header" style="display:flex; justify-content:center; align-items:center; gap:8px; margin-bottom:15px; font-size:14px; color:var(--primary-color);">
+            <i class="fa-solid fa-phone-volume call-glow-icon" style="animation: pulse 1s infinite;"></i>
+            <h4 id="call-status-label" style="margin:0;">Call in Progress</h4>
+        </div>
+        <div class="call-widget-body" style="margin-bottom: 20px;">
+            <img id="call-partner-pfp" src="/static/placeholder-art.png" class="user-avatar-medium" alt="Avatar" style="width:70px; height:70px; border-radius:50%; border:2px solid var(--primary-color); margin-bottom:10px;">
+            <h3 id="call-partner-name" style="margin:5px 0;">User</h3>
+            
+            <div class="screenshare-video-wrapper" id="screenshare-container" style="display:none; margin-top:15px; position:relative; background:#000; border-radius:6px; overflow:hidden; aspect-ratio: 16/9;">
+                <video id="remote-video" autoplay playsinline class="remote-screenshare-video" style="width:100%; height:100%; object-fit:contain;"></video>
+                <video id="local-video" autoplay playsinline muted class="local-screenshare-video" style="position:absolute; bottom:5px; right:5px; width:30%; border:1px solid #fff; border-radius:4px;"></video>
+            </div>
+        </div>
+        <div class="call-widget-footer" style="display:flex; justify-content:center; gap:12px;">
+            <button id="btn-call-mute" class="btn btn-secondary btn-circle" style="width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;" onclick="toggleMuteCall()"><i class="fa-solid fa-microphone"></i></button>
+            <button id="btn-call-share" class="btn btn-secondary btn-circle" style="width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;" onclick="toggleScreenshareCall()"><i class="fa-solid fa-desktop"></i></button>
+            <button class="btn btn-error btn-circle" style="width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#ef4444; color:#fff;" onclick="endCurrentCall()"><i class="fa-solid fa-phone-slash"></i></button>
+        </div>
+    </div>
+
+    <!-- INCOMING CALL MODAL -->
+    <div id="webrtc-incoming-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-card call-incoming-card" style="text-align: center; padding: 30px;">
+            <div class="incoming-pulse" style="font-size: 40px; color: var(--primary-color); animation: pulse 1s infinite; margin-bottom:15px;"><i class="fa-solid fa-phone"></i></div>
+            <h3 id="incoming-caller-name">Incoming Call...</h3>
+            <p id="incoming-call-type" style="opacity: 0.7; margin-bottom: 25px;">Voice Call</p>
+            <div class="incoming-actions" style="display:flex; justify-content:center; gap:15px;">
+                <button class="btn btn-primary btn-sm" onclick="acceptIncomingCall()"><i class="fa-solid fa-check"></i> Accept</button>
+                <button class="btn btn-error btn-sm" style="background:#ef4444;" onclick="rejectIncomingCall()"><i class="fa-solid fa-xmark"></i> Decline</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE BATTLE MODAL -->
+    <div id="create-battle-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Create Beat Battle</h3>
+                <button class="close-btn" onclick="hideCreateBattleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Battle Title</label>
+                    <input type="text" id="battle-title-input" placeholder="e.g. Synth Wave Madness" class="input-form">
+                </div>
+                <div class="form-group">
+                    <label>Description & Rules</label>
+                    <textarea id="battle-desc-input" placeholder="e.g. Create a track using only the battle starter sample provided in 140bpm..." class="input-form" style="height:100px; resize:none;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Starter Sample</label>
+                    <input type="file" id="battle-sample-file" class="input-form" accept="audio/*">
+                </div>
+                <div class="form-group">
+                    <label>Root Key (Optional)</label>
+                    <input type="text" id="battle-key-input" placeholder="e.g. C Minor" class="input-form">
+                </div>
+                <div class="form-group">
+                    <label>Style / Theme Tags</label>
+                    <input type="text" id="battle-style-input" placeholder="e.g. lo-fi, trap, synthwave" class="input-form">
+                </div>
+                <div class="form-group">
+                    <label>Visibility</label>
+                    <select id="battle-privacy-input" class="input-form">
+                        <option value="public">Public</option>
+                        <option value="private">Private (Invite Only)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Deadline Date</label>
+                    <input type="datetime-local" id="battle-deadline-input" class="input-form">
+                </div>
+                <button class="btn btn-primary" onclick="submitCreateBattle()">Launch Beat Battle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE HOVERCARD PANEL -->
+    <div id="profile-hovercard" class="profile-hovercard" style="display:none; position:absolute; z-index:99999; width:260px; background:#120e1c; border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); padding:15px; pointer-events: auto;"></div>
+
+    <!-- Custom Script -->
+    <script src="/static/app.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wavely Admin & License Control Center</title>
+  <link rel="stylesheet" href="admin.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <!-- 1. Master Login Screen (Displayed when not authenticated) -->
+  <div id="loginScreen" class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-icon-wrap">
+        <i data-lucide="shield-lock"></i>
+      </div>
+      <h2 class="auth-title">Wavely License Control</h2>
+      <p class="auth-subtitle">Restricted Administrator Access. Please enter your master password to continue.</p>
+
+      <form id="loginForm" class="auth-form">
+        <div class="form-group">
+          <label for="passwordInput">Master Admin Password</label>
+          <div class="password-input-wrap">
+            <input type="password" id="passwordInput" placeholder="Enter master password..." required autocomplete="current-password">
+          </div>
+        </div>
+
+        <div id="loginErrorMsg" class="auth-error-msg hidden">
+          <i data-lucide="alert-circle"></i>
+          <span id="loginErrorText">Incorrect password</span>
+        </div>
+
+        <button type="submit" id="loginBtn" class="btn-auth-submit">
+          <i data-lucide="key-round"></i>
+          <span>Unlock Admin Panel</span>
+        </button>
+      </form>
+      <div class="auth-footer-tip">
+        Default master password: <code>admin</code> (can be changed inside the dashboard)
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Main Admin Dashboard Application (Displayed once logged in) -->
+  <div id="adminApp" class="admin-app hidden">
+    <!-- Header / Navbar -->
+    <header class="admin-header">
+      <div class="header-brand">
+        <div class="brand-logo-icon">
+          <i data-lucide="shield-check"></i>
+        </div>
+        <div>
+          <h1 class="brand-title">Wavely Security & License Control</h1>
+          <p class="brand-subtitle">Real-time HWID telemetry, ban enforcement & tamper monitoring</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="live-pulse-badge">
+          <span class="pulse-dot"></span>
+          <span>Live Sync Active</span>
+        </div>
+        <button id="changePassBtn" class="action-btn secondary" title="Change Admin Master Password">
+          <i data-lucide="lock"></i>
+          <span>Change Password</span>
+        </button>
+        <button id="refreshBtn" class="action-btn secondary" title="Refresh client telemetry data">
+          <i data-lucide="refresh-cw"></i>
+          <span>Refresh</span>
+        </button>
+        <button id="logoutBtn" class="action-btn logout" title="Log out of admin panel">
+          <i data-lucide="log-out"></i>
+          <span>Log Out</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <!-- Metric Cards Grid -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon purple">
+            <i data-lucide="laptop"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Total Registered Devices</span>
+            <h2 id="totalDevicesCount" class="stat-number">0</h2>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon cyan">
+            <i data-lucide="activity"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Online Active Clients</span>
+            <h2 id="onlineDevicesCount" class="stat-number">0</h2>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon red">
+            <i data-lucide="shield-ban"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Banned Devices / IPs</span>
+            <h2 id="bannedDevicesCount" class="stat-number">0</h2>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon orange">
+            <i data-lucide="alert-triangle"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Crack / Tamper Alerts</span>
+            <h2 id="tamperAlertsCount" class="stat-number">0</h2>
+          </div>
+        </div>
+      </section>
+
+      <!-- Search and Filter Toolbar -->
+      <section class="toolbar-section">
+        <div class="search-input-box">
+          <i data-lucide="search"></i>
+          <input type="text" id="searchInput" placeholder="Search by PC Name, Username, HWID, IP, or OS...">
+        </div>
+        <div class="filter-pills">
+          <button class="filter-btn active" data-filter="all">All Devices</button>
+          <button class="filter-btn" data-filter="online">Online</button>
+          <button class="filter-btn" data-filter="banned">Banned</button>
+          <button class="filter-btn" data-filter="tampered">Tamper Flags</button>
+        </div>
+      </section>
+
+      <!-- Main Devices Data Table -->
+      <section class="table-card">
+        <div class="table-header">
+          <h3 class="table-title">Registered Machines & Client Telemetry</h3>
+          <span id="tableCountBadge" class="table-badge">0 Machines</span>
+        </div>
+        <div class="table-responsive">
+          <table class="devices-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>PC Name & User</th>
+                <th>Hardware ID (HWID)</th>
+                <th>IP Address</th>
+                <th>System Specs</th>
+                <th>Version</th>
+                <th>Last Active</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="devicesTableBody">
+              <tr>
+                <td colspan="8" class="table-empty-cell">
+                  <i data-lucide="loader-2" class="spin-icon"></i>
+                  <span>Connecting to licensing server...</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- Ban Device Modal -->
+    <div id="banModal" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-row">
+            <i data-lucide="shield-alert" class="modal-icon-red"></i>
+            <h3 id="modalTitle">Ban Device Access</h3>
+          </div>
+          <button id="closeModalBtn" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p id="modalDescription" class="modal-desc">
+            You are about to revoke access for this machine. The client will be locked immediately on their next heartbeat.
+          </p>
+          <div class="modal-info-box">
+            <div><strong>PC Name:</strong> <span id="modalPcName">--</span></div>
+            <div><strong>HWID:</strong> <code id="modalHwid">--</code></div>
+          </div>
+          <div class="form-group">
+            <label for="banReasonInput">Ban Reason (Displayed to User):</label>
+            <input type="text" id="banReasonInput" placeholder="e.g. Unauthorized redistribution, Terms of service violation, Payment refunded" value="Access suspended by administrator.">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="cancelModalBtn" class="btn-cancel">Cancel</button>
+          <button id="confirmBanBtn" class="btn-confirm-ban">Confirm Ban & Lock Client</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Change Master Password Modal -->
+    <div id="changePasswordModal" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-row">
+            <i data-lucide="lock" style="color: var(--accent-purple);"></i>
+            <h3>Change Master Admin Password</h3>
+          </div>
+          <button id="closePassModalBtn" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="currPassInput">Current Master Password:</label>
+            <input type="password" id="currPassInput" placeholder="Enter current password...">
+          </div>
+          <div class="form-group" style="margin-top: 14px;">
+            <label for="newPassInput">New Master Password:</label>
+            <input type="password" id="newPassInput" placeholder="Enter new password (min 4 chars)...">
+          </div>
+          <div id="passChangeError" class="auth-error-msg hidden" style="margin-top: 12px;"></div>
+        </div>
+        <div class="modal-footer">
+          <button id="cancelPassModalBtn" class="btn-cancel">Cancel</button>
+          <button id="confirmPassChangeBtn" class="action-btn" style="background: var(--accent-purple); color: #fff; border: none;">Update Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

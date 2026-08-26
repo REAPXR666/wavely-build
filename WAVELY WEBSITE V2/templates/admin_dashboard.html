@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Operations Console — Wavely{% endblock %}
+{% block content %}
+<div class="page-shell page-shell--wide">
+  <header class="workspace-header">
+    <div><span class="page-eyebrow">Restricted · Admin</span><h1>Operations console.</h1><p>Membership, revenue, hardware security and support.</p></div>
+    <span class="status-pill status-pill-green"><span class="status-dot"></span> Production · v1.0.5</span>
+  </header>
+
+  <div class="stat-grid admin-metrics">
+    <div class="stat-card"><div class="stat-top"><span class="stat-label">Gross sales</span></div><div class="stat-value" style="color:var(--green)">&#36;{{ "%.2f"|format(analytics['total_revenue']) }}</div><div class="stat-note">Processed customer volume</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-label">Monthly recurring</span></div><div class="stat-value" style="color:var(--acid)">&#36;{{ "%.2f"|format(analytics['mrr']) }}</div><div class="stat-note">ARR &#36;{{ "%.2f"|format(analytics['arr']) }}</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-label">Paying subscribers</span></div><div class="stat-value">{{ analytics['total_active_subscribers'] }}</div><div class="stat-note">{{ analytics['conversion_rate'] }}% conversion</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-label">Users / devices</span></div><div class="stat-value">{{ analytics['total_users'] }} / {{ analytics['total_devices'] }}</div><div class="stat-note">Registered endpoints</div></div>
+  </div>
+
+  <nav class="admin-tabs" aria-label="Admin sections">
+    <button id="tab-btn-users" class="admin-tab-btn active" onclick="switchAdminTab('users')">Users · {{ users|length }}</button>
+    <button id="tab-btn-devices" class="admin-tab-btn" onclick="switchAdminTab('devices')">Devices · {{ devices|length }}</button>
+    <button id="tab-btn-firewall" class="admin-tab-btn" onclick="switchAdminTab('firewall')">Firewall · {{ banned_ips|length }}</button>
+    <button id="tab-btn-issues" class="admin-tab-btn" onclick="switchAdminTab('issues')">Helpdesk · {{ issues|length }}</button>
+    <button id="tab-btn-invoices" class="admin-tab-btn" onclick="switchAdminTab('invoices')">Transactions · {{ analytics['recent_payments']|length }}</button>
+  </nav>
+
+  <section id="tab-content-users" class="admin-tab-content active">
+    <div class="panel">
+      <div class="admin-toolbar"><div class="panel-title" style="margin:0"><h2>User directory</h2></div><input type="search" id="user-search-input" onkeyup="filterTable('user-search-input','users-table')" placeholder="Filter users…" class="form-input admin-search"></div>
+      <div class="table-scroll"><table class="data-table" id="users-table"><thead><tr><th>ID</th><th>User</th><th>Email</th><th>Plan</th><th>Expires</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+      {% for u in users %}<tr>
+        <td class="highlight">#{{ u['id'] }}</td><td><strong>{{ u['username'] }}</strong>{% if u['is_admin'] %} <span class="status-pill status-pill-purple">Admin</span>{% endif %}</td><td>{{ u['email'] }}</td>
+        <td>{% if u['sub_status'] == 'active' %}<span class="status-pill status-pill-green">{{ u['plan'] }}</span>{% else %}<span class="status-pill">Unpaid</span>{% endif %}</td><td class="font-mono">{{ u['expires_at'] or '—' }}</td>
+        <td>{% if u['is_banned'] %}<span class="status-pill" style="color:var(--red)">Banned</span>{% else %}<span class="status-pill status-pill-green">Good</span>{% endif %}</td>
+        <td><div class="action-group">
+          <form method="POST" action="{{ url_for('admin_grant_membership', user_id=u['id']) }}" class="action-group"><select name="plan" class="form-input" style="min-height:34px;width:auto;padding:5px 28px 5px 8px;font-size:11px"><option value="monthly_499">+1 month</option><option value="annual_45">+1 year</option><option value="lifetime_vip">Lifetime</option></select><button type="submit" class="btn btn-secondary btn-sm">Grant</button></form>
+          {% if u['sub_status'] == 'active' %}<form method="POST" action="{{ url_for('admin_revoke_membership', user_id=u['id']) }}"><button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Revoke membership for {{ u['username'] }}?')">Revoke</button></form>{% endif %}
+          <form method="POST" action="{{ url_for('admin_toggle_user_ban', user_id=u['id']) }}"><input type="hidden" name="reason" value="Suspended by administrator"><button type="submit" class="btn btn-ghost btn-sm">{% if u['is_banned'] %}Unban{% else %}Ban{% endif %}</button></form>
+        </div></td>
+      </tr>{% endfor %}</tbody></table></div>
+    </div>
+  </section>
+
+  <section id="tab-content-devices" class="admin-tab-content">
+    <div class="panel"><div class="panel-title"><h2>Registered hardware</h2><i class="fa-solid fa-microchip"></i></div>
+      <div class="table-scroll"><table class="data-table" id="devices-table"><thead><tr><th>ID</th><th>User</th><th>Computer</th><th>HWID</th><th>Version</th><th>Last heartbeat</th><th>Action</th></tr></thead><tbody>
+      {% for d in devices %}<tr><td class="highlight">#{{ d['id'] }}</td><td><strong>{{ d['username'] }}</strong></td><td>{{ d['pc_name'] }} · {{ d['os_info'] }}</td><td class="highlight">{{ d['hwid'][:22] }}…</td><td>v{{ d['app_version'] }}</td><td>{{ d['last_heartbeat'] }}</td><td><form method="POST" action="{{ url_for('admin_toggle_device_ban', device_id=d['id']) }}"><input type="hidden" name="reason" value="Hardware integrity violation"><button type="submit" class="btn {% if d['is_banned'] %}btn-secondary{% else %}btn-danger{% endif %} btn-sm">{% if d['is_banned'] %}Unban HWID{% else %}Ban HWID{% endif %}</button></form></td></tr>{% endfor %}
+      </tbody></table></div>
+    </div>
+  </section>
+
+  <section id="tab-content-firewall" class="admin-tab-content">
+    <div class="panel">
+      <div class="panel-title"><h2>IP firewall</h2><i class="fa-solid fa-shield-halved"></i></div>
+      <form method="POST" action="{{ url_for('admin_ban_ip') }}" class="admin-toolbar"><input type="text" name="ip_address" required placeholder="IP address" class="form-input"><input type="text" name="reason" placeholder="Reason for restriction" class="form-input"><button type="submit" class="btn btn-danger">Block IP</button></form>
+      {% if banned_ips %}<div class="table-scroll"><table class="data-table"><thead><tr><th>IP address</th><th>Reason</th><th>Date</th><th>Action</th></tr></thead><tbody>{% for ip in banned_ips %}<tr><td style="color:var(--red)" class="font-mono">{{ ip['ip_address'] }}</td><td>{{ ip['reason'] }}</td><td>{{ ip['created_at'] }}</td><td><form method="POST" action="{{ url_for('admin_unban_ip', ip_id=ip['id']) }}"><button type="submit" class="btn btn-ghost btn-sm">Remove</button></form></td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="panel-copy">No IP addresses are currently restricted.</p>{% endif %}
+    </div>
+  </section>
+
+  <section id="tab-content-issues" class="admin-tab-content">
+    <div class="panel"><div class="panel-title"><h2>Helpdesk queue</h2><i class="fa-solid fa-life-ring"></i></div>
+      <div class="table-scroll"><table class="data-table"><thead><tr><th>ID</th><th>Category</th><th>User</th><th>Title</th><th>Status</th><th>Action</th></tr></thead><tbody>
+      {% for it in issues %}<tr><td class="highlight">#{{ it['id'] }}</td><td><span class="status-pill">{{ it['category'] }}</span></td><td><strong>{{ it['username'] }}</strong></td><td><a href="{{ url_for('issue_detail_page', issue_id=it['id']) }}"><strong>{{ it['title'] }}</strong></a></td><td>{% if it['status'] == 'resolved' %}<span class="status-pill status-pill-green">Resolved</span>{% else %}<span class="status-pill status-pill-purple">{{ it['status']|capitalize }}</span>{% endif %}</td><td><div class="action-group"><a href="{{ url_for('issue_detail_page', issue_id=it['id']) }}" class="btn btn-secondary btn-sm">Open</a>{% if it['status'] != 'resolved' %}<form method="POST" action="{{ url_for('admin_resolve_issue', issue_id=it['id']) }}"><button type="submit" class="btn btn-primary btn-sm">Resolve</button></form>{% endif %}</div></td></tr>{% endfor %}
+      </tbody></table></div>
+    </div>
+  </section>
+
+  <section id="tab-content-invoices" class="admin-tab-content">
+    <div class="panel"><div class="panel-title"><h2>Recent transactions</h2><i class="fa-solid fa-receipt"></i></div>
+      <div class="table-scroll"><table class="data-table"><thead><tr><th>Invoice</th><th>Customer</th><th>Plan</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>
+      {% for p in analytics['recent_payments'] %}<tr><td class="highlight">{{ p['payment_id'] }}</td><td><strong>{{ p['username'] }}</strong><br><span class="device-meta">{{ p['email'] }}</span></td><td>{{ p['plan'] }}</td><td><strong>&#36;{{ "%.2f"|format(p['amount']) }}</strong></td><td><span class="status-pill status-pill-green">{{ p['status'] }}</span></td><td>{{ p['created_at'] }}</td></tr>{% endfor %}
+      </tbody></table></div>
+    </div>
+  </section>
+</div>
+{% endblock %}

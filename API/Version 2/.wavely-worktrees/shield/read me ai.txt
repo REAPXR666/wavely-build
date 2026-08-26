@@ -1,0 +1,16 @@
+1. perform a full web test, make sure everything loads and works as expected
+2. perform a vulnerability test and fix all issues
+3. ensure everything works properly and efficiently as it should with NO issues at all, and if there are any, fix them
+4. Ensure the site is fully mobile friendly
+5. give the pages some animations, effects etc
+6. make the dashboard have even more features, super in depth and descriptive and animated
+7. ensure all users are logged in / registered when using the sample page, community page, dashboard etc.
+8. once all of these are done, do the exact same again, and keep going until everything is perfect with NO issues at all.
+9. the "discord server" style stuff on the community page, make each server etc have its own endpoints, ensure you can make roles with permissions, ensure you can make channels that only users with certain roles can see (or everyone if chosen), ensure you can make catagories only roles can see (or everyone if chosen), and make it so if you create a channel under a caatgory, the viewable permissions sync to the catagory etc so it auto makes things viewable or not. Please ensure you can reorder /rearange channels and catagories, including making it so you can move channels from catagory to another one, or no catagory. Ensure all users roles are showed seperately in the sidebar (Like discord does), again, if selected to show roles seperately. Ensure all discord style features work, Another cool thing to do is make it so if you send a wavely.lol server invite link inside of a wavely server, it will show the server name, profile icon, how many members there are and how many online ones there are.
+
+Please plan comprehensively and do not exhaust or give up until it is truly done and finished.
+
+
+Please analyse the full flask app, all HTML etc. 
+
+Please once done. plan comprehensively a FULL review of my site and then report back to me

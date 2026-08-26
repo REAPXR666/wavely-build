@@ -1,0 +1,401 @@
+{
+  "settings": {
+    "downloadDir": "C:\\Users\\louis\\Music\\SpliceCloneLibrary",
+    "presetDir": "C:\\Users\\louis\\SpliceClonePresets",
+    "theme": "dark"
+  },
+  "downloadedSamples": [
+    "splice-dbf15e5ea69a330cfc64b3e9ce2b25dec0f9dbfd97928f1e4b56b27dccb441ca",
+    "splice-37a2a2c263f9b94295baf260740ba606c076646a2372d52b308f22ba72505d02",
+    "splice-759f1927e1b662ce7ce4aa17433583b01f704537a45dafdacbcce71395e0c29c",
+    "splice-a3f27a5ec6c2a5450337fd638de1ab9ca93d75c697e8646e6c8ddab3cc589f6f",
+    "splice-84d6ced8620e2582198d666d9dbeb0da6afeb52bc40f9ba2880195022d788f6c",
+    "splice-cc3388485d4a1fc967c2e0ef74f12514da2a63371d929436d77070192e771cdd",
+    "splice-a2bb0257b0bf495482680b61666596252fba65afc26de6dc26985d52ab837ed5",
+    "splice-b03c14041cdeb121f3af607c7fd8ba288aa3c33e240ab85f94dade2cb1e0087c",
+    "splice-fa177f9c86b637a4f6c47c246582bc505d3926c6373f5247729ee30f7d8e9b5d",
+    "splice-5168ab64fb75d707816a39cbfab6b24ad9ab46087f2bb511e19a6da09b9f33cf",
+    "splice-c62aa939d87b8b92070217a365b21bebe34049ff7dbdd44996f3d3d8eede4b46",
+    "splice-f8d586f7b44564893009e3c46f9e0d7c7c4635ec88ab4686cd3f1b3145d81339"
+  ],
+  "downloadedPresets": [],
+  "indexedPacks": [
+    "musicradar-techno"
+  ],
+  "indexedFiles": [
+    {
+      "id": "splice-f8d586f7b44564893009e3c46f9e0d7c7c4635ec88ab4686cd3f1b3145d81339",
+      "name": "ORBIT_RT2_140_synth_chords_teeth_F_m.wav",
+      "pack": "RAGE TRAP 2",
+      "duration": "0:14",
+      "key": "f#",
+      "bpm": 140,
+      "tags": [
+        "splice",
+        "premium",
+        "orbit_rt2_140_synthy",
+        "synth",
+        "hip hop",
+        "chords",
+        "trap",
+        "rage"
+      ],
+      "source": "Local Library",
+      "filePath": "C:\\Users\\louis\\Music\\SpliceCloneLibrary\\ORBIT_RT2_140_synth_chords_teeth_F_m.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "splice-c62aa939d87b8b92070217a365b21bebe34049ff7dbdd44996f3d3d8eede4b46",
+      "name": "ORBIT_RT2_140_synth_lead_panning_teeth_F_m.wav",
+      "pack": "RAGE TRAP 2",
+      "duration": "0:14",
+      "key": "f#",
+      "bpm": 140,
+      "tags": [
+        "splice",
+        "premium",
+        "synth",
+        "lead",
+        "synth",
+        "leads",
+        "hip hop",
+        "trap",
+        "rage"
+      ],
+      "source": "Local Library",
+      "filePath": "C:\\Users\\louis\\Music\\SpliceCloneLibrary\\ORBIT_RT2_140_synth_lead_panning_teeth_F_m.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "splice-5168ab64fb75d707816a39cbfab6b24ad9ab46087f2bb511e19a6da09b9f33cf",
+      "name": "91V_UKB2_132_synth_chord_step_up_phrygian_D.wav",
+      "pack": "UK Bass Ultra Pack 2",
+      "duration": "0:15",
+      "key": "d",
+      "bpm": 132,
+      "tags": [
+        "splice",
+        "premium",
+        "ukg",
+        "synth",
+        "synth",
+        "dubstep",
+        "chords",
+        "bass music",
+        "uk garage",
+        "speed garage"
+      ],
+      "source": "Local Library",
+      "filePath": "C:\\Users\\louis\\Music\\SpliceCloneLibrary\\91V_UKB2_132_synth_chord_step_up_phrygian_D.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "splice-fa177f9c86b637a4f6c47c246582bc505d3926c6373f5247729ee30f7d8e9b5d",
+      "name": "VOX_SH_vocal_oneshot_spoken_bass.wav",
+      "pack": "Speed House Drums and Vocals",
+      "duration": "0:02",
+      "key": "--",
+      "bpm": "--",
+      "tags": [
+        "splice",
+        "premium",
+        "drum",
+        "and",
+        "bass",
+        "vocals",
+        "phrases",
+        "uk garage",
+        "speed garage",
+        "house",
+        "stutter house"
+      ],
+      "source": "Local Library",
+      "filePath": "C:\\Users\\louis\\Music\\SpliceCloneLibrary\\VOX_SH_vocal_oneshot_spoken_bass.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "splice-b03c14041cdeb121f3af607c7fd8ba288aa3c33e240ab85f94dade2cb1e0087c",
+      "name": "SHADOW_UKG_132_hats_Raiden.wav",
+      "pack": "UK Garage",
+      "duration": "0:07",
+      "key": "--",
+      "bpm": 132,
+      "tags": [
+        "splice",
+        "premium",
+        "shadow",
+        "ukg",
+        "drums",
+        "hats",
+        "uk garage",
+        "speed garage"
+      ],
+      "source": "Local Library",
+      "filePath": "C:\\Users\\louis\\Music\\SpliceCloneLibrary\\SHADOW_UKG_132_hats_Raiden.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "splice-a2bb0257b0bf495482680b61666596252fba65afc26de6dc26985d52ab837ed5",
+      "name": "KSHMR_sok5_rim_organic_maple.wav",
+      "pack": "Sounds of KSHMR Vol 5 - Drums",
+      "duration": "0:00",
+      "key": "--",
+      "bpm": "--",
+      "tags": [
+        "splice",
+        "premium",
+        "ukg",
+        "snare",
+        "drums",
+        "snares",
+        "edm",
+        "pop",
+        "organic",
+        "rims"
+      ],
+      "source": "Local Library",
+      "filePath": "C:\\Users\\louis\\Music\\SpliceCloneLibrary\\KSHMR_sok5_rim_organic_maple.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "splice-cc3388485d4a1fc967c2e0ef74f12514da2a63371d929436d77070192e771cdd",
+      "name": "T_TSCR4_kick_oneshot_drivon.wav",
+      "pack": "Crusy Vol. 4 - Trademark Series",
+      "duration": "0:00",
+      "key": "--",
+      "bpm": "--",
+      "tags": [
+        "splice",
+        "premium",
+        "ukg",
+        "kick",
+        "drums",
+        "kicks",
+        "house",
+        "tech house",
+        "french house"
+      ],
+      "source": "Local Library",
+      "filePath": "C:\\Users\\louis\\Music\\SpliceCloneLibrary\\T_TSCR4_kick_oneshot_drivon.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "splice-84d6ced8620e2582198d666d9dbeb0da6afeb52bc40f9ba2880195022d788f6c",
+      "name": "91V_UKB2_140_synth_lead_combo_the_king_Fm.wav",
+      "pack": "UK Bass Ultra Pack 2",
+      "duration": "0:14",
+      "key": "f",
+      "bpm": 140,
+      "tags": [
+        "splice",
+        "premium",
+        "synth",
+        "lead",
+        "synth",
+        "leads",
+        "dubstep",
+        "bass music",
+        "uk garage",
+        "speed garage"
+      ],
+      "source": "Local Library",
+      "filePath": "C:\\Users\\louis\\Music\\SpliceCloneLibrary\\91V_UKB2_140_synth_lead_combo_the_king_Fm.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "splice-a3f27a5ec6c2a5450337fd638de1ab9ca93d75c697e8646e6c8ddab3cc589f6f",
+      "name": "DS_S2OT_150_synth_lead_faster_C_min.wav",
+      "pack": "Serum 2 Opium Trap",
+      "duration": "0:06",
+      "key": "c#",
+      "bpm": 150,
+      "tags": [
+        "splice",
+        "premium",
+        "synth",
+        "lead",
+        "synth",
+        "leads",
+        "hip hop",
+        "trap",
+        "rage"
+      ],
+      "source": "Local Library",
+      "filePath": "C:\\Users\\louis\\Music\\SpliceCloneLibrary\\DS_S2OT_150_synth_lead_faster_C_min.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "splice-759f1927e1b662ce7ce4aa17433583b01f704537a45dafdacbcce71395e0c29c",
+      "name": "TSP_ENEIV2_175_kit_throwback_drum_E.wav",
+      "pack": "ENEI - Sample Pack Vol. 2",
+      "duration": "0:22",
+      "key": "e",
+      "bpm": 175,
+      "tags": [
+        "splice",
+        "premium",
+        "drum",
+        "and",
+        "bass",
+        "drum and bass",
+        "drums",
+        "grooves",
+        "jungle",
+        "bass music"
+      ],
+      "source": "Local Library",
+      "filePath": "C:\\Users\\louis\\Music\\SpliceCloneLibrary\\TSP_ENEIV2_175_kit_throwback_drum_E.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "splice-37a2a2c263f9b94295baf260740ba606c076646a2372d52b308f22ba72505d02",
+      "name": "TSP_ENEIV2_172_kit_head_break_no_sidechain_D_.wav",
+      "pack": "ENEI - Sample Pack Vol. 2",
+      "duration": "0:22",
+      "key": "d#",
+      "bpm": 172,
+      "tags": [
+        "splice",
+        "premium",
+        "drum",
+        "and",
+        "bass",
+        "drum and bass",
+        "drums",
+        "breaks",
+        "jungle",
+        "bass music"
+      ],
+      "source": "Local Library",
+      "filePath": "C:\\Users\\louis\\Music\\SpliceCloneLibrary\\TSP_ENEIV2_172_kit_head_break_no_sidechain_D_.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "splice-dbf15e5ea69a330cfc64b3e9ce2b25dec0f9dbfd97928f1e4b56b27dccb441ca",
+      "name": "KMRBI_DNBR_174_drum_loop_journey.wav",
+      "pack": "Liquid Funk - DNB Rollers",
+      "duration": "0:01",
+      "key": "--",
+      "bpm": 174,
+      "tags": [
+        "splice",
+        "premium",
+        "drum",
+        "and",
+        "bass",
+        "drums",
+        "grooves",
+        "drum and bass",
+        "liquid dnb"
+      ],
+      "source": "Local Library",
+      "filePath": "C:\\Users\\louis\\Music\\SpliceCloneLibrary\\KMRBI_DNBR_174_drum_loop_journey.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "musicradar-techno-file-5",
+      "name": "SUB_BASS_LOOP_126_6.wav",
+      "pack": "SampleRadar: 1000 Free Techno Samples",
+      "duration": "0:00",
+      "key": "--",
+      "bpm": 128,
+      "tags": [
+        "techno",
+        "bass"
+      ],
+      "source": "Music Radar Samples",
+      "filePath": "C:\\Users\\User\\Music\\SpliceCloneLibrary\\musicradar-techno\\SUB_BASS_LOOP_126_6.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "musicradar-techno-file-4",
+      "name": "PERC_CONGA_128_5.wav",
+      "pack": "SampleRadar: 1000 Free Techno Samples",
+      "duration": "0:00",
+      "key": "G min",
+      "bpm": 128,
+      "tags": [
+        "techno",
+        "conga"
+      ],
+      "source": "Music Radar Samples",
+      "filePath": "C:\\Users\\User\\Music\\SpliceCloneLibrary\\musicradar-techno\\PERC_CONGA_128_5.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "musicradar-techno-file-3",
+      "name": "TECHNO_SYNTH_LOOP_128_AMIN_4.wav",
+      "pack": "SampleRadar: 1000 Free Techno Samples",
+      "duration": "0:00",
+      "key": "C min",
+      "bpm": 128,
+      "tags": [
+        "techno",
+        "synth"
+      ],
+      "source": "Music Radar Samples",
+      "filePath": "C:\\Users\\User\\Music\\SpliceCloneLibrary\\musicradar-techno\\TECHNO_SYNTH_LOOP_128_AMIN_4.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "musicradar-techno-file-2",
+      "name": "HIHAT_CLOSED_126_3.wav",
+      "pack": "SampleRadar: 1000 Free Techno Samples",
+      "duration": "0:00",
+      "key": "--",
+      "bpm": 128,
+      "tags": [
+        "techno",
+        "closed"
+      ],
+      "source": "Music Radar Samples",
+      "filePath": "C:\\Users\\User\\Music\\SpliceCloneLibrary\\musicradar-techno\\HIHAT_CLOSED_126_3.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "musicradar-techno-file-1",
+      "name": "TECHNO_SNARE_CLAP_2.wav",
+      "pack": "SampleRadar: 1000 Free Techno Samples",
+      "duration": "0:00",
+      "key": "G min",
+      "bpm": 128,
+      "tags": [
+        "techno",
+        "snare"
+      ],
+      "source": "Music Radar Samples",
+      "filePath": "C:\\Users\\User\\Music\\SpliceCloneLibrary\\musicradar-techno\\TECHNO_SNARE_CLAP_2.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "musicradar-techno-file-0",
+      "name": "TECHNO_KICK_909_1.wav",
+      "pack": "SampleRadar: 1000 Free Techno Samples",
+      "duration": "0:00",
+      "key": "C min",
+      "bpm": 128,
+      "tags": [
+        "techno",
+        "kick"
+      ],
+      "source": "Music Radar Samples",
+      "filePath": "C:\\Users\\User\\Music\\SpliceCloneLibrary\\musicradar-techno\\TECHNO_KICK_909_1.wav",
+      "isDownloaded": true
+    },
+    {
+      "id": "local-scan-0-TRIPPIE_REDD_X_CHE_SYNTH_PHRASE.wav",
+      "name": "TRIPPIE_REDD_X_CHE_SYNTH_PHRASE.wav",
+      "pack": "Imported Library",
+      "duration": "0:02",
+      "key": "--",
+      "bpm": "--",
+      "tags": [
+        "local",
+        "wav"
+      ],
+      "source": "Local Folder",
+      "filePath": "C:\\Users\\louis\\Music\\SpliceCloneLibrary\\TRIPPIE_REDD_X_CHE_SYNTH_PHRASE.wav",
+      "isDownloaded": true
+    }
+  ]
+}

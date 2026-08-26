@@ -1,0 +1,25 @@
+{
+  "devices": {
+    "TEST-1234-5678-90AB-CDEF": {
+      "hwid": "TEST-1234-5678-90AB-CDEF",
+      "fullHash": "",
+      "pcName": "STUDIO-DESKTOP",
+      "username": "ProducerJohn",
+      "platform": "win32",
+      "osRelease": "",
+      "arch": "x64",
+      "totalMemoryGB": 0,
+      "cpuModel": "Intel i9-13900K",
+      "appVersion": "1.0.1",
+      "ip": "127.0.0.1",
+      "status": "active",
+      "banReason": "",
+      "firstSeen": "2026-08-22T21:20:45.130Z",
+      "lastSeen": "2026-08-22T21:20:45.161Z",
+      "totalHeartbeats": 3,
+      "tamperFlag": false,
+      "integritySignature": ""
+    }
+  },
+  "bannedIps": {}
+}

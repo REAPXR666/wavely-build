@@ -1,0 +1,98 @@
+{
+  "name": "wavely",
+  "version": "1.0.6",
+  "description": "Wavely - Premium DAW-integrated Desktop Audio Sample Browser",
+  "author": "Wavely",
+  "main": "main.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev:react": "vite",
+    "dev:electron": "cross-env NODE_ENV=development electron .",
+    "dev": "concurrently \"npm run dev:react\" \"npm run dev:electron\"",
+    "build": "vite build",
+    "preview": "vite preview",
+    "package": "npm run build && electron-builder",
+    "build:win": "npm run build && electron-builder --win",
+    "build:mac": "npm run build && electron-builder --mac dmg zip -c.mac.identity=null"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.10",
+    "cheerio": "^1.0.0-rc.12",
+    "lucide-react": "^0.354.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "socket.io-client": "^4.8.3",
+    "wavesurfer.js": "^7.7.15"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^29.1.0",
+    "electron-builder": "^24.13.3",
+    "vite": "^5.1.4"
+  },
+  "build": {
+    "appId": "com.wavely.app",
+    "productName": "Wavely",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "mediaUtils.js",
+      "audioWorker.js",
+      "audioWorkerPool.js",
+      "updater.js",
+      "preload.js",
+      "hwid.js",
+      "security.js",
+      "licenseClient.js",
+      "licensing.json",
+      "drag-icon.png",
+      "app icon.png",
+      "splice queries.txt"
+    ],
+    "asarUnpack": [
+      "audioWorker.js",
+      "mediaUtils.js"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "app icon.png"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "app icon.png",
+      "category": "public.app-category.music",
+      "identity": null
+    },
+    "dmg": {
+      "title": "Wavely Installer",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Audio"
+    }
+  }
+}

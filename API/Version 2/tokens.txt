@@ -1,0 +1,12 @@
+verify_user_1:verify_user_1@verify.com:verification_pass
+verify_user_2:verify_user_2@verify.com:verification_pass
+bot_dnz6rw:bot_dnz6rw@gbyj7.com:Pass_0ynr6mj0
+bot_g1h6gg:bot_g1h6gg@krvog.com:Pass_svoaq9o6
+bot_0v9m1s:bot_0v9m1s@67zr9.com:Pass_jhnss41m
+bot_dgvs3o:bot_dgvs3o@92ie1.com:Pass_idgbb2n3
+bot_ypinmb:bot_ypinmb@vueph.com:Pass_owfcvbfp
+bot_c2iz0x:bot_c2iz0x@gry6e.com:Pass_byacjq0y
+bot_58lbec:bot_58lbec@7qbd3.com:Pass_3k4alk0x
+bot_bykivo:bot_bykivo@1b45z.com:Pass_8yh05usd
+bot_wbgvvl:bot_wbgvvl@cylvi.com:Pass_w56nlvch
+bot_negbv7:bot_negbv7@1aeli.com:Pass_t6oum8wx

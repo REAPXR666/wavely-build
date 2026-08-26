@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+{% block content %}
+<section id="tab-home" class="tab-content active">
+    
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <span class="badge-pill animated-pulse">
+                <span class="pill-glow"></span>
+                <i class="fa-solid fa-gift"></i> 100% Free & Open Source Creator Suite
+            </span>
+            <h1 class="hero-title">
+                Unleash the Catalog.<br>
+                <span class="gradient-text">Decrypted Previews</span> & Collaborations.
+            </h1>
+            <p class="hero-subtitle">
+                Search, stream, and decrypt the global Splice preview catalog directly to raw WAV or MP3 files. Host ELO-based beat battles, manage custom community servers with role permissions, and collaborate with producers.
+            </p>
+            <div class="hero-cta">
+                <button class="btn btn-primary btn-lg hover-scale" onclick="switchTab('dashboard')">
+                    <i class="fa-solid fa-rocket"></i> Get Free API Key
+                </button>
+                <button class="btn btn-glass btn-lg hover-scale" onclick="switchTab('community')">
+                    <i class="fa-solid fa-users"></i> Enter Community Hub
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scrolling Features Overview -->
+    <div class="section-container reveal-on-scroll">
+        <div class="section-header">
+            <h2 class="section-title">The Complete Producer Arsenal</h2>
+            <p class="section-desc">Everything you need to source, decrypt, collaborate, and compete in one cohesive dashboard.</p>
+        </div>
+        <div class="features-grid stagger-children">
+            <div class="feature-card hover-glow">
+                <div class="feature-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                <h3>1. Catalog Engine</h3>
+                <p>Query the entire Splice preview library in real-time. Filter by instrument family, category, key, BPM, and sample format with zero limits.</p>
+            </div>
+            <div class="feature-card hover-glow">
+                <div class="feature-icon"><i class="fa-solid fa-unlock-keyhole"></i></div>
+                <h3>2. Instant Decrypter</h3>
+                <p>Bypass proprietary encryption wrappers automatically. Stream high-fidelity decrypted audio in WAV or compressed MP3 format inside your code.</p>
+            </div>
+            <div class="feature-card hover-glow">
+                <div class="feature-icon"><i class="fa-solid fa-people-group"></i></div>
+                <h3>3. Custom Guilds</h3>
+                <p>Build community servers. Assign roles, establish access-restricted categories, and enjoy synchronized channel permissions like Discord.</p>
+            </div>
+            <div class="feature-card hover-glow">
+                <div class="feature-icon"><i class="fa-solid fa-trophy"></i></div>
+                <h3>4. Beat Battles</h3>
+                <p>Participate in active beatmaking battles. Submit tracks, vote on matches, and rank on the global ELO leaderboard.</p>
+            </div>
+            <div class="feature-card hover-glow">
+                <div class="feature-icon"><i class="fa-solid fa-comments"></i></div>
+                <h3>5. Direct Chats</h3>
+                <p>Connect with peers via private direct messaging. Send feedback, collaborate, and share audio file attachments.</p>
+            </div>
+            <div class="feature-card hover-glow">
+                <div class="feature-icon"><i class="fa-solid fa-gears"></i></div>
+                <h3>6. Developer SDK</h3>
+                <p>Integrate Wavely directly into your DAW plugins, custom scripts, or Discord bots with detailed multi-language guides.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive JSON Preview Console -->
+    <div class="section-container reveal-on-scroll">
+        <div class="section-header">
+            <h2 class="section-title">REST API Playground</h2>
+            <p class="section-desc">Inspect a sample request/response flow querying our catalog scraper pipeline.</p>
+        </div>
+        <div class="interactive-preview">
+            <div class="preview-header">
+                <div class="dots">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                </div>
+                <div class="preview-title">GET /api/search?q=ambient+pad&key=Amin</div>
+            </div>
+            <div class="preview-body">
+                <pre><code>{
+  "status": "success",
+  "query": "ambient pad",
+  "results_count": 1,
+  "data": [
+    {
+      "id": "e2808c1a-289d-4c31-9fdf-2115682613ba",
+      "filename": "WLY_Amin_Ambient_Pad_120BPM.wav",
+      "bpm": 120,
+      "key": "A Minor",
+      "category": "synthesizer",
+      "is_loop": true,
+      "decrypted_preview": "/api/decrypted-audio/e2808c1a-289d-4c31-9fdf-2115682613ba?format=wav"
+    }
+  ]
+}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Platform Comparison Section -->
+    <div class="section-container reveal-on-scroll">
+        <div class="section-header">
+            <h2 class="section-title">Why Wavely?</h2>
+            <p class="section-desc">How Wavely compares to standard loop portals and premium subscription platforms.</p>
+        </div>
+        <div class="comparison-container">
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Features</th>
+                        <th class="highlight-col">Wavely</th>
+                        <th>Standard Portals</th>
+                        <th>Subscription Sites</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Pricing</strong></td>
+                        <td class="highlight-col">100% Free</td>
+                        <td>Limited Free Tier</td>
+                        <td>$9.99 - $29.99/mo</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Audio Decryption</strong></td>
+                        <td class="highlight-col"><i class="fa-solid fa-circle-check text-success"></i> Direct WAV/MP3</td>
+                        <td><i class="fa-solid fa-circle-xmark text-danger"></i> None</td>
+                        <td><i class="fa-solid fa-circle-xmark text-danger"></i> Encrypted player only</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Developer REST APIs</strong></td>
+                        <td class="highlight-col"><i class="fa-solid fa-circle-check text-success"></i> Yes (Unlimited)</td>
+                        <td><i class="fa-solid fa-circle-xmark text-danger"></i> No</td>
+                        <td><i class="fa-solid fa-circle-xmark text-danger"></i> Restrictive/Private</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Community Servers</strong></td>
+                        <td class="highlight-col"><i class="fa-solid fa-circle-check text-success"></i> Synced Permissions</td>
+                        <td><i class="fa-solid fa-circle-xmark text-danger"></i> Simple comments only</td>
+                        <td><i class="fa-solid fa-circle-xmark text-danger"></i> External forums only</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Beat Battles</strong></td>
+                        <td class="highlight-col"><i class="fa-solid fa-circle-check text-success"></i> ELO Leaderboards</td>
+                        <td><i class="fa-solid fa-circle-xmark text-danger"></i> No</td>
+                        <td><i class="fa-solid fa-circle-xmark text-danger"></i> Manual/Ad-hoc</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quickstart Guide -->
+    <div class="section-container reveal-on-scroll">
+        <div class="section-header">
+            <h2 class="section-title">Developer Quickstart</h2>
+            <p class="section-desc">Go from zero to decrypted samples in three easy steps.</p>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <h4>Register Account</h4>
+                <p>Create a secure creator account in under 30 seconds. No credit card or verification required.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <h4>Generate API Key</h4>
+                <p>Navigate to your Developer Dashboard page and click <strong>Generate Key</strong>. You can hold up to 3 active keys.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <h4>Query the Scraper</h4>
+                <p>Send an authorized request containing your API key to search our index and download decrypted loops instantly.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Creator Reviews Section -->
+    <div class="section-container reveal-on-scroll" style="margin-bottom: 80px;">
+        <div class="section-header">
+            <h2 class="section-title">Producer Feedback</h2>
+            <p class="section-desc">Read reviews from creators using Wavely to speed up their production pipelines.</p>
+        </div>
+        <div class="reviews-grid">
+            <div class="review-card">
+                <div class="review-profile">
+                    <img src="/static/placeholder-art.png" alt="Avatar" class="review-avatar">
+                    <div>
+                        <h5>Decibel_Dave</h5>
+                        <span>EDM Producer</span>
+                    </div>
+                </div>
+                <p>"Being able to query the entire Splice catalogue straight from my custom python scripts and download unencrypted WAVs has saved me hours of editing time. Absolutely stellar tool!"</p>
+            </div>
+            <div class="review-card">
+                <div class="review-profile">
+                    <img src="/static/placeholder-art.png" alt="Avatar" class="review-avatar">
+                    <div>
+                        <h5>Resonance_Girl</h5>
+                        <span>Sound Designer</span>
+                    </div>
+                </div>
+                <p>"The beat battles and integrated ELO leaderboards are incredibly addictive. It's so nice to have a Discord-style server layout to sync channels and talk shop with other creators."</p>
+            </div>
+            <div class="review-card">
+                <div class="review-profile">
+                    <img src="/static/placeholder-art.png" alt="Avatar" class="review-avatar">
+                    <div>
+                        <h5>LoFi_Luna</h5>
+                        <span>Beatsmith</span>
+                    </div>
+                </div>
+                <p>"Completely free with unencrypted direct access APIs. I built a DAW widget that searches Wavely, fetches pad loops, and drops them directly into my sampler."</p>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+<!-- Inline Landing Page Styles and Animations -->
+<style>
+    /* Entrance animations */
+    .animated-pulse {
+        animation: pulseGlow 2.5s infinite alternate;
+    }
+    
+    .hover-scale {
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+    }
+    .hover-scale:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 8px 24px rgba(155, 89, 182, 0.4);
+    }
+
+    .section-container {
+        max-width: 1200px;
+        margin: 80px auto 0 auto;
+        padding: 0 20px;
+    }
+    
+    .section-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .section-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #ffffff 0%, var(--text-dim) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .section-desc {
+        color: var(--text-dim);
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .hover-glow {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .hover-glow:hover {
+        transform: translateY(-5px);
+        border-color: rgba(155, 89, 182, 0.6);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(155, 89, 182, 0.25);
+    }
+
+    /* Comparison Table Styling */
+    .comparison-container {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        margin-top: 30px;
+        box-shadow: var(--shadow-card);
+    }
+    
+    .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+    
+    .comparison-table th, .comparison-table td {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .comparison-table th {
+        background: rgba(255, 255, 255, 0.02);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+    }
+    
+    .comparison-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .comparison-table td.highlight-col, .comparison-table th.highlight-col {
+        background: rgba(155, 89, 182, 0.07);
+        border-left: 1px solid rgba(155, 89, 182, 0.2);
+        border-right: 1px solid rgba(155, 89, 182, 0.2);
+        color: #ffffff;
+    }
+    
+    .text-success {
+        color: #2ecc71;
+    }
+    
+    .text-danger {
+        color: #e74c3c;
+    }
+
+    /* Steps Grid */
+    .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 30px;
+        margin-top: 30px;
+    }
+    
+    .step-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .step-num {
+        position: absolute;
+        top: -10px;
+        right: 10px;
+        font-size: 7rem;
+        font-weight: 900;
+        color: rgba(155, 89, 182, 0.06);
+        line-height: 1;
+        user-select: none;
+        pointer-events: none;
+    }
+    
+    .step-card h4 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: #ffffff;
+    }
+    
+    .step-card p {
+        color: var(--text-dim);
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    /* Reviews Grid */
+    .reviews-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 30px;
+        margin-top: 30px;
+    }
+    
+    .review-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .review-profile {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .review-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        margin-right: 12px;
+        border: 2px solid rgba(155, 89, 182, 0.3);
+    }
+    
+    .review-profile h5 {
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .review-profile span {
+        color: var(--text-dim);
+        font-size: 0.8rem;
+    }
+    
+    .review-card p {
+        color: var(--text-dim);
+        font-style: italic;
+        line-height: 1.6;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    /* Scroll Reveal Classes */
+    .reveal-on-scroll {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .reveal-on-scroll.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+
+<!-- Scroll Reveal Script -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.05
+    });
+    
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => {
+        revealObserver.observe(el);
+    });
+});
+</script>
+{% endblock %}

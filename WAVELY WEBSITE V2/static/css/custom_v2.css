@@ -1,0 +1,190 @@
+/* =============================================================
+   WAVELY WEBSITE V2 - CUSTOM COMPONENT ENHANCEMENTS
+   Matching the exact look & feel of wavely.lol
+   ============================================================= */
+
+.btn-primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+    border: none;
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 4px 18px rgba(139, 92, 246, 0.4);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 6px 25px rgba(139, 92, 246, 0.6);
+    transform: translateY(-2px);
+}
+
+.btn-ghost {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    transition: all var(--transition);
+}
+
+.btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.card-luxury {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 30px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: all var(--transition);
+}
+
+.card-luxury:hover {
+    border-color: var(--border-hover);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(139, 92, 246, 0.15);
+}
+
+/* Pricing Grid Cards */
+.pricing-card-highlight {
+    background: linear-gradient(145deg, rgba(28, 18, 55, 0.8), rgba(16, 12, 34, 0.95));
+    border: 2px solid var(--primary);
+    box-shadow: 0 0 35px rgba(139, 92, 246, 0.35);
+    position: relative;
+}
+
+.badge-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-tag-success {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.badge-tag-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.badge-tag-primary {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.35);
+}
+
+/* Admin Dashboard Grids */
+.admin-metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 35px;
+}
+
+.metric-stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary);
+}
+
+.metric-stat-card.green::before {
+    background: var(--success);
+}
+
+.metric-stat-card.pink::before {
+    background: var(--accent);
+}
+
+.stat-label-dim {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+}
+
+.stat-num-bold {
+    font-size: 2.2rem;
+    font-weight: 900;
+    font-family: var(--font-heading);
+    letter-spacing: -0.5px;
+    color: var(--text-main);
+    line-height: 1.1;
+    margin-bottom: 4px;
+}
+
+/* Tabs */
+.custom-nav-tabs {
+    display: flex;
+    gap: 10px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+    margin-bottom: 25px;
+    overflow-x: auto;
+}
+
+.custom-tab-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.custom-tab-btn.active {
+    background: var(--primary-soft);
+    color: #ffffff;
+    border-color: rgba(139, 92, 246, 0.4);
+}
+
+/* Table */
+.v2-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.v2-table th {
+    text-align: left;
+    padding: 14px 18px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.v2-table td {
+    padding: 16px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}

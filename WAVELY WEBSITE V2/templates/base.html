@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0d0c">
+  <meta name="description" content="Wavely is the sample and preset browser built to keep every sound in time with your DAW.">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>{% block title %}Wavely — Find the sound. Keep the flow.{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/crafted.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  {% if banned_ip %}
+  <main class="state-page" id="main-content">
+    <div class="state-card state-card--danger">
+      <span class="state-code">403</span>
+      <h1>Access restricted.</h1>
+      <p>Your IP address has been restricted from the Wavely network.</p>
+      <code>Reason: {{ ban_reason or 'Security policy violation' }}</code>
+    </div>
+  </main>
+  {% else %}
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a href="{{ url_for('index_page') }}" class="brand-link" aria-label="Wavely home">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span>
+        <span class="brand-name">wavely</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a href="{{ url_for('index_page') }}" class="nav-link {% if request.endpoint == 'index_page' %}active{% endif %}">Product</a>
+        <a href="{{ url_for('pricing_page') }}" class="nav-link {% if request.endpoint == 'pricing_page' %}active{% endif %}">Pricing</a>
+        <a href="{{ url_for('download_page') }}" class="nav-link {% if request.endpoint == 'download_page' %}active{% endif %}">Download</a>
+        <a href="{{ url_for('issues_page') }}" class="nav-link {% if 'issue' in request.endpoint %}active{% endif %}">Support</a>
+        {% if current_user %}<a href="{{ url_for('dashboard_page') }}" class="nav-link {% if request.endpoint == 'dashboard_page' %}active{% endif %}">Dashboard</a>{% endif %}
+        {% if is_admin %}<a href="{{ url_for('admin_dashboard_page') }}" class="nav-link nav-link--admin">Admin</a>{% endif %}
+      </nav>
+      <div class="header-actions">
+        {% if current_user %}
+          <a href="{{ url_for('dashboard_page') }}" class="account-chip"><span class="account-dot"></span>{{ current_user['username'] }}</a>
+          <a href="{{ url_for('logout') }}" class="text-link">Sign out</a>
+        {% else %}
+          <a href="{{ url_for('login_page') }}" class="text-link">Sign in</a>
+          <a href="{{ url_for('pricing_page') }}" class="btn btn-primary btn-sm">Get Wavely Pro <span aria-hidden="true">↗</span></a>
+        {% endif %}
+      </div>
+      <details class="mobile-menu">
+        <summary aria-label="Open navigation"><span></span><span></span></summary>
+        <nav aria-label="Mobile navigation">
+          <a href="{{ url_for('index_page') }}">Product</a>
+          <a href="{{ url_for('pricing_page') }}">Pricing</a>
+          <a href="{{ url_for('download_page') }}">Download</a>
+          <a href="{{ url_for('issues_page') }}">Support</a>
+          {% if current_user %}<a href="{{ url_for('dashboard_page') }}">Dashboard</a><a href="{{ url_for('logout') }}">Sign out</a>{% else %}<a href="{{ url_for('login_page') }}">Sign in</a>{% endif %}
+        </nav>
+      </details>
+    </div>
+  </header>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <aside class="shell flash-stack" aria-live="polite">
+        {% for category, message in messages %}
+          <div class="flash-message flash-message--{{ category }}"><span>{{ message }}</span><button type="button" onclick="this.parentElement.remove()" aria-label="Dismiss message">×</button></div>
+        {% endfor %}
+      </aside>
+    {% endif %}
+  {% endwith %}
+  <main id="main-content">{% block content %}{% endblock %}</main>
+  <footer class="site-footer">
+    <div class="shell footer-top">
+      <div>
+        <a href="{{ url_for('index_page') }}" class="brand-link brand-link--footer">
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span><span class="brand-name">wavely</span>
+        </a>
+        <p>Less searching. More making.</p>
+      </div>
+      <div class="footer-nav">
+        <div><span>Explore</span><a href="{{ url_for('index_page') }}">Product</a><a href="{{ url_for('pricing_page') }}">Pricing</a><a href="{{ url_for('download_page') }}">Desktop app</a></div>
+        <div><span>Account</span><a href="{{ url_for('login_page') }}">Sign in</a><a href="{{ url_for('register_page') }}">Create account</a><a href="{{ url_for('issues_page') }}">Helpdesk</a></div>
+      </div>
+    </div>
+    <div class="shell footer-bottom"><span>© {{ now_year }} Wavely Technologies</span><span>Built for producers, engineers & sound designers.</span></div>
+    <div class="footer-wordmark" aria-hidden="true">WAVELY</div>
+  </footer>
+  {% endif %}
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/captcha.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

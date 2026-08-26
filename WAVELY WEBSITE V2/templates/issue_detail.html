@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ issue['title'] }} — Wavely Support{% endblock %}
+{% block content %}
+<div class="page-shell"><div class="ticket-detail">
+  <a href="{{ url_for('issues_page') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to all tickets</a>
+  <article class="issue-card">
+    <header class="issue-head">
+      <div><span class="status-pill">{{ issue['category'] }}</span><h1>{{ issue['title'] }}</h1><div class="issue-meta">Opened by {{ issue['username'] }} on {{ issue['created_at'] }} · {{ issue['priority']|capitalize }} priority</div></div>
+      <div class="action-group">
+        {% if issue['status'] == 'resolved' %}<span class="status-pill status-pill-green"><i class="fa-solid fa-check"></i> Resolved</span>{% else %}<span class="status-pill status-pill-purple">{{ issue['status']|capitalize }}</span>{% if is_admin %}<form method="POST" action="{{ url_for('admin_resolve_issue', issue_id=issue['id']) }}"><button type="submit" class="btn btn-primary btn-sm">Resolve</button></form>{% endif %}{% endif %}
+      </div>
+    </header>
+    <div class="issue-description">{{ issue['description'] }}</div>
+    <h2 class="thread-title">Discussion <span class="status-pill">{{ messages|length }}</span></h2>
+    {% if messages %}<div class="thread-list">
+      {% for msg in messages %}<div class="thread-message {% if msg['is_admin'] %}thread-message--staff{% endif %}"><div class="thread-message-head"><span><strong>{{ msg['sender_name'] }}</strong>{% if msg['is_admin'] %} · Wavely staff{% endif %}</span><span>{{ msg['created_at'] }}</span></div><div class="thread-message-body">{{ msg['message'] }}</div></div>{% endfor %}
+    </div>{% else %}<p class="panel-copy">No replies yet.</p>{% endif %}
+    {% if not issue['is_locked'] and issue['status'] != 'resolved' %}
+      {% if current_user %}<form method="POST" action="{{ url_for('reply_issue', issue_id=issue['id']) }}" class="reply-box"><label class="form-label" for="message">Post a reply</label><textarea id="message" name="message" rows="4" required placeholder="Type your response…" class="form-input"></textarea><div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Send reply</button></div></form>
+      {% else %}<div class="info-strip"><i class="fa-solid fa-lock"></i><div><a href="{{ url_for('login_page') }}"><strong>Sign in</strong></a> to join the discussion.</div></div>{% endif %}
+    {% else %}<div class="info-strip"><i class="fa-solid fa-check"></i><div><strong>This ticket is resolved and closed.</strong></div></div>{% endif %}
+  </article>
+</div></div>
+{% endblock %}
+

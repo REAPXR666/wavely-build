@@ -1,0 +1,398 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Admin Control Panel - Splice Pro{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar">
+        <div class="logo-area">
+            <div class="logo-icon">S</div>
+            <span class="logo-text">SPLICE PRO</span>
+            <span class="badge-admin">ADMIN</span>
+        </div>
+        
+        <div class="admin-profile">
+            <div class="profile-avatar">A</div>
+            <div class="profile-info">
+                <span class="profile-name">{{ admin_username }}</span>
+                <span class="profile-role">System Administrator</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-item active" onclick="switchTab('announcements')">
+                <span class="nav-icon">📢</span>
+                <span>Announcements</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('updates')">
+                <span class="nav-icon">✨</span>
+                <span>App Updates & Versions</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('tickets')">
+                <span class="nav-icon">🎫</span>
+                <span>Support Tickets</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('bugs')">
+                <span class="nav-icon">🐛</span>
+                <span>Bug Reports</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('settings')">
+                <span class="nav-icon">⚙️</span>
+                <span>Discord Webhook Settings</span>
+            </div>
+        </nav>
+
+        <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+            <span class="nav-icon">🚪</span>
+            <span>Logout</span>
+        </a>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="dashboard-main">
+        <header class="main-header">
+            <h1 id="tab-title">Announcements</h1>
+            <div class="header-right">
+                <span class="status-indicator online"></span>
+                <span>API Server Online</span>
+            </div>
+        </header>
+
+        <div class="tab-content-wrapper">
+            <!-- ANNOUNCEMENTS TAB -->
+            <section id="tab-announcements" class="tab-panel active">
+                <div class="flex-row">
+                    <!-- Post Announcement Form -->
+                    <div class="card form-card">
+                        <h2>Post New Announcement</h2>
+                        <form action="{{ url_for('admin_add_announcement') }}" method="POST">
+                            <div class="form-group">
+                                <label for="ann-title">Announcement Title</label>
+                                <input type="text" id="ann-title" name="title" placeholder="e.g. Server Maintenance" required autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label for="ann-content">Announcement Content</label>
+                                <textarea id="ann-content" name="content" rows="6" placeholder="Describe the announcement details..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn primary">Publish Announcement</button>
+                        </form>
+                    </div>
+
+                    <!-- Announcements List -->
+                    <div class="card list-card">
+                        <h2>Current Announcements</h2>
+                        <div class="scroll-list">
+                            {% if announcements %}
+                                {% for ann in announcements %}
+                                <div class="item-card announcement-item">
+                                    <div class="item-header">
+                                        <h3>{{ ann.title }}</h3>
+                                        <span class="item-date">{{ ann.created_at }}</span>
+                                    </div>
+                                    <p class="item-body">{{ ann.content }}</p>
+                                    <form action="{{ url_for('admin_delete_announcement', ann_id=ann.id) }}" method="POST" class="delete-form">
+                                        <button type="submit" class="btn danger small">Delete</button>
+                                    </form>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state">No announcements posted yet.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- APP UPDATES TAB -->
+            <section id="tab-updates" class="tab-panel">
+                <div class="flex-row">
+                    <!-- Post Update Form -->
+                    <div class="card form-card">
+                        <h2>Post New App Version</h2>
+                        <form action="{{ url_for('admin_add_update') }}" method="POST">
+                            <div class="form-group">
+                                <label for="up-version">App Version Number</label>
+                                <input type="text" id="up-version" name="version" placeholder="e.g. v1.0.4" required autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label for="up-changelog">Changelog & Updates</label>
+                                <textarea id="up-changelog" name="changelog" rows="6" placeholder="List new features, bug fixes, etc..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn primary">Publish Version Details</button>
+                        </form>
+                    </div>
+
+                    <!-- Updates List -->
+                    <div class="card list-card">
+                        <h2>Version History</h2>
+                        <div class="scroll-list">
+                            {% if updates %}
+                                {% for up in updates %}
+                                <div class="item-card update-item">
+                                    <div class="item-header">
+                                        <h3>Version {{ up.version }}</h3>
+                                        <span class="item-date">{{ up.created_at }}</span>
+                                    </div>
+                                    <pre class="item-body">{{ up.changelog }}</pre>
+                                    <form action="{{ url_for('admin_delete_update', up_id=up.id) }}" method="POST" class="delete-form">
+                                        <button type="submit" class="btn danger small">Delete Version</button>
+                                    </form>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state">No version updates posted yet.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SUPPORT TICKETS TAB -->
+            <section id="tab-tickets" class="tab-panel">
+                <div class="tickets-layout">
+                    <!-- Tickets List -->
+                    <div class="card tickets-list-card">
+                        <h2>Active Tickets</h2>
+                        <div class="tickets-scroll">
+                            {% if tickets %}
+                                {% for t in tickets %}
+                                <div id="ticket-item-{{ t.id }}" class="ticket-list-item {% if t.status == 'closed' %}closed{% endif %}" onclick="openTicket('{{ t.id }}', '{{ t.title }}', '{{ t.username }}', '{{ t.status }}')">
+                                    <div class="ticket-meta">
+                                        <span class="ticket-user">@{{ t.username }}</span>
+                                        <span class="status-badge {{ t.status }}">{{ t.status }}</span>
+                                    </div>
+                                    <h3 class="ticket-title">{{ t.title }}</h3>
+                                    <span class="ticket-time">{{ t.created_at }}</span>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state">No support tickets created yet.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Ticket Chat Viewer -->
+                    <div class="card ticket-chat-card" id="chat-card-placeholder">
+                        <div class="empty-state chat-empty">Select a support ticket from the list to view history and send replies.</div>
+                    </div>
+
+                    <div class="card ticket-chat-card hidden" id="chat-card-active">
+                        <div class="chat-header">
+                            <div>
+                                <h3 id="active-ticket-title">Ticket Title</h3>
+                                <p class="chat-meta">User: <span id="active-ticket-user">@username</span> | Status: <span id="active-ticket-status" class="status-text">open</span></p>
+                            </div>
+                            <div class="chat-actions">
+                                <form id="status-toggle-form" action="" method="POST">
+                                    <button type="submit" id="status-toggle-btn" class="btn small">Close Ticket</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Messages Panel -->
+                        <div class="chat-messages-container" id="ticket-messages-box">
+                            <!-- Messages populated dynamically -->
+                        </div>
+
+                        <!-- Chat Input -->
+                        <form id="reply-form" action="" method="POST" class="chat-input-form">
+                            <input type="text" name="message" id="reply-input" placeholder="Type a reply to user..." required autocomplete="off">
+                            <button type="submit" class="btn primary">Send Reply</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BUG REPORTS TAB -->
+            <section id="tab-bugs" class="tab-panel">
+                <div class="card full-width">
+                    <h2>Registry of Submitted Bugs</h2>
+                    <div class="table-container">
+                        {% if bugs %}
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>User</th>
+                                    <th>Bug Title</th>
+                                    <th>Description</th>
+                                    <th>Steps to Reproduce</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bug in bugs %}
+                                <tr>
+                                    <td class="date-col">{{ bug.created_at }}</td>
+                                    <td><strong>@{{ bug.username }}</strong></td>
+                                    <td class="bug-title-col">{{ bug.title }}</td>
+                                    <td class="bug-desc-col">{{ bug.description }}</td>
+                                    <td class="bug-steps-col"><code>{{ bug.steps_to_reproduce }}</code></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="empty-state">No bug reports submitted yet. Great job!</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- DISCORD WEBHOOK TAB -->
+            <section id="tab-settings" class="tab-panel">
+                <div class="card form-card medium-width">
+                    <h2>Discord Bug Reporter Integration</h2>
+                    <p class="description">Paste your Discord Webhook URL below. Whenever a user submits a bug report through the app, details (user, title, description, steps) will be automatically sent as a rich embed card directly to your Discord channel.</p>
+                    
+                    <form action="{{ url_for('admin_save_webhook') }}" method="POST">
+                        <div class="form-group">
+                            <label for="discord-url">Discord Webhook URL</label>
+                            <input type="url" id="discord-url" name="discord_webhook" value="{{ discord_webhook }}" placeholder="https://discord.com/api/webhooks/..." autocomplete="off">
+                        </div>
+                        
+                        {% if discord_webhook %}
+                            <div class="webhook-status success">
+                                <span class="webhook-indicator">✓</span> Discord Integration Active
+                            </div>
+                        {% else %}
+                            <div class="webhook-status warning">
+                                <span class="webhook-indicator">⚠</span> Webhook URL Not Set. Bug reports will be saved locally only.
+                            </div>
+                        {% endif %}
+                        
+                        <button type="submit" class="btn primary" style="margin-top: 16px;">Save Integration Settings</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<script>
+    // Tab switching engine
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-panel').forEach(panel => {
+            panel.classList.remove('active');
+        });
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        document.getElementById('tab-' + tabId).classList.add('active');
+        
+        // Find click trigger
+        event.currentTarget.classList.add('active');
+        
+        // Header title formatting
+        const titles = {
+            announcements: 'Announcements & Global Alerts',
+            updates: 'App Version Updates & Releases',
+            tickets: 'Support Tickets Desk',
+            bugs: 'Registry of Submitted Bugs',
+            settings: 'System Integrations & Webhooks'
+        };
+        document.getElementById('tab-title').textContent = titles[tabId];
+    }
+
+    // Dynamic support ticket chat loading
+    function openTicket(ticketId, title, user, status) {
+        // Toggle selected list state
+        document.querySelectorAll('.ticket-list-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.getElementById('ticket-item-' + ticketId).classList.add('active');
+
+        // Toggle visibility
+        document.getElementById('chat-card-placeholder').classList.add('hidden');
+        const activeCard = document.getElementById('chat-card-active');
+        activeCard.classList.remove('hidden');
+
+        // Set text details
+        document.getElementById('active-ticket-title').textContent = title;
+        document.getElementById('active-ticket-user').textContent = '@' + user;
+        
+        const statusEl = document.getElementById('active-ticket-status');
+        statusEl.textContent = status;
+        statusEl.className = 'status-text ' + status;
+
+        // Set action routes
+        document.getElementById('reply-form').action = `/admin/tickets/${ticketId}/reply`;
+        
+        const statusForm = document.getElementById('status-toggle-form');
+        const statusBtn = document.getElementById('status-toggle-btn');
+        if (status === 'open') {
+            statusForm.action = `/admin/tickets/${ticketId}/status/closed`;
+            statusBtn.textContent = 'Close Ticket';
+            statusBtn.className = 'btn danger small';
+        } else {
+            statusForm.action = `/admin/tickets/${ticketId}/status/open`;
+            statusBtn.textContent = 'Reopen Ticket';
+            statusBtn.className = 'btn success small';
+        }
+
+        // Fetch messages via API
+        fetch('/api/tickets/' + ticketId, {
+            headers: {
+                'Authorization': 'Bearer admin-bypass' // Handled in flask session check, but for api call
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const msgBox = document.getElementById('ticket-messages-box');
+            msgBox.innerHTML = '';
+            
+            if (data.messages && data.messages.length > 0) {
+                data.messages.forEach(msg => {
+                    const msgDiv = document.createElement('div');
+                    const isSelf = msg.sender_name === 'Admin';
+                    msgDiv.className = 'chat-message ' + (isSelf ? 'self' : 'user');
+                    
+                    const time = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    msgDiv.innerHTML = `
+                        <div class="message-meta">
+                            <span class="msg-sender">${msg.sender_name}</span>
+                            <span class="msg-time">${time}</span>
+                        </div>
+                        <div class="message-content">${escapeHTML(msg.message)}</div>
+                    `;
+                    msgBox.appendChild(msgDiv);
+                });
+            }
+            
+            // Scroll to bottom
+            msgBox.scrollTop = msgBox.scrollHeight;
+        })
+        .catch(err => {
+            console.error('Error fetching ticket messages:', err);
+        });
+    }
+
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+    }
+
+    // Auto navigate to hash ticket if it exists
+    window.addEventListener('DOMContentLoaded', () => {
+        const hash = window.location.hash;
+        if (hash && hash.startsWith('#ticket-')) {
+            const tId = hash.split('-')[1];
+            switchTab('tickets');
+            // Try to open it
+            const item = document.getElementById('ticket-item-' + tId);
+            if (item) {
+                item.click();
+            }
+        }
+    });
+</script>
+{% endblock %}

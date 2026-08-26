@@ -1,0 +1,4 @@
+- [app.js override layers](app-js-overrides.md) — core fns redefined multiple times; the LAST declaration wins (edit bottom-of-file versions). Auth/DMs persisted in git-tracked AUTH.json/DMS JSON.
+- [WebRTC call signaling](webrtc-signaling.md) — caller must buffer ICE candidates until call_id is assigned (gathering starts before /initiate returns); poll-based trickle ICE with index dedup.
+- [DB pooling & concurrency](db-perf-pooling.md) — pooled `_get_db_conn` contextmanager, before_request skips /static/ + 30s ban cache, gunicorn gthread 1-worker/8-threads; in-memory caches mean DO NOT add workers without a require_api_key DB fallback.
+- [Session secret key](session-secret-key.md) — app.secret_key from SESSION_SECRET (global) → DB fallback; never a committed file or per-process ephemeral key, or sessions break across instances/restarts.

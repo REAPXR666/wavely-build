@@ -1,0 +1,115 @@
+{
+  "requests": [
+    {
+      "timestamp": "2026-05-26T23:26:16.877095",
+      "username": "tester",
+      "endpoint": "/api/search",
+      "status_code": 200,
+      "api_key_label": "Test Key"
+    },
+    {
+      "timestamp": "2026-05-26T23:26:20.929028",
+      "username": "tester",
+      "endpoint": "/api/search",
+      "status_code": 200,
+      "api_key_label": "Test Key"
+    },
+    {
+      "timestamp": "2026-05-26T23:26:24.082471",
+      "username": "tester",
+      "endpoint": "/api/decrypted-audio/fa41dccb9daec4a5ae30648fc12828e553343819634869582a09100581283273",
+      "status_code": 200,
+      "api_key_label": "Test Key"
+    },
+    {
+      "timestamp": "2026-05-26T23:26:26.768754",
+      "username": "tester",
+      "endpoint": "/api/decrypted-audio/fa41dccb9daec4a5ae30648fc12828e553343819634869582a09100581283273",
+      "status_code": 200,
+      "api_key_label": "Test Key"
+    },
+    {
+      "timestamp": "2026-05-26T23:28:54.806145",
+      "username": "tester",
+      "endpoint": "/api/search",
+      "status_code": 200,
+      "api_key_label": "Test Key"
+    },
+    {
+      "timestamp": "2026-05-26T23:29:25.094349",
+      "username": "tester",
+      "endpoint": "/api/search",
+      "status_code": 200,
+      "api_key_label": "Test Key"
+    },
+    {
+      "timestamp": "2026-05-26T23:29:26.186971",
+      "username": "tester",
+      "endpoint": "/api/decrypted-audio/07f3df979021d80bea46e0e2f953ba3b0a32b22e3bc143b928d9d05fff929fe0",
+      "status_code": 200,
+      "api_key_label": "Test Key"
+    },
+    {
+      "timestamp": "2026-05-26T23:29:30.189633",
+      "username": "tester",
+      "endpoint": "/api/search",
+      "status_code": 200,
+      "api_key_label": "Test Key"
+    },
+    {
+      "timestamp": "2026-05-26T23:30:00.445699",
+      "username": "tester",
+      "endpoint": "/api/search",
+      "status_code": 200,
+      "api_key_label": "Test Key"
+    },
+    {
+      "timestamp": "2026-05-26T23:30:03.693673",
+      "username": "tester",
+      "endpoint": "/api/decrypted-audio/e8ea1c8ac74bcbaf2f233a4b585fa6b661368500b0af465929122847c2145c4f",
+      "status_code": 200,
+      "api_key_label": "Test Key"
+    },
+    {
+      "timestamp": "2026-05-26T23:39:46.568428",
+      "username": "admin",
+      "endpoint": "/api/search",
+      "status_code": 200,
+      "api_key_label": "test",
+      "ip_address": "127.0.0.1"
+    },
+    {
+      "timestamp": "2026-05-26T23:41:17.548254",
+      "username": "admin",
+      "endpoint": "/api/sample/eddebb380854fd48d23f7a6001107f13cf61f427a40cd4ac71d7d7cf080a15a8",
+      "status_code": 200,
+      "api_key_label": "test",
+      "ip_address": "127.0.0.1"
+    },
+    {
+      "timestamp": "2026-05-26T23:42:51.768698",
+      "username": "admin",
+      "endpoint": "/api/sample/eddebb380854fd48d23f7a6001107f13cf61f427a40cd4ac71d7d7cf080a15a8",
+      "status_code": 200,
+      "api_key_label": "test",
+      "ip_address": "127.0.0.1"
+    },
+    {
+      "timestamp": "2026-05-26T23:50:32.012071",
+      "username": "admin",
+      "endpoint": "/api/search",
+      "status_code": 200,
+      "api_key_label": "test",
+      "ip_address": "127.0.0.1"
+    },
+    {
+      "timestamp": "2026-05-26T23:51:27.584786",
+      "username": "admin",
+      "endpoint": "/api/search",
+      "status_code": 200,
+      "api_key_label": "test",
+      "ip_address": "127.0.0.1"
+    }
+  ],
+  "errors": []
+}

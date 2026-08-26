@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+<section id="tab-dashboard" class="tab-content active">
+    <div class="community-dashboard-layout">
+        <aside class="dash-sidebar">
+            <div class="user-badge-container" id="dash-user-badge">
+                <div class="user-badge-pfp-wrap"><img id="dash-user-pfp" src="/static/placeholder-art.png" alt="Avatar" class="user-avatar-medium"></div>
+                <div class="user-badge-info">
+                    <h4 id="dash-username">Username</h4>
+                    <div class="badge-stats-row"><span class="user-badge-elo"><i class="fa-solid fa-fire"></i> <span id="dash-elo-val">0</span> ELO</span><span class="user-badge-rank"><i class="fa-solid fa-ranking-star"></i> #<span id="dash-rank-val">--</span></span></div>
+                    <div class="votes-stats-row"><span class="text-success"><i class="fa-solid fa-thumbs-up"></i> <span id="dash-upvotes-val">0</span></span><span class="text-error" style="margin-left:8px;"><i class="fa-solid fa-thumbs-down"></i> <span id="dash-downvotes-val">0</span></span></div>
+                </div>
+            </div>
+            <ul class="dash-menu">
+                <li class="dash-menu-item active" id="menu-btn-api" onclick="switchDashTab('api')"><i class="fa-solid fa-key"></i> API Keys</li>
+                <li class="dash-menu-item" id="menu-btn-battles" onclick="switchDashTab('battles')"><i class="fa-solid fa-trophy"></i> Battles</li>
+                <li class="dash-menu-item" id="menu-btn-profile" onclick="switchDashTab('profile')"><i class="fa-solid fa-user-gear"></i> Profile</li>
+                <li class="dash-menu-item" id="menu-btn-settings" onclick="switchDashTab('settings')"><i class="fa-solid fa-gear"></i> Account</li>
+            </ul>
+        </aside>
+        <div class="dash-main-pane">
+            <div id="dash-subtab-api" class="dash-subtab-pane active">
+                <div class="dashboard-grid" style="grid-template-columns:1fr;gap:20px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="responsive-two-col">
+                        <div class="card metrics-panel"><h3>Metrics</h3><div class="metric-row"><div class="metric-item"><span class="metric-label">Total Requests</span><span class="metric-val" id="stat-total-requests">--</span></div><div class="metric-item"><span class="metric-label">Success Rate</span><span class="metric-val" id="stat-success-rate">--</span></div></div><div class="metric-row"><div class="metric-item"><span class="metric-label">Most Used</span><span class="metric-val text-truncate" id="stat-most-used" style="max-width:140px;">--</span></div><div class="metric-item"><span class="metric-label">Errors</span><span class="metric-val text-error" id="stat-errors">--</span></div></div></div>
+                        <div class="card api-keys-card"><div class="card-header-btn"><h3>API Keys</h3><span class="count-badge" id="key-count">0/3</span></div><p class="desc-text">Max 3 keys per account.</p><div class="api-keys-list" id="keys-list-container"></div><div class="generate-key-form"><input type="text" id="new-key-label" placeholder="Key label (e.g. Prod)" class="input-form"><button class="btn btn-primary" onclick="generateApiKey()">Generate Key</button></div></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;" class="responsive-two-col">
+                        <div class="card chart-card"><h3>Daily Requests (30 Days)</h3><div class="chart-wrapper"><canvas id="trafficChart"></canvas></div></div>
+                        <div class="card" style="display:flex;flex-direction:column;gap:14px;">
+                            <h3>Endpoint Breakdown</h3>
+                            <div style="position:relative;flex:1;min-height:200px;"><canvas id="endpointPieChart"></canvas></div>
+                            <div class="card" style="padding:14px;background:rgba(255,255,255,0.02);border:1px solid var(--border-color);border-radius:10px;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-size:12px;font-weight:700;color:var(--text-dim);text-transform:uppercase;">API Usage (Daily)</span><span style="font-size:11px;color:var(--text-muted);" id="quota-label">0 / 1000</span></div>
+                                <div style="height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;"><div id="quota-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px;transition:width 0.8s cubic-bezier(0.16,1,0.3,1);"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card logs-card"><div class="logs-header-actions"><h3>Traceback Logs</h3><div style="display:flex;gap:8px;align-items:center;"><input type="text" id="log-search" oninput="filterLogs()" placeholder="Search logs..." class="input-form input-sm"><button class="btn btn-ghost btn-sm" onclick="exportLogsCSV()" title="Export CSV"><i class="fa-solid fa-file-csv"></i> CSV</button></div></div><div class="table-container"><table class="logs-table"><thead><tr><th>Timestamp</th><th>Type</th><th>Route</th><th>Details</th></tr></thead><tbody id="logs-table-body"></tbody></table></div></div>
+                </div>
+            </div>
+            <div id="dash-subtab-battles" class="dash-subtab-pane">
+                <div class="battles-portal-grid">
+                    <div class="battles-left-pane"><div class="pane-header-actions"><h2>Beat Battles</h2><button class="btn btn-primary btn-sm" onclick="showCreateBattleModal()"><i class="fa-solid fa-plus"></i> Create</button></div><div class="battles-tabs"><button class="battle-tab-btn active" id="bt-tab-active" onclick="switchBattleTab('active')">Active</button><button class="battle-tab-btn" id="bt-tab-joined" onclick="switchBattleTab('joined')">Joined</button><button class="battle-tab-btn" id="bt-tab-my" onclick="switchBattleTab('my')">Mine</button></div><div class="battles-list-container" id="battles-list"></div></div>
+                    <div class="battles-right-pane"><div class="card leaderboard-card" id="battle-leaderboard-panel"><h3><i class="fa-solid fa-crown text-warning"></i> Leaderboard</h3><div class="table-container"><table class="leaderboard-table"><thead><tr><th>Rank</th><th>Producer</th><th>ELO</th><th>Wins</th><th><i class="fa-solid fa-thumbs-up"></i></th><th><i class="fa-solid fa-thumbs-down"></i></th></tr></thead><tbody id="leaderboard-table-body"></tbody></table></div></div><div class="card battle-detail-card" id="battle-detail-panel" style="display:none;"></div></div>
+                </div>
+            </div>
+            <div id="dash-subtab-profile" class="dash-subtab-pane">
+                <div class="profile-edit-card">
+                    <div class="profile-card-header"><h3><i class="fa-solid fa-user-gear"></i> Edit Profile</h3><p class="profile-card-sub">Customise your public producer identity.</p></div>
+                    <div class="profile-edit-grid">
+                        <div class="profile-edit-left"><div class="avatar-upload-wrap"><div class="avatar-preview-frame"><img id="profile-edit-pfp-preview" src="/static/placeholder-art.png" class="user-avatar-large" alt="Avatar"><div class="avatar-upload-overlay" onclick="document.getElementById('profile-pfp-input').click()"><i class="fa-solid fa-camera"></i><span>Change</span></div></div><input type="file" id="profile-pfp-input" accept="image/*" style="display:none;" onchange="uploadProfilePFP()"></div><div class="avatar-upload-actions"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('profile-pfp-input').click()"><i class="fa-solid fa-upload"></i> Upload</button><span class="pfp-upload-status" id="pfp-upload-status"></span></div></div>
+                        <div class="profile-edit-right">
+                            <div class="form-group"><label class="form-label-with-counter"><span><i class="fa-solid fa-pen-to-square"></i> Bio</span><span class="bio-char-counter" id="bio-char-counter">0 / 300</span></label><textarea id="profile-bio-input" placeholder="Introduce yourself..." class="input-form textarea-form" maxlength="300" oninput="updateBioCharCount()"></textarea></div>
+                            <div class="form-divider"><span class="form-divider-text"><i class="fa-solid fa-link"></i> Socials</span></div>
+                            <div class="socials-input-group">
+                                <div class="social-field"><div class="social-icon-wrapper soundcloud-bg"><i class="fa-brands fa-soundcloud"></i></div><input type="text" id="profile-sc-input" placeholder="SoundCloud" class="input-form"></div>
+                                <div class="social-field"><div class="social-icon-wrapper youtube-bg"><i class="fa-brands fa-youtube"></i></div><input type="text" id="profile-yt-input" placeholder="YouTube" class="input-form"></div>
+                                <div class="social-field"><div class="social-icon-wrapper twitter-bg"><i class="fa-brands fa-x-twitter"></i></div><input type="text" id="profile-tw-input" placeholder="Twitter / X" class="input-form"></div>
+                                <div class="social-field"><div class="social-icon-wrapper spotify-bg"><i class="fa-brands fa-spotify"></i></div><input type="text" id="profile-sp-input" placeholder="Spotify" class="input-form"></div>
+                            </div>
+                            <div class="profile-save-area"><button class="btn btn-primary btn-lg" id="btn-save-profile" onclick="saveProfileChanges()"><i class="fa-solid fa-floppy-disk"></i> Save</button><span class="profile-save-status" id="profile-save-status"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Account Settings -->
+            <div id="dash-subtab-settings" class="dash-subtab-pane">
+                <div class="card" style="max-width:600px;">
+                    <h3 style="margin-bottom:20px;"><i class="fa-solid fa-gear"></i> Account Settings</h3>
+                    <div class="form-group"><label>Change Password</label><input type="password" id="settings-old-password" placeholder="Current password" class="input-form"></div>
+                    <div class="form-group"><input type="password" id="settings-new-password" placeholder="New password (min 6 chars)" class="input-form"></div>
+                    <div class="form-group"><input type="password" id="settings-confirm-password" placeholder="Confirm new password" class="input-form"></div>
+                    <div class="form-error-msg" id="settings-error"></div>
+                    <div style="display:flex;gap:10px;align-items:center;"><button class="btn btn-primary" onclick="changePassword()"><i class="fa-solid fa-lock"></i> Update Password</button><span id="settings-status" style="font-size:12px;font-weight:600;"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block modals %}
+<div id="create-battle-modal" class="modal-overlay" style="display:none;"><div class="modal-card"><div class="modal-header"><h3>Create Beat Battle</h3><button class="close-btn" onclick="hideCreateBattleModal()">&times;</button></div><div class="modal-body">
+    <div class="form-group"><label>Title</label><input type="text" id="battle-title-input" placeholder="e.g. Synth Wave Madness" class="input-form"></div>
+    <div class="form-group"><label>Description</label><textarea id="battle-desc-input" placeholder="Rules..." class="input-form" style="height:80px;resize:none;"></textarea></div>
+    <div class="form-group"><label>Starter Sample</label><input type="file" id="battle-sample-file-input" class="input-form" accept="audio/*"></div>
+    <div class="form-group"><label>Key</label><input type="text" id="battle-key-input" placeholder="C Minor" class="input-form"></div>
+    <div class="form-group"><label>Style</label><input type="text" id="battle-style-input" placeholder="lo-fi, trap" class="input-form"></div>
+    <div class="form-group"><label>Visibility</label><select id="battle-visibility-input" class="input-form"><option value="true">Public</option><option value="false">Private</option></select></div>
+    <div class="form-group"><label>Deadline</label><input type="datetime-local" id="battle-deadline-input" class="input-form"></div>
+    <button class="btn btn-primary" onclick="submitCreateBattle()">Launch Battle</button>
+</div></div></div>
+{% endblock %}

@@ -1,0 +1,5 @@
+{
+  "serverBaseUrl": "https://wavely.lol",
+  "serverEndpoint": "https://wavely.lol/api/license",
+  "comment": "Official production Wavely Cloud & Licensing network."
+}

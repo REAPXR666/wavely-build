@@ -1,0 +1,140 @@
+{
+  "profiles": {
+    "tester": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 1
+    },
+    "admin": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 2,
+      "bio": "Stuff",
+      "socials": {
+        "soundcloud": "TRNDSTR",
+        "youtube": "",
+        "twitter": "",
+        "spotify": "TRNDSTR"
+      },
+      "pfp": "/static/uploads/pfps/pfp_admin_07177447.png"
+    },
+    "testuser123": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 3,
+      "pfp": "",
+      "bio": "Hello I am a test user",
+      "socials": {
+        "soundcloud": "https://sc.com/test",
+        "youtube": "",
+        "twitter": "",
+        "spotify": ""
+      }
+    },
+    "fixtest1": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 4,
+      "pfp": "",
+      "bio": "Fixed test bio",
+      "socials": {
+        "soundcloud": "https://sc.com/fix"
+      }
+    },
+    "test": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 5
+    },
+    "testuser2": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 3,
+      "bio": "Producer and sound designer.",
+      "socials": {
+        "soundcloud": "https://soundcloud.com/testuser2",
+        "youtube": "https://youtube.com/testuser2",
+        "twitter": "",
+        "spotify": ""
+      },
+      "pfp": "/static/uploads/pfps/pfp_testuser2_a9a96058.png",
+      "last_active": 1780345848.517486
+    },
+    "admin2": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 4,
+      "bio": "",
+      "socials": {},
+      "pfp": "",
+      "last_active": 1780340162.061239
+    },
+    "newuser123": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 5,
+      "bio": "",
+      "socials": {
+        "soundcloud": "",
+        "youtube": "",
+        "twitter": "",
+        "spotify": ""
+      },
+      "pfp": "/static/uploads/pfps/pfp_newuser123_f0a945b1.png",
+      "last_active": 1780346797.950169
+    },
+    "joineruser123": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 6,
+      "bio": "",
+      "socials": {},
+      "pfp": "",
+      "last_active": 1780347386.355928
+    },
+    "tester_june_2": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 7,
+      "bio": "",
+      "socials": {},
+      "pfp": "",
+      "last_active": 1780384801.541214
+    },
+    "verify_user_1": {
+      "elo": 10,
+      "wins": 0,
+      "upvotes": 1,
+      "downvotes": 0,
+      "global_rank": 1
+    },
+    "verify_user_2": {
+      "elo": 0,
+      "wins": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "global_rank": 8
+    }
+  },
+  "acknowledgements": {}
+}

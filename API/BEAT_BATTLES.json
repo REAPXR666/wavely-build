@@ -1,0 +1,71 @@
+{
+  "battles": [
+    {
+      "id": "1aadb875-9af3-4929-bd1b-24455d1dd0c0",
+      "title": "Trap Heatwave",
+      "description": "Produce a trap beat using this loop",
+      "creator": "testuser2",
+      "sample_url": "/static/uploads/battles/battle_ref_testuser2_8dcef76d.mp3",
+      "key": "C Minor",
+      "style": "trap",
+      "deadline": "2026-06-25T15:00:00Z",
+      "is_public": false,
+      "invite_code": "invite_YxSqTrtd004",
+      "status": "active",
+      "winner": null,
+      "tracks": []
+    },
+    {
+      "id": "dff1006a-5ae5-4249-a855-fe60b8df7bdb",
+      "title": "New User Trap Beat",
+      "description": "Submit your entry now",
+      "creator": "newuser123",
+      "sample_url": "/static/uploads/battles/battle_ref_newuser123_1c97dd72.mp3",
+      "key": "G Minor",
+      "style": "Trap",
+      "deadline": "2026-06-25T15:00:00Z",
+      "is_public": true,
+      "invite_code": "invite_m6qACXz9-EY",
+      "status": "active",
+      "winner": null,
+      "tracks": []
+    },
+    {
+      "id": "36d84f42-9829-4718-8898-0e157c3538b7",
+      "title": "Lo-Fi Summer Breeze",
+      "description": "Create a relaxing lo-fi beat. Keep it chill.",
+      "creator": "tester_june_2",
+      "sample_url": "/static/uploads/battles/battle_ref_tester_june_2_7bf32bc2.wav",
+      "key": "A Minor",
+      "style": "lo-fi",
+      "deadline": "2026-06-15T18:00:00Z",
+      "is_public": true,
+      "invite_code": "invite_46TYTHS2MYo",
+      "status": "active",
+      "winner": null,
+      "tracks": [
+        {
+          "id": "ab06cd1a-ff1d-44b7-b65a-dfe737e90c84",
+          "username": "verify_user_1",
+          "audio_url": "/static/uploads/battles/entry_36d84f42-9829-4718-8898-0e157c3538b7_verify_user_1_15022664.mp3",
+          "created_at": "2026-06-02T08:51:18.370076Z",
+          "votes": {
+            "verify_user_2": 1
+          },
+          "comments": [
+            {
+              "username": "verify_user_2",
+              "comment": "This beat is fire! Great job.",
+              "created_at": "2026-06-02T08:51:18.434209Z"
+            }
+          ]
+        }
+      ],
+      "participants": [
+        "tester_june_2",
+        "verify_user_1",
+        "verify_user_2"
+      ]
+    }
+  ]
+}

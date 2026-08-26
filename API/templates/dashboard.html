@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/dashboard.css">
+{% endblock %}
+
+{% block content %}
+<section id="tab-dashboard" class="tab-content active">
+    <div class="community-dashboard-layout">
+        <!-- Dashboard Sub-Sidebar -->
+        <aside class="dash-sidebar">
+            <div class="user-badge-container" id="dash-user-badge">
+                <div class="user-badge-pfp-wrap">
+                    <img id="dash-user-pfp" src="/static/placeholder-art.png" alt="Avatar" class="user-avatar-medium">
+                </div>
+                <div class="user-badge-info">
+                    <h4 id="dash-username">Username</h4>
+                    <div class="badge-stats-row">
+                        <span class="user-badge-elo"><i class="fa-solid fa-fire"></i> <span id="dash-elo-val">0</span> ELO</span>
+                        <span class="user-badge-rank"><i class="fa-solid fa-ranking-star"></i> Rank #<span id="dash-rank-val">--</span></span>
+                    </div>
+                    <div class="votes-stats-row">
+                        <span class="text-success"><i class="fa-solid fa-thumbs-up"></i> <span id="dash-upvotes-val">0</span></span>
+                        <span class="text-error" style="margin-left: 8px;"><i class="fa-solid fa-thumbs-down"></i> <span id="dash-downvotes-val">0</span></span>
+                    </div>
+                </div>
+            </div>
+            <ul class="dash-menu">
+                <li class="dash-menu-item active" id="menu-btn-api" onclick="switchDashTab('api')"><i class="fa-solid fa-key"></i> API Keys & Logs</li>
+                <li class="dash-menu-item" id="menu-btn-battles" onclick="switchDashTab('battles')"><i class="fa-solid fa-trophy"></i> Beat Battles</li>
+                <li class="dash-menu-item" id="menu-btn-profile" onclick="switchDashTab('profile')"><i class="fa-solid fa-user-gear"></i> Profile & Bio</li>
+            </ul>
+        </aside>
+
+        <!-- Dashboard Main Sub-Panels -->
+        <div class="dash-main-pane">
+            
+            <!-- 1. API Keys & Logs -->
+            <div id="dash-subtab-api" class="dash-subtab-pane active">
+                <div class="dashboard-grid" style="grid-template-columns: 1fr; gap: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <!-- Stats Card -->
+                        <div class="card metrics-panel">
+                            <h3>Dashboard Metrics</h3>
+                            <div class="metric-row">
+                                <div class="metric-item">
+                                    <span class="metric-label">Total Requests</span>
+                                    <span class="metric-val" id="stat-total-requests">--</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Success Rate</span>
+                                    <span class="metric-val" id="stat-success-rate">--</span>
+                                </div>
+                            </div>
+                            <div class="metric-row">
+                                <div class="metric-item">
+                                    <span class="metric-label">Most Used Route</span>
+                                    <span class="metric-val text-truncate" id="stat-most-used" style="max-width: 140px;">--</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Total Errors</span>
+                                    <span class="metric-val text-error" id="stat-errors">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- API Keys -->
+                        <div class="card api-keys-card">
+                            <div class="card-header-btn">
+                                <h3>My API Keys</h3>
+                                <span class="count-badge" id="key-count">0/3</span>
+                            </div>
+                            <p class="desc-text">Manage keys. Limit 3 keys per account.</p>
+                            <div class="api-keys-list" id="keys-list-container"></div>
+                            <div class="generate-key-form">
+                                <input type="text" id="new-key-label" placeholder="Key label (e.g. Prod)" class="input-form">
+                                <button class="btn btn-primary" onclick="generateApiKey()">Generate Key</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Charts & Logs -->
+                    <div class="card chart-card">
+                        <h3>Daily Request Traffic (30 Days)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="trafficChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card logs-card">
+                        <div class="logs-header-actions">
+                            <h3>Analytics Traceback Logs (90 Days)</h3>
+                            <input type="text" id="log-search" oninput="filterLogs()" placeholder="Search logs..." class="input-form input-sm">
+                        </div>
+                        <div class="table-container">
+                            <table class="logs-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Type</th>
+                                        <th>Route</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logs-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Beat Battles -->
+            <div id="dash-subtab-battles" class="dash-subtab-pane">
+                <div class="battles-portal-grid">
+                    <div class="battles-left-pane">
+                        <div class="pane-header-actions">
+                            <h2>Beat Battles</h2>
+                            <button class="btn btn-primary btn-sm" onclick="showCreateBattleModal()"><i class="fa-solid fa-plus"></i> Create Battle</button>
+                        </div>
+                        <div class="battles-tabs">
+                            <button class="battle-tab-btn active" id="bt-tab-active" onclick="switchBattleTab('active')">Active Battles</button>
+                            <button class="battle-tab-btn" id="bt-tab-joined" onclick="switchBattleTab('joined')">Joined</button>
+                            <button class="battle-tab-btn" id="bt-tab-my" onclick="switchBattleTab('my')">My Battles</button>
+                        </div>
+                        <div class="battles-list-container" id="battles-list"></div>
+                    </div>
+                    <div class="battles-right-pane">
+                        <!-- Leaderboard -->
+                        <div class="card leaderboard-card" id="battle-leaderboard-panel">
+                            <h3><i class="fa-solid fa-crown text-warning"></i> Global Leaderboard</h3>
+                            <div class="table-container">
+                                <table class="leaderboard-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Producer</th>
+                                            <th>ELO</th>
+                                            <th>Wins</th>
+                                            <th>Upvotes</th>
+                                            <th>Downvotes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="leaderboard-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- Detail Panel -->
+                        <div class="card battle-detail-card" id="battle-detail-panel" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Profile & Bio -->
+            <div id="dash-subtab-profile" class="dash-subtab-pane">
+                <div class="profile-edit-card">
+                    <div class="profile-card-header">
+                        <h3><i class="fa-solid fa-user-gear"></i> Edit Profile & Bio</h3>
+                        <p class="profile-card-sub">Customise your public producer identity visible across the community.</p>
+                    </div>
+
+                    <div class="profile-edit-grid">
+                        <!-- Left: Avatar Section -->
+                        <div class="profile-edit-left">
+                            <div class="avatar-upload-wrap">
+                                <div class="avatar-preview-frame">
+                                    <img id="profile-edit-pfp-preview" src="/static/placeholder-art.png" class="user-avatar-large" alt="Avatar">
+                                    <div class="avatar-upload-overlay" onclick="document.getElementById('profile-pfp-input').click()">
+                                        <i class="fa-solid fa-camera"></i>
+                                        <span>Change Photo</span>
+                                    </div>
+                                </div>
+                                <input type="file" id="profile-pfp-input" accept="image/*" style="display:none;" onchange="uploadProfilePFP()">
+                            </div>
+                            <div class="avatar-upload-actions">
+                                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('profile-pfp-input').click()">
+                                    <i class="fa-solid fa-upload"></i> Upload Photo
+                                </button>
+                                <span class="pfp-upload-status" id="pfp-upload-status"></span>
+                            </div>
+                        </div>
+
+                        <!-- Right: Form Section -->
+                        <div class="profile-edit-right">
+                            <div class="form-group">
+                                <label class="form-label-with-counter">
+                                    <span><i class="fa-solid fa-pen-to-square"></i> Bio / About Me</span>
+                                    <span class="bio-char-counter" id="bio-char-counter">0 / 300</span>
+                                </label>
+                                <textarea id="profile-bio-input" placeholder="Introduce yourself to other producers... share your story, genres, gear, influences, or whatever inspires your sound." class="input-form textarea-form" maxlength="300" oninput="updateBioCharCount()"></textarea>
+                            </div>
+
+                            <div class="form-divider">
+                                <span class="form-divider-text"><i class="fa-solid fa-link"></i> Social Platforms</span>
+                            </div>
+
+                            <div class="socials-input-group">
+                                <div class="social-field">
+                                    <div class="social-icon-wrapper soundcloud-bg">
+                                        <i class="fa-brands fa-soundcloud"></i>
+                                    </div>
+                                    <input type="text" id="profile-sc-input" placeholder="SoundCloud handle" class="input-form">
+                                </div>
+                                <div class="social-field">
+                                    <div class="social-icon-wrapper youtube-bg">
+                                        <i class="fa-brands fa-youtube"></i>
+                                    </div>
+                                    <input type="text" id="profile-yt-input" placeholder="YouTube handle" class="input-form">
+                                </div>
+                                <div class="social-field">
+                                    <div class="social-icon-wrapper twitter-bg">
+                                        <i class="fa-brands fa-x-twitter"></i>
+                                    </div>
+                                    <input type="text" id="profile-tw-input" placeholder="Twitter / X handle" class="input-form">
+                                </div>
+                                <div class="social-field">
+                                    <div class="social-icon-wrapper spotify-bg">
+                                        <i class="fa-brands fa-spotify"></i>
+                                    </div>
+                                    <input type="text" id="profile-sp-input" placeholder="Spotify artist name" class="input-form">
+                                </div>
+                            </div>
+
+                            <div class="profile-save-area">
+                                <button class="btn btn-primary btn-lg" id="btn-save-profile" onclick="saveProfileChanges()">
+                                    <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                                </button>
+                                <span class="profile-save-status" id="profile-save-status"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+{% endblock %}

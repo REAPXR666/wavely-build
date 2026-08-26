@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<section id="tab-admin" class="tab-content active">
+    <div class="admin-dashboard-wrap">
+        <div class="admin-header"><h2><i class="fa-solid fa-user-shield"></i> Admin Console</h2><p class="desc-text">Manage accounts, traffic, and security.</p></div>
+        <div class="admin-subnav"><button class="subnav-btn active" onclick="switchAdminSubTab('users')"><i class="fa-solid fa-users"></i> Users</button><button class="subnav-btn" onclick="switchAdminSubTab('ips')"><i class="fa-solid fa-ban"></i> IP Bans</button><button class="subnav-btn" onclick="switchAdminSubTab('logs')"><i class="fa-solid fa-list-check"></i> Logs</button></div>
+        <div class="admin-body">
+            <div id="admin-subtab-users" class="admin-subtab-content active"><div class="card"><div class="card-header-btn"><h3>Developers</h3><span class="count-badge" id="admin-users-count">0</span></div><div class="table-container"><table class="admin-table"><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Keys</th><th>Status</th><th>Actions</th></tr></thead><tbody id="admin-users-table-body"></tbody></table></div></div></div>
+            <div id="admin-subtab-ips" class="admin-subtab-content"><div class="admin-ip-grid"><div class="card"><h3>Ban IP</h3><form onsubmit="handleIpBan(event)" class="generate-key-form"><input type="text" id="ban-ip-address" placeholder="e.g. 192.168.1.100" required class="input-form"><button type="submit" class="btn btn-primary">Ban IP</button></form></div><div class="card"><h3>Banned IPs</h3><div class="table-container"><table class="admin-table"><thead><tr><th>IP</th><th>Status</th><th>Action</th></tr></thead><tbody id="admin-ips-table-body"></tbody></table></div></div></div></div>
+            <div id="admin-subtab-logs" class="admin-subtab-content"><div class="card"><div class="logs-header-actions"><h3>Global Logs (200)</h3><input type="text" id="admin-log-search" oninput="filterAdminLogs()" placeholder="Filter..." class="input-form input-sm"></div><div class="table-container"><table class="logs-table"><thead><tr><th>Time</th><th>User</th><th>IP</th><th>Type</th><th>Route</th><th>Details</th></tr></thead><tbody id="admin-logs-table-body"></tbody></table></div></div></div>
+        </div>
+    </div>
+</section>
+{% endblock %}

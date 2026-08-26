@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<section id="tab-browser" class="tab-content active">
+    <div class="browser-container-grid">
+        <aside class="browser-sidebar">
+            <div class="sidebar-nav-title">Wavely Catalog</div>
+            <ul class="sidebar-nav-list">
+                <li><button class="sidebar-nav-item active" id="side-nav-sounds" onclick="switchBrowserPanel('sounds')"><i class="fa-solid fa-music"></i> Sounds</button></li>
+                <li><button class="sidebar-nav-item" id="side-nav-presets" onclick="switchBrowserPanel('presets')"><i class="fa-solid fa-sliders"></i> Presets</button></li>
+            </ul>
+            <div class="sidebar-nav-title">Your Library</div>
+            <ul class="sidebar-nav-list">
+                <li><button class="sidebar-nav-item" id="side-nav-liked" onclick="switchBrowserPanel('liked')"><i class="fa-solid fa-star"></i> Liked (<span id="liked-badge-count">0</span>)</button></li>
+                <li><button class="sidebar-nav-item" id="side-nav-downloaded" onclick="switchBrowserPanel('downloaded')"><i class="fa-solid fa-circle-down"></i> Downloaded (<span id="downloaded-badge-count">0</span>)</button></li>
+            </ul>
+        </aside>
+        <div class="browser-main-content">
+            <div class="card search-filter-card" id="browser-filter-card">
+                <div class="browser-header-row"><div class="search-box-wrap"><i class="fa-solid fa-magnifying-glass search-icon-embed"></i><input type="text" id="browser-search-input" placeholder="Search 1,000,000+ samples..." value="synth lead" onkeydown="if(event.key === 'Enter') executeBrowserSearch()"><button class="btn btn-primary" onclick="executeBrowserSearch()"><i class="fa-solid fa-search"></i> Search</button></div></div>
+                <div class="filters-row" id="filters-row-sounds">
+                    <div class="filter-group"><label><i class="fa-solid fa-key"></i> Key</label><div class="dual-select"><select id="filter-key-root"><option value="">All Keys</option><option value="C">C</option><option value="C#">C#</option><option value="D">D</option><option value="D#">D#</option><option value="E">E</option><option value="F">F</option><option value="F#">F#</option><option value="G">G</option><option value="G#">G#</option><option value="A">A</option><option value="A#">A#</option><option value="B">B</option></select><select id="filter-key-scale"><option value="">All</option><option value="maj">Major</option><option value="min">Minor</option></select></div></div>
+                    <div class="filter-group"><label><i class="fa-solid fa-guitar"></i> Instrument</label><select id="filter-instrument"><option value="">All</option><option value="drums">Drums</option><option value="vocals">Vocals</option><option value="synth">Synth</option><option value="bass">Bass</option><option value="keys">Keys</option><option value="strings">Strings</option><option value="fx">FX</option><option value="guitar">Guitar</option></select></div>
+                    <div class="filter-group"><label><i class="fa-solid fa-wave-square"></i> Type</label><select id="filter-type"><option value="">All</option><option value="oneshot">One-Shot</option><option value="loop">Loop</option></select></div>
+                </div>
+                <div class="filters-row" id="filters-row-presets" style="display:none;"><div class="filter-group"><label><i class="fa-solid fa-plug"></i> Plugin</label><select id="filter-preset-plugin"><option value="">All</option><option value="serum">Serum</option><option value="serum 2">Serum 2</option><option value="vital">Vital</option><option value="massive">Massive</option></select></div></div>
+            </div>
+            <div class="card results-card">
+                <div class="results-header"><h3 id="results-count-title">Sounds</h3><span class="count-badge" id="results-total-badge">-- results</span></div>
+                <div class="loader-container" id="browser-loader" style="display:none;"><i class="fa-solid fa-circle-notch fa-spin loader-spinner"></i><span>Loading assets from Splice...</span></div>
+                <div class="table-container" id="browser-table-wrapper">
+                    <table class="browser-table"><thead><tr><th width="45">Play</th><th width="60">Art</th><th>Name & Pack</th><th width="80">Key</th><th width="80">BPM</th><th width="80">Dur</th><th width="50">Fav</th><th width="140">Download</th></tr></thead><tbody id="browser-results-body"></tbody></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

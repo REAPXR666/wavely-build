@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Checkout Complete — Wavely{% endblock %}
+{% block content %}
+<section class="checkout-result">
+  <div class="checkout-result-card">
+    {% if payment_complete %}
+      <span class="checkout-result-icon"><i class="fa-solid fa-check"></i></span>
+      <span class="page-eyebrow">Payment confirmed</span>
+      <h1>You’re in.</h1>
+      <p>Stripe has confirmed your payment. Your Wavely Pro access is being synchronised securely and should appear on your dashboard now.</p>
+      <a href="{{ url_for('dashboard_page') }}" class="btn btn-primary btn-lg">Open studio dashboard <span>↗</span></a>
+    {% else %}
+      <span class="checkout-result-icon checkout-result-icon--pending"><i class="fa-solid fa-clock"></i></span>
+      <span class="page-eyebrow">Payment processing</span>
+      <h1>Nearly there.</h1>
+      <p>Your payment method is still processing. We’ll activate Pro automatically as soon as Stripe confirms it—there’s no need to pay again.</p>
+      <a href="{{ url_for('dashboard_page') }}" class="btn btn-secondary btn-lg">Return to dashboard</a>
+    {% endif %}
+    <div class="checkout-reference">Checkout reference · {{ checkout_session_id }}</div>
+  </div>
+</section>
+{% endblock %}

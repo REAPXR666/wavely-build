@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Simple Pricing — Wavely Pro{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <header class="page-header page-header--center">
+    <span class="page-eyebrow">One library. One price.</span>
+    <h1>Unlimited means unlimited.</h1>
+    <p>Every sound, every preset, every full pack. Choose your billing rhythm and get back to making music.</p>
+  </header>
+  <div class="pricing-grid">
+    <article class="pricing-box">
+      <div>
+        <div class="price-title">Monthly</div>
+        <div class="price-num-row"><span class="price-dollar">$</span><span class="price-val">4.99</span><span class="price-cycle">/ month</span></div>
+        <p class="plan-copy">Complete access with the freedom to cancel whenever you like.</p>
+        <ul class="checklist">
+          <li class="checklist-item"><i class="fa-solid fa-check check-icon"></i><span><strong>Unlimited</strong> sample downloads</span></li>
+          <li class="checklist-item"><i class="fa-solid fa-check check-icon"></i><span>Automatic zero-silence trim</span></li>
+          <li class="checklist-item"><i class="fa-solid fa-check check-icon"></i><span>ACID tempo metadata for DAW sync</span></li>
+          <li class="checklist-item"><i class="fa-solid fa-check check-icon"></i><span>45,000+ synth presets</span></li>
+          <li class="checklist-item"><i class="fa-solid fa-check check-icon"></i><span>Full pack ZIP downloads</span></li>
+          <li class="checklist-item"><i class="fa-solid fa-check check-icon"></i><span>2 authorised studio computers</span></li>
+        </ul>
+      </div>
+      {% if current_user %}<button id="checkout-btn-monthly_499" onclick="handleStripeCheckout('monthly_499')" class="btn btn-secondary">Choose monthly · $4.99</button>{% else %}<a href="{{ url_for('register_page') }}" class="btn btn-secondary">Create account to subscribe</a>{% endif %}
+    </article>
+    <article class="pricing-box featured">
+      <span class="pricing-badge-popular">Save 25%</span>
+      <div>
+        <div class="price-title">Annual</div>
+        <div class="price-num-row"><span class="price-dollar">$</span><span class="price-val">45</span><span class="price-cycle">/ year</span></div>
+        <p class="plan-copy">The same complete studio access, with more devices and less admin.</p>
+        <ul class="checklist">
+          <li class="checklist-item"><i class="fa-solid fa-check check-icon"></i><span><strong>Everything in Monthly</strong></span></li>
+          <li class="checklist-item"><i class="fa-solid fa-check check-icon"></i><span>$14.88 saved every year</span></li>
+          <li class="checklist-item"><i class="fa-solid fa-check check-icon"></i><span>4 authorised studio computers</span></li>
+          <li class="checklist-item"><i class="fa-solid fa-check check-icon"></i><span>Priority helpdesk queue</span></li>
+          <li class="checklist-item"><i class="fa-solid fa-check check-icon"></i><span>Early desktop app updates</span></li>
+        </ul>
+      </div>
+      {% if current_user %}<button id="checkout-btn-annual_45" onclick="handleStripeCheckout('annual_45')" class="btn btn-primary">Choose annual · $45</button>{% else %}<a href="{{ url_for('register_page') }}" class="btn btn-primary">Get a year of Wavely</a>{% endif %}
+    </article>
+  </div>
+  <div class="trust-row">
+    <div class="trust-item"><i class="fa-solid fa-lock"></i><strong>Secure payment</strong><p>Encrypted transactions. We never store card details.</p></div>
+    <div class="trust-item"><i class="fa-solid fa-bolt"></i><strong>Instant activation</strong><p>Sign in to the desktop app and start browsing immediately.</p></div>
+    <div class="trust-item"><i class="fa-solid fa-rotate-left"></i><strong>Cancel in one click</strong><p>Control renewal from your account dashboard.</p></div>
+  </div>
+</div>
+{% endblock %}

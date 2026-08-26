@@ -1,0 +1,1002 @@
+{% extends "base.html" %}
+{% block content %}
+<section id="tab-docs" class="tab-content active">
+    <div class="docs-layout">
+        <aside class="docs-sidebar">
+            <div class="sidebar-section">
+                <h4>Getting Started</h4>
+                <ul>
+                    <li><a href="#doc-auth" class="sidebar-link active" onclick="scrollToDocSection(event, 'doc-auth')">Authentication</a></li>
+                    <li><a href="#doc-errors" class="sidebar-link" onclick="scrollToDocSection(event, 'doc-errors')">Errors & Response Codes</a></li>
+                </ul>
+            </div>
+            <div class="sidebar-section">
+                <h4>Catalog & Audio</h4>
+                <ul>
+                    <li><a href="#endpoint-search" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-search')">GET /api/search</a></li>
+                    <li><a href="#endpoint-sample-info" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-sample-info')">GET /api/sample/&lt;uuid&gt;</a></li>
+                    <li><a href="#endpoint-decrypt" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-decrypt')">GET /api/decrypted-audio/&lt;uuid&gt;</a></li>
+                </ul>
+            </div>
+            <div class="sidebar-section">
+                <h4>Beat Battles</h4>
+                <ul>
+                    <li><a href="#endpoint-battles-list" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-battles-list')">GET /api/battles</a></li>
+                    <li><a href="#endpoint-battles-submit" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-battles-submit')">POST /api/battles/submit</a></li>
+                    <li><a href="#endpoint-battles-vote" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-battles-vote')">POST /api/battles/vote</a></li>
+                    <li><a href="#endpoint-battles-leaderboard" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-battles-leaderboard')">GET /api/battles/leaderboard</a></li>
+                </ul>
+            </div>
+            <div class="sidebar-section">
+                <h4>Community Servers</h4>
+                <ul>
+                    <li><a href="#endpoint-servers-list" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-servers-list')">GET /api/servers</a></li>
+                    <li><a href="#endpoint-servers-create" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-servers-create')">POST /api/servers/create</a></li>
+                    <li><a href="#endpoint-servers-join" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-servers-join')">POST /api/servers/join/&lt;code&gt;</a></li>
+                    <li><a href="#endpoint-servers-msg-get" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-servers-msg-get')">GET /api/servers/messages</a></li>
+                    <li><a href="#endpoint-servers-msg-send" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-servers-msg-send')">POST /api/servers/messages/send</a></li>
+                </ul>
+            </div>
+            <div class="sidebar-section">
+                <h4>Direct Messaging</h4>
+                <ul>
+                    <li><a href="#endpoint-dms-list" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-dms-list')">GET /api/dms</a></li>
+                    <li><a href="#endpoint-dms-msg-get" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-dms-msg-get')">GET /api/dms/messages/&lt;user&gt;</a></li>
+                    <li><a href="#endpoint-dms-send" class="sidebar-link" onclick="scrollToDocSection(event, 'endpoint-dms-send')">POST /api/dms/send</a></li>
+                </ul>
+            </div>
+        </aside>
+        
+        <div class="docs-main-content">
+            <div class="section-title-wrap">
+                <h2>API Developer & Creator Reference</h2>
+                <p class="subtitle">Complete guide to Wavely's catalog, decryption, battles, servers, and direct communication layers.</p>
+            </div>
+            
+            <!-- GETTING STARTED -->
+            <div class="doc-block" id="doc-auth">
+                <h3>Authentication</h3>
+                <p>Wavely V2 employs two different methods of authentication depending on the endpoint type:</p>
+                <ul>
+                    <li><strong>Developer Catalog APIs:</strong> Authenticated using the <code>X-API-Key</code> HTTP Header. Obtain your key from your user dashboard.</li>
+                    <li><strong>Community & Messaging APIs:</strong> Authenticated using your active browser session cookie. If scripting against these endpoints, you can log in via the authentication action endpoint to retrieve your session cookies, or supply your active session cookie in the <code>Cookie</code> header.</li>
+                </ul>
+                <div class="note-box" style="margin-top:15px; border-left:4px solid var(--primary);">
+                    <strong>API Key Header Format:</strong> <code>X-API-Key: wv_&lt;your_key_here&gt;</code><br>
+                    <strong>Session Cookie Header Format:</strong> <code>Cookie: session=&lt;your_session_value&gt;</code>
+                </div>
+            </div>
+            
+            <div class="doc-block" id="doc-errors">
+                <h3>Errors & Response Codes</h3>
+                <p>Standard JSON payloads are returned for error states with a descriptive error string. The following HTTP status codes are used:</p>
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Meaning</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>200</code></td>
+                            <td>OK</td>
+                            <td>Request completed successfully.</td>
+                        </tr>
+                        <tr>
+                            <td><code>400</code></td>
+                            <td>Bad Request</td>
+                            <td>Missing parameters or validation limits exceeded (e.g. password too short).</td>
+                        </tr>
+                        <tr>
+                            <td><code>401</code></td>
+                            <td>Unauthorized</td>
+                            <td>Invalid or missing API key, or not logged in.</td>
+                        </tr>
+                        <tr>
+                            <td><code>403</code></td>
+                            <td>Forbidden</td>
+                            <td>Action not permitted (e.g. post in a locked channel, or IP has been banned).</td>
+                        </tr>
+                        <tr>
+                            <td><code>404</code></td>
+                            <td>Not Found</td>
+                            <td>Requested resource (server, channel, battle) does not exist.</td>
+                        </tr>
+                        <tr>
+                            <td><code>429</code></td>
+                            <td>Too Many Requests</td>
+                            <td>Rate limit exceeded on authentication endpoints.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- CATALOG & AUDIO -->
+            <hr style="border:none; border-top:1px solid var(--border-color); margin:40px 0;">
+            <div class="section-title-wrap">
+                <h2>Catalog & Audio APIs</h2>
+            </div>
+            
+            <div class="doc-block" id="endpoint-search">
+                <h3>Search Catalog</h3>
+                <div class="endpoint-badge"><span class="badge-get">GET</span><code>/api/search</code></div>
+                <p>Queries the global music sample catalog with various metadata filters.</p>
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>q</code></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>Text query (e.g., <code>synth loop</code>).</td>
+                        </tr>
+                        <tr>
+                            <td><code>category</code></td>
+                            <td>string</td>
+                            <td>No</td>
+                            <td>Filter by instrument family (e.g., <code>drums</code>, <code>vocals</code>).</td>
+                        </tr>
+                        <tr>
+                            <td><code>key</code></td>
+                            <td>string</td>
+                            <td>No</td>
+                            <td>Filter by musical key (e.g., <code>Amin</code>, <code>C#maj</code>).</td>
+                        </tr>
+                        <tr>
+                            <td><code>type</code></td>
+                            <td>string</td>
+                            <td>No</td>
+                            <td>Filter by sample type: <code>one-shot</code> or <code>loop</code>.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+url = "https://wavely.lol/api/search"
+headers = {"X-API-Key": "wv_YOUR_API_KEY"}
+params = {
+    "q": "drum loop",
+    "key": "Cmin",
+    "type": "loop"
+}
+response = requests.get(url, headers=headers, params=params)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>const url = new URL("https://wavely.lol/api/search");
+url.searchParams.append("q", "drum loop");
+url.searchParams.append("key", "Cmin");
+
+fetch(url, {
+  headers: { "X-API-Key": "wv_YOUR_API_KEY" }
+})
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl -H "X-API-Key: wv_YOUR_API_KEY" \
+  "https://wavely.lol/api/search?q=drum+loop&key=Cmin&type=loop"</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="doc-block" id="endpoint-sample-info">
+                <h3>Retrieve Sample Details</h3>
+                <div class="endpoint-badge"><span class="badge-get">GET</span><code>/api/sample/&lt;uuid&gt;</code></div>
+                <p>Fetches metadata and source URL details for a specific sample ID.</p>
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+uuid = "sample-uuid-here"
+url = f"https://wavely.lol/api/sample/{uuid}"
+headers = {"X-API-Key": "wv_YOUR_API_KEY"}
+
+response = requests.get(url, headers=headers)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>const uuid = "sample-uuid-here";
+fetch(`https://wavely.lol/api/sample/${uuid}`, {
+  headers: { "X-API-Key": "wv_YOUR_API_KEY" }
+})
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl -H "X-API-Key: wv_YOUR_API_KEY" \
+  https://wavely.lol/api/sample/sample-uuid-here</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="doc-block" id="endpoint-decrypt">
+                <h3>Decrypt Audio File</h3>
+                <div class="endpoint-badge"><span class="badge-get">GET</span><code>/api/decrypted-audio/&lt;uuid&gt;</code></div>
+                <p>Retrieves the fully decrypted raw audio binary stream. Supports switching output containers dynamically.</p>
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>format</code></td>
+                            <td>string</td>
+                            <td>No</td>
+                            <td>Container format: <code>wav</code> (default) or <code>mp3</code>.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+uuid = "sample-uuid-here"
+url = f"https://wavely.lol/api/decrypted-audio/{uuid}"
+headers = {"X-API-Key": "wv_YOUR_API_KEY"}
+params = {"format": "mp3"}
+
+response = requests.get(url, headers=headers, params=params)
+with open("decrypted_sample.mp3", "wb") as f:
+    f.write(response.content)
+print("File downloaded successfully.")</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>const uuid = "sample-uuid-here";
+fetch(`https://wavely.lol/api/decrypted-audio/${uuid}?format=wav`, {
+  headers: { "X-API-Key": "wv_YOUR_API_KEY" }
+})
+.then(res => res.blob())
+.then(blob => {
+  const audioUrl = URL.createObjectURL(blob);
+  const audio = new Audio(audioUrl);
+  audio.play();
+});</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl -H "X-API-Key: wv_YOUR_API_KEY" \
+  -o sample.wav "https://wavely.lol/api/decrypted-audio/sample-uuid-here?format=wav"</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- BEAT BATTLES -->
+            <hr style="border:none; border-top:1px solid var(--border-color); margin:40px 0;">
+            <div class="section-title-wrap">
+                <h2>Beat Battle APIs</h2>
+            </div>
+            
+            <div class="doc-block" id="endpoint-battles-list">
+                <h3>List Active Battles</h3>
+                <div class="endpoint-badge"><span class="badge-get">GET</span><code>/api/battles</code></div>
+                <p>Retrieves all past, present, and active beat production battles.</p>
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+url = "https://wavely.lol/api/battles"
+headers = {"Cookie": "session=YOUR_SESSION_COOKIE"}
+
+response = requests.get(url, headers=headers)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>fetch("/api/battles")
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl --cookie "session=YOUR_SESSION_COOKIE" \
+  https://wavely.lol/api/battles</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="doc-block" id="endpoint-battles-submit">
+                <h3>Submit Track Entry</h3>
+                <div class="endpoint-badge"><span class="badge-post">POST</span><code>/api/battles/submit</code></div>
+                <p>Submits a finished track to an active beat battle thread.</p>
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>battle_id</code></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>Target battle identifier.</td>
+                        </tr>
+                        <tr>
+                            <td><code>sample_url</code></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>Link to the submitted audio track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>comments</code></td>
+                            <td>string</td>
+                            <td>No</td>
+                            <td>Description of plugins, DAWs, or techniques used.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+url = "https://wavely.lol/api/battles/submit"
+headers = {
+    "Cookie": "session=YOUR_SESSION_COOKIE",
+    "Content-Type": "application/json"
+}
+payload = {
+    "battle_id": "btl_12345",
+    "sample_url": "https://storage.googleapis.com/user-beats/beat.mp3",
+    "comments": "Made with FL Studio and the decrypt audio API!"
+}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>fetch("/api/battles/submit", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    battle_id: "btl_12345",
+    sample_url: "https://storage.googleapis.com/user-beats/beat.mp3",
+    comments: "Made with Logic Pro X"
+  })
+})
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl -X POST --cookie "session=YOUR_SESSION_COOKIE" \
+  -H "Content-Type: application/json" \
+  -d '{"battle_id":"btl_12345","sample_url":"https://storage.googleapis.com/user-beats/beat.mp3"}' \
+  https://wavely.lol/api/battles/submit</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="doc-block" id="endpoint-battles-vote">
+                <h3>Cast Submission Vote</h3>
+                <div class="endpoint-badge"><span class="badge-post">POST</span><code>/api/battles/vote</code></div>
+                <p>Votes for a submission in a running beat battle. ELO scores are recalculated dynamically on vote completions.</p>
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>battle_id</code></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>Target battle identifier.</td>
+                        </tr>
+                        <tr>
+                            <td><code>submission_id</code></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>ID of the track entry receiving the vote.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+url = "https://wavely.lol/api/battles/vote"
+headers = {
+    "Cookie": "session=YOUR_SESSION_COOKIE",
+    "Content-Type": "application/json"
+}
+payload = {
+    "battle_id": "btl_12345",
+    "submission_id": "sub_98765"
+}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>fetch("/api/battles/vote", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    battle_id: "btl_12345",
+    submission_id: "sub_98765"
+  })
+})
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl -X POST --cookie "session=YOUR_SESSION_COOKIE" \
+  -H "Content-Type: application/json" \
+  -d '{"battle_id":"btl_12345","submission_id":"sub_98765"}' \
+  https://wavely.lol/api/battles/vote</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="doc-block" id="endpoint-battles-leaderboard">
+                <h3>View ELO Leaderboard</h3>
+                <div class="endpoint-badge"><span class="badge-get">GET</span><code>/api/battles/leaderboard</code></div>
+                <p>Retrieves the overall rankings of community producers ordered by active ELO score ratings.</p>
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+url = "https://wavely.lol/api/battles/leaderboard"
+headers = {"Cookie": "session=YOUR_SESSION_COOKIE"}
+
+response = requests.get(url, headers=headers)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>fetch("/api/battles/leaderboard")
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl --cookie "session=YOUR_SESSION_COOKIE" \
+  https://wavely.lol/api/battles/leaderboard</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- COMMUNITY SERVERS -->
+            <hr style="border:none; border-top:1px solid var(--border-color); margin:40px 0;">
+            <div class="section-title-wrap">
+                <h2>Discord-Like Server APIs</h2>
+            </div>
+            
+            <div class="doc-block" id="endpoint-servers-list">
+                <h3>List Server Subscriptions</h3>
+                <div class="endpoint-badge"><span class="badge-get">GET</span><code>/api/servers</code></div>
+                <p>Retrieves all channels, categories, and settings of servers the logged-in user belongs to. Messages are stripped and private channels are automatically filtered out based on roles.</p>
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+url = "https://wavely.lol/api/servers"
+headers = {"Cookie": "session=YOUR_SESSION_COOKIE"}
+
+response = requests.get(url, headers=headers)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>fetch("/api/servers")
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl --cookie "session=YOUR_SESSION_COOKIE" \
+  https://wavely.lol/api/servers</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="doc-block" id="endpoint-servers-create">
+                <h3>Create Chat Server</h3>
+                <div class="endpoint-badge"><span class="badge-post">POST</span><code>/api/servers/create</code></div>
+                <p>Creates a new guild server. Send values as Form Data parameters to support optional file upload banners.</p>
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>name</code></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>Server name display string.</td>
+                        </tr>
+                        <tr>
+                            <td><code>icon</code></td>
+                            <td>binary file</td>
+                            <td>No</td>
+                            <td>Image file to set as the server profile icon.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+url = "https://wavely.lol/api/servers/create"
+headers = {"Cookie": "session=YOUR_SESSION_COOKIE"}
+files = {"icon": open("icon.png", "rb")}
+data = {"name": "Producers Guild"}
+
+response = requests.post(url, headers=headers, data=data, files=files)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>const formData = new FormData();
+formData.append("name", "Producers Guild");
+formData.append("icon", fileInput.files[0]);
+
+fetch("/api/servers/create", {
+  method: "POST",
+  body: formData
+})
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl -X POST --cookie "session=YOUR_SESSION_COOKIE" \
+  -F "name=Producers Guild" \
+  -F "icon=@/path/to/icon.png" \
+  https://wavely.lol/api/servers/create</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="doc-block" id="endpoint-servers-join">
+                <h3>Join Server by Invite Code</h3>
+                <div class="endpoint-badge"><span class="badge-post">POST</span><code>/api/servers/join/&lt;code&gt;</code></div>
+                <p>Joins a server using its unique invite code.</p>
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+invite_code = "inv_abc123"
+url = f"https://wavely.lol/api/servers/join/{invite_code}"
+headers = {"Cookie": "session=YOUR_SESSION_COOKIE"}
+
+response = requests.post(url, headers=headers)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>const inviteCode = "inv_abc123";
+fetch(`/api/servers/join/${inviteCode}`, {
+  method: "POST"
+})
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl -X POST --cookie "session=YOUR_SESSION_COOKIE" \
+  https://wavely.lol/api/servers/join/inv_abc123</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="doc-block" id="endpoint-servers-msg-get">
+                <h3>Fetch Channel Messages</h3>
+                <div class="endpoint-badge"><span class="badge-get">GET</span><code>/api/servers/messages/&lt;server_id&gt;/&lt;channel_id&gt;</code></div>
+                <p>Retrieves all chat history messages posted inside a specific server channel.</p>
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+server_id = "srv_123"
+channel_id = "chan_456"
+url = f"https://wavely.lol/api/servers/messages/{server_id}/{channel_id}"
+headers = {"Cookie": "session=YOUR_SESSION_COOKIE"}
+
+response = requests.get(url, headers=headers)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>const serverId = "srv_123";
+const channelId = "chan_456";
+fetch(`/api/servers/messages/${serverId}/${channelId}`)
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl --cookie "session=YOUR_SESSION_COOKIE" \
+  https://wavely.lol/api/servers/messages/srv_123/chan_456</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="doc-block" id="endpoint-servers-msg-send">
+                <h3>Send Chat Message</h3>
+                <div class="endpoint-badge"><span class="badge-post">POST</span><code>/api/servers/messages/send</code></div>
+                <p>Sends a text message and/or upload attachment to a channel. Use Form Data format.</p>
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>server_id</code></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>Target server.</td>
+                        </tr>
+                        <tr>
+                            <td><code>channel_id</code></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>Target channel.</td>
+                        </tr>
+                        <tr>
+                            <td><code>content</code></td>
+                            <td>string</td>
+                            <td>No</td>
+                            <td>Message body text. Optional if uploading a file attachment.</td>
+                        </tr>
+                        <tr>
+                            <td><code>attachment</code></td>
+                            <td>binary file</td>
+                            <td>No</td>
+                            <td>Optional file upload (e.g. <code>.wav</code> sample or image).</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+url = "https://wavely.lol/api/servers/messages/send"
+headers = {"Cookie": "session=YOUR_SESSION_COOKIE"}
+data = {
+    "server_id": "srv_123",
+    "channel_id": "chan_456",
+    "content": "Check out this kick sample!"
+}
+files = {"attachment": open("kick.wav", "rb")}
+
+response = requests.post(url, headers=headers, data=data, files=files)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>const formData = new FormData();
+formData.append("server_id", "srv_123");
+formData.append("channel_id", "chan_456");
+formData.append("content", "Hey guys!");
+
+fetch("/api/servers/messages/send", {
+  method: "POST",
+  body: formData
+})
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl -X POST --cookie "session=YOUR_SESSION_COOKIE" \
+  -F "server_id=srv_123" \
+  -F "channel_id=chan_456" \
+  -F "content=Checkout this link wavely.lol/join/invite-code" \
+  https://wavely.lol/api/servers/messages/send</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- DIRECT MESSAGING -->
+            <hr style="border:none; border-top:1px solid var(--border-color); margin:40px 0;">
+            <div class="section-title-wrap">
+                <h2>Direct Messaging APIs</h2>
+            </div>
+            
+            <div class="doc-block" id="endpoint-dms-list">
+                <h3>List DM Threads</h3>
+                <div class="endpoint-badge"><span class="badge-get">GET</span><code>/api/dms</code></div>
+                <p>Retrieves a list of all active direct message threads containing partner details and last messages.</p>
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+url = "https://wavely.lol/api/dms"
+headers = {"Cookie": "session=YOUR_SESSION_COOKIE"}
+
+response = requests.get(url, headers=headers)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>fetch("/api/dms")
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl --cookie "session=YOUR_SESSION_COOKIE" \
+  https://wavely.lol/api/dms</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="doc-block" id="endpoint-dms-msg-get">
+                <h3>Fetch Direct Messages</h3>
+                <div class="endpoint-badge"><span class="badge-get">GET</span><code>/api/dms/messages/&lt;user&gt;</code></div>
+                <p>Fetches direct messaging logs between you and the specified partner user.</p>
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+partner_username = "trap_lord"
+url = f"https://wavely.lol/api/dms/messages/{partner_username}"
+headers = {"Cookie": "session=YOUR_SESSION_COOKIE"}
+
+response = requests.get(url, headers=headers)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>const partner = "trap_lord";
+fetch(`/api/dms/messages/${partner}`)
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl --cookie "session=YOUR_SESSION_COOKIE" \
+  https://wavely.lol/api/dms/messages/trap_lord</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="doc-block" id="endpoint-dms-send">
+                <h3>Send Direct Message</h3>
+                <div class="endpoint-badge"><span class="badge-post">POST</span><code>/api/dms/send</code></div>
+                <p>Sends a direct private message or attachment to another user. Use Form Data format.</p>
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>recipient</code></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>Target user recipient username.</td>
+                        </tr>
+                        <tr>
+                            <td><code>content</code></td>
+                            <td>string</td>
+                            <td>No</td>
+                            <td>Text content of message. Optional if attachment is provided.</td>
+                        </tr>
+                        <tr>
+                            <td><code>attachment</code></td>
+                            <td>binary file</td>
+                            <td>No</td>
+                            <td>Optional image or audio file attachment.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="code-tab-container">
+                    <div class="code-tabs">
+                        <button class="code-tab-btn active" onclick="switchCodeTab(this, 'python')">Python</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'javascript')">JavaScript</button>
+                        <button class="code-tab-btn" onclick="switchCodeTab(this, 'curl')">cURL</button>
+                    </div>
+                    <div class="code-panes">
+                        <div class="code-pane active" data-lang="python">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>import requests
+url = "https://wavely.lol/api/dms/send"
+headers = {"Cookie": "session=YOUR_SESSION_COOKIE"}
+data = {
+    "recipient": "trap_lord",
+    "content": "Check out this collaboration beat!"
+}
+files = {"attachment": open("beat_sketch.mp3", "rb")}
+
+response = requests.post(url, headers=headers, data=data, files=files)
+print(response.json())</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="javascript">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>const formData = new FormData();
+formData.append("recipient", "trap_lord");
+formData.append("content", "Collaboration sketch attached!");
+formData.append("attachment", fileInput.files[0]);
+
+fetch("/api/dms/send", {
+  method: "POST",
+  body: formData
+})
+.then(res => res.json())
+.then(data => console.log(data));</code></pre>
+                        </div>
+                        <div class="code-pane" data-lang="curl">
+                            <button class="btn-copy-code" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <pre><code>curl -X POST --cookie "session=YOUR_SESSION_COOKIE" \
+  -F "recipient=trap_lord" \
+  -F "content=Hi there!" \
+  https://wavely.lol/api/dms/send</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</section>
+
+<script>
+function scrollToDocSection(event, elementId) {
+    event.preventDefault();
+    const targetElement = document.getElementById(elementId);
+    if (targetElement) {
+        // Smooth scroll to element offset
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // Highlight active link in sidebar
+        document.querySelectorAll('.docs-sidebar .sidebar-link').forEach(link => {
+            link.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+}
+</script>
+{% endblock %}
