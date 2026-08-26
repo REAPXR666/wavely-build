@@ -6,6 +6,9 @@ on:
     tags: [ 'v*' ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-macos:
     name: Package macOS (.DMG & .ZIP)
@@ -26,7 +29,9 @@ jobs:
         run: npm run build
 
       - name: Package macOS DMG & ZIP
-        run: npx electron-builder --mac dmg zip -c.mac.identity=null
+        run: npx electron-builder --mac dmg zip -c.mac.identity=null --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Rename Release Files
         run: |
@@ -67,7 +72,9 @@ jobs:
         run: npm run build
 
       - name: Package Windows Installer (.exe) & Portable (.zip)
-        run: npx electron-builder --win nsis zip
+        run: npx electron-builder --win nsis zip --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Rename Windows Files
         run: |
