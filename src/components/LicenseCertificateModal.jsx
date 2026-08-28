@@ -2,6 +2,74 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Printer, Copy, Check, ExternalLink, X, User, Mail, ShieldCheck } from 'lucide-react';
 import spliceLogoUrl from '../assets/splice-logo.webp';
 
+// Robust helper to construct the exact Splice sample URL matching Splice website format
+export function buildSpliceSampleUrl(sound) {
+  if (!sound) return 'https://splice.com/sounds';
+  
+  if (sound.permalink) {
+    return sound.permalink.startsWith('http') ? sound.permalink : `https://splice.com${sound.permalink}`;
+  }
+  
+  if (sound.sampleUrl && sound.sampleUrl.includes('splice.com')) {
+    return sound.sampleUrl;
+  }
+
+  // 1. Primary identifier: fileHash (SHA256 hex) or uuid
+  let hashOrUuid = sound.fileHash || sound.hash || sound.uuid || '';
+  if (!hashOrUuid && sound.id) {
+    hashOrUuid = sound.id.replace(/^splice-(preset-)?/, '');
+  }
+
+  // 2. Clean Pack Name
+  const cleanPack = (sound.pack || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  // 3. Clean Tags (filter out generic 'splice' tag)
+  const cleanTags = (sound.tags || [])
+    .map(t => (typeof t === 'string' ? t : t.label || ''))
+    .filter(t => t && t.toLowerCase() !== 'splice')
+    .slice(0, 4)
+    .join(' ')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  // 4. Clean Sample Name
+  const cleanName = (sound.name || '')
+    .toLowerCase()
+    .replace(/\.wav$|\.mp3$/i, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  // Combine into slug matching Splice format: <pack>-<tags/keywords>-sample
+  let slugParts = [];
+  if (cleanPack && cleanPack !== 'splice-catalog' && cleanPack !== 'splice-presets') {
+    slugParts.push(cleanPack);
+  }
+  if (cleanTags) {
+    slugParts.push(cleanTags);
+  } else if (cleanName) {
+    slugParts.push(cleanName);
+  }
+  
+  let slug = slugParts.join('-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+  if (!slug.endsWith('-sample') && !slug.endsWith('-preset')) {
+    slug = `${slug}-sample`;
+  }
+  if (!slug || slug === '-sample') {
+    slug = cleanName ? `${cleanName}-sample` : 'sample';
+  }
+
+  if (hashOrUuid) {
+    return `https://splice.com/sounds/sample/${hashOrUuid}/${slug}`;
+  }
+
+  // Fallback search query if no ID
+  return `https://splice.com/sounds/search?q=${encodeURIComponent(sound.name || '')}`;
+}
+
 export default function LicenseCertificateModal({ 
   sound, 
   user, 
@@ -20,10 +88,6 @@ export default function LicenseCertificateModal({
     return localStorage.getItem('wavely_licensee_email') || user?.email || '';
   });
 
-  const [issuerMode, setIssuerMode] = useState(() => {
-    return localStorage.getItem('wavely_cert_issuer') || 'splice'; // 'splice' | 'wavely'
-  });
-
   // Save changes to localStorage
   useEffect(() => {
     if (fullName) {
@@ -37,16 +101,10 @@ export default function LicenseCertificateModal({
     }
   }, [email]);
 
-  useEffect(() => {
-    if (issuerMode) {
-      localStorage.setItem('wavely_cert_issuer', issuerMode);
-    }
-  }, [issuerMode]);
-
   // Compute display licensee name: entered full name, or fallback to 'WAVELY'
   const displayName = useMemo(() => {
-    return fullName.trim() ? fullName.trim() : (issuerMode === 'splice' ? 'Louis Woolford-Jones' : 'WAVELY');
-  }, [fullName, issuerMode]);
+    return fullName.trim() ? fullName.trim() : 'WAVELY';
+  }, [fullName]);
 
   // Format date, sample filename, and exact Splice sample URL
   const certData = useMemo(() => {
@@ -65,28 +123,14 @@ export default function LicenseCertificateModal({
       day: 'numeric'
     });
 
-    // Clean sample filename (e.g. VOX_KEH_126_vocal_hook_wet_wasting_my_time_Am.wav)
+    // Clean sample filename (e.g. 91V_LDA_174_songstarter_driftwood_intro_Bm.wav)
     let sampleFilename = sound.name || 'sample_asset.wav';
     if (!sampleFilename.toLowerCase().endsWith('.wav') && !sampleFilename.toLowerCase().endsWith('.mp3')) {
       sampleFilename = `${sampleFilename.replace(/\s+/g, '_')}.wav`;
     }
 
-    // Build exact Splice Sample URL: https://splice.com/sounds/sample/<uuid>/<slug>
-    const uuid = sound.uuid || sound.id || '';
-    const slug = (sound.name || 'sample')
-      .toLowerCase()
-      .replace(/\.wav$|\.mp3$/i, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-
-    let sampleUrl = 'https://splice.com/sounds';
-    if (uuid && slug) {
-      sampleUrl = `https://splice.com/sounds/sample/${uuid}/${slug}`;
-    } else if (uuid) {
-      sampleUrl = `https://splice.com/sounds/sample/${uuid}`;
-    } else {
-      sampleUrl = `https://splice.com/sounds/search?q=${encodeURIComponent(sound.name || '')}`;
-    }
+    // Build exact Splice Sample URL: https://splice.com/sounds/sample/<hashOrUuid>/<slug>
+    const sampleUrl = buildSpliceSampleUrl(sound);
 
     return {
       formattedDate,
@@ -113,10 +157,9 @@ export default function LicenseCertificateModal({
     window.print();
   };
 
-  const isSpliceIssuer = issuerMode === 'splice';
-  const companyName = isSpliceIssuer ? 'Distributed Creation Inc. (“Splice”)' : 'Wavely Technologies Inc. (“Wavely”)';
-  const teamName = isSpliceIssuer ? 'The Splice Team' : 'The Wavely Team';
-  const companyEntity = isSpliceIssuer ? 'Distributed Creation, Inc.' : 'Wavely Technologies, Inc.';
+  const companyName = 'Distributed Creation Inc. (“Splice”)';
+  const teamName = 'The Splice Team';
+  const companyEntity = 'Distributed Creation, Inc.';
 
   const handleCopyClearance = () => {
     const text = `Certificate of Content License
@@ -130,7 +173,7 @@ ${companyName} holds the legal rights necessary to license the content further d
 The use of the following content in accordance with our Terms of Use (${certData.termsUrl}) by ${displayName} shall therefore not constitute a valid basis for a copyright infringement or de-monetization claim by a third party (including claims for master or publishing rights of the same).
 
 The content licensed can be referenced from our platform:
-• ${certData.sampleFilename} (licensed ${certData.shortDate})
+• ${certData.sampleFilename} (${certData.sampleUrl}) (licensed ${certData.shortDate})
 
 Please see our Terms of Use (${certData.termsUrl}) for more specific information pertaining to the parameters and permitted uses of this license, which includes, without limitation, the right to create new derivative works embodying the content in both audio and audiovisual formats, and to distribute such content via any method or manner now known or hereafter created which shall include, without limitation, any digital service providers that the above licensee may choose.
 
