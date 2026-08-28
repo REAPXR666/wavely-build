@@ -1,8 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  ShieldCheck, Award, Printer, Copy, Check, ExternalLink, X, FileText, 
-  Lock, Music, Sparkles, Hash, Calendar, User, Radio, Info
-} from 'lucide-react';
+import { Printer, Copy, Check, ExternalLink, X } from 'lucide-react';
 
 export default function LicenseCertificateModal({ 
   sound, 
@@ -13,45 +10,41 @@ export default function LicenseCertificateModal({
 }) {
   const [copied, setCopied] = useState(false);
 
-  // Generate deterministic/unique Certificate ID and metadata
+  // Format date and sample filename
   const certData = useMemo(() => {
     if (!sound) return null;
 
-    const rawId = sound.uuid || sound.id || sound.name || 'sample';
-    let hash = 0;
-    for (let i = 0; i < rawId.length; i++) {
-      hash = ((hash << 5) - hash) + rawId.charCodeAt(i);
-      hash |= 0;
-    }
-    const cleanHash = Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
-    const certCode = `WLY-CERT-${new Date().getFullYear()}-${cleanHash.slice(0, 4)}-${cleanHash.slice(4, 8)}`;
-
-    const dateStr = new Date().toLocaleDateString('en-US', {
+    const dateObj = new Date();
+    const formattedDate = dateObj.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
 
-    const licensee = user?.username || 'Licensed Wavely Studio Producer';
-    const email = user?.email || 'Verified Account';
-    const plan = subscription?.plan ? subscription.plan.replace('_', ' ').toUpperCase() : 'PRO UNLIMITED';
+    const shortDate = dateObj.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+
+    // Clean filename formatted like Splice sample names (e.g. VOX_KEH_126_vocal_hook_wet_Am.wav)
+    let sampleFilename = sound.name || 'sample_asset.wav';
+    if (!sampleFilename.toLowerCase().endsWith('.wav') && !sampleFilename.toLowerCase().endsWith('.mp3')) {
+      sampleFilename = `${sampleFilename.replace(/\s+/g, '_')}.wav`;
+    }
+
+    const licenseeName = user?.username ? user.username : 'Louis Woolford-Jones';
+
+    const certId = sound.uuid || sound.id || 'sample';
 
     return {
-      certCode,
-      dateStr,
-      licensee,
-      email,
-      plan,
-      sampleName: sound.name || 'Wavely Sample',
-      packName: sound.pack || sound.source || 'Wavely Master Sound Library',
-      bpm: sound.bpm ? `${sound.bpm} BPM` : 'N/A',
-      key: sound.key || 'N/A',
-      duration: sound.duration || 'N/A',
-      category: sound.category || (sound.tags && sound.tags[0]) || 'Audio Sample',
-      fingerprint: `SHA256:${cleanHash}${cleanHash}${cleanHash.slice(0, 4)}`.toUpperCase(),
-      verifyUrl: `https://wavely.lol/certificate/${certCode}`
+      formattedDate,
+      shortDate,
+      sampleFilename,
+      licenseeName,
+      verifyUrl: `https://wavely.lol/certificate/${certId}`
     };
-  }, [sound, user, subscription]);
+  }, [sound, user]);
 
   if (!certData) return null;
 
@@ -60,27 +53,29 @@ export default function LicenseCertificateModal({
   };
 
   const handleCopyClearance = () => {
-    const text = `--- OFFICIAL WAVELY LICENSE & CLEARANCE CERTIFICATE ---
-Certificate ID: ${certData.certCode}
-Verification URL: ${certData.verifyUrl}
-Issue Date: ${certData.dateStr}
+    const text = `Certificate of Content License
 
-LICENSEE INFORMATION:
-Producer: ${certData.licensee}
-Account Email: ${certData.email}
-Membership Tier: Wavely ${certData.plan}
+${certData.formattedDate}
 
-SAMPLE ASSET CLEARANCE:
-Sample Title: ${certData.sampleName}
-Pack / Catalog: ${certData.packName}
-Tempo / Key: ${certData.bpm} | ${certData.key}
-Asset Fingerprint: ${certData.fingerprint}
+To Whom It May Concern:
 
-CLEARANCE GRANT & COMMERCIAL RIGHTS:
-The licensee identified above holds an official, worldwide, perpetual, non-exclusive, royalty-free license to use, reproduce, modify, and synchronize this sound recording into original musical compositions and audiovisual productions (including commercial streaming on Spotify/Apple Music, YouTube Content ID whitelist, digital downloads, TV, Film, Video Games, and Public Broadcast).
+Wavely Technologies Inc. (“Wavely”) holds the legal rights necessary to license the content further described herein and has licensed such content to ${certData.licenseeName} on a perpetual, royalty-free, non-exclusive basis.
 
-Issued by Wavely Technologies Licensing Authority.
--------------------------------------------------------`;
+The use of the following content in accordance with our Terms of Use by ${certData.licenseeName} shall therefore not constitute a valid basis for a copyright infringement or de-monetization claim by a third party (including claims for master or publishing rights of the same).
+
+The content licensed can be referenced from our platform:
+• ${certData.sampleFilename} (licensed ${certData.shortDate})
+
+Please see our Terms of Use for more specific information pertaining to the parameters and permitted uses of this license, which includes, without limitation, the right to create new derivative works embodying the content in both audio and audiovisual formats, and to distribute such content via any method or manner now known or hereafter created which shall include, without limitation, any digital service providers that the above licensee may choose.
+
+If further assistance is required in verifying the validity and scope of this license, please feel free to reach out to us directly at copyright@wavely.lol.
+
+Thank you,
+The Wavely Team
+
+Wavely Technologies, Inc.
+817 Broadway, 4th Floor
+New York, NY 10003`;
 
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
@@ -98,194 +93,119 @@ Issued by Wavely Technologies Licensing Authority.
   };
 
   return (
-    <div className="license-modal-overlay" onClick={onClose}>
-      <div className="license-modal-container" onClick={(e) => e.stopPropagation()}>
+    <div className="splice-cert-overlay" onClick={onClose}>
+      <div className="splice-cert-modal-container" onClick={(e) => e.stopPropagation()}>
         
         {/* Modal Top Control Bar (Hidden in Print) */}
-        <div className="license-modal-toolbar no-print">
-          <div className="license-toolbar-left">
-            <div className="license-badge-pill">
-              <ShieldCheck size={16} className="text-emerald" />
-              <span>Official License Certificate</span>
-            </div>
-            <span className="cert-code-pill font-mono">{certData.certCode}</span>
+        <div className="splice-cert-toolbar no-print">
+          <div className="splice-cert-toolbar-title">
+            <span>Certificate of Content License</span>
           </div>
 
-          <div className="license-toolbar-actions">
+          <div className="splice-cert-toolbar-actions">
             <button 
-              className="license-action-btn"
+              className="splice-cert-btn"
               onClick={handleCopyClearance}
-              title="Copy standard clearance text for YouTube dispute or digital distributors (DistroKid, TuneCore, etc.)"
+              title="Copy statement for YouTube Content ID dispute or digital distributors"
             >
-              {copied ? <Check size={15} className="text-emerald" /> : <Copy size={15} />}
+              {copied ? <Check size={14} className="text-emerald" /> : <Copy size={14} />}
               <span>{copied ? 'Copied Statement!' : 'Copy Dispute Text'}</span>
             </button>
 
             <button 
-              className="license-action-btn primary"
+              className="splice-cert-btn primary"
               onClick={handlePrint}
-              title="Save as PDF or print high-resolution certificate"
+              title="Save as PDF or print high-resolution document"
             >
-              <Printer size={15} />
+              <Printer size={14} />
               <span>Print / Save PDF</span>
             </button>
 
             <button 
-              className="license-action-btn"
+              className="splice-cert-btn"
               onClick={handleOpenVerifyUrl}
-              title="Verify online on wavely.lol"
+              title="Open online verification"
             >
-              <ExternalLink size={15} />
+              <ExternalLink size={14} />
               <span>Verify Online</span>
             </button>
 
-            <button className="license-close-btn" onClick={onClose} title="Close modal">
-              <X size={18} />
+            <button className="splice-cert-close" onClick={onClose} title="Close modal">
+              <X size={16} />
             </button>
           </div>
         </div>
 
-        {/* Printable Certificate Document Card */}
-        <div className="certificate-document-card" id="printable-certificate">
+        {/* 1:1 Splice-Style Document Sheet */}
+        <div className="splice-cert-sheet" id="printable-certificate">
           
-          {/* Certificate Frame Borders */}
-          <div className="cert-border-outer">
-            <div className="cert-border-inner">
-              
-              {/* Watermark Crest */}
-              <div className="cert-watermark-crest">
-                <Award size={240} />
-              </div>
+          {/* Centered Top Brand Logo Mark */}
+          <div className="splice-cert-logo-center">
+            <svg width="44" height="44" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="22" y="18" width="22" height="38" rx="11" transform="rotate(-35 22 18)" fill="#000000" />
+              <rect x="52" y="38" width="22" height="38" rx="11" transform="rotate(-35 52 38)" fill="#000000" />
+            </svg>
+          </div>
 
-              {/* Certificate Header */}
-              <div className="cert-header">
-                <div className="cert-brand-seal">
-                  <div className="cert-seal-icon">
-                    <ShieldCheck size={28} />
-                  </div>
-                  <div className="cert-brand-meta">
-                    <div className="cert-brand-title">WAVELY</div>
-                    <div className="cert-brand-sub">LICENSING & COPYRIGHT CLEARANCE DIVISION</div>
-                  </div>
-                </div>
+          {/* Certificate Title */}
+          <h1 className="splice-cert-title">
+            Certificate of Content License
+          </h1>
 
-                <div className="cert-meta-header-box font-mono">
-                  <div className="cert-meta-row">
-                    <span className="label">CERTIFICATE ID:</span>
-                    <strong className="val text-gold">{certData.certCode}</strong>
-                  </div>
-                  <div className="cert-meta-row">
-                    <span className="label">ISSUED DATE:</span>
-                    <span className="val">{certData.dateStr}</span>
-                  </div>
-                  <div className="cert-meta-row">
-                    <span className="label">STATUS:</span>
-                    <span className="val text-emerald">VERIFIED & ACTIVE</span>
-                  </div>
-                </div>
-              </div>
+          {/* Issue Date */}
+          <div className="splice-cert-date">
+            {certData.formattedDate}
+          </div>
 
-              {/* Title Section */}
-              <div className="cert-title-section">
-                <div className="cert-main-title">Certificate of Royalty-Free License</div>
-                <div className="cert-subtitle">
-                  Perpetual Worldwide Commercial Synchronization & Master Recording Grant
-                </div>
-              </div>
+          {/* Formal Salutation */}
+          <div className="splice-cert-salutation">
+            To Whom It May Concern:
+          </div>
 
-              {/* 2-Column Info Grid */}
-              <div className="cert-grid-info">
-                
-                {/* Licensee Column */}
-                <div className="cert-info-block">
-                  <div className="cert-block-heading">
-                    <User size={14} />
-                    <span>Authorized Licensee</span>
-                  </div>
-                  <div className="cert-field-row">
-                    <span className="field-name">Producer / User:</span>
-                    <span className="field-val"><strong>{certData.licensee}</strong></span>
-                  </div>
-                  <div className="cert-field-row">
-                    <span className="field-name">Registered Email:</span>
-                    <span className="field-val font-mono">{certData.email}</span>
-                  </div>
-                  <div className="cert-field-row">
-                    <span className="field-name">License Scope:</span>
-                    <span className="field-val">Commercial Master & Sync</span>
-                  </div>
-                  <div className="cert-field-row">
-                    <span className="field-name">Territory:</span>
-                    <span className="field-val">Worldwide & In Perpetuity</span>
-                  </div>
-                </div>
+          {/* Body Paragraph 1 */}
+          <p className="splice-cert-paragraph">
+            Wavely Technologies Inc. (“Wavely”) holds the legal rights necessary to license the content further described herein and has licensed such content to <strong>{certData.licenseeName}</strong> on a perpetual, royalty-free, non-exclusive basis.
+          </p>
 
-                {/* Sample Details Column */}
-                <div className="cert-info-block">
-                  <div className="cert-block-heading">
-                    <Music size={14} />
-                    <span>Cleared Sample Asset</span>
-                  </div>
-                  <div className="cert-field-row">
-                    <span className="field-name">Asset Title:</span>
-                    <span className="field-val highlight-sample"><strong>{certData.sampleName}</strong></span>
-                  </div>
-                  <div className="cert-field-row">
-                    <span className="field-name">Origin / Pack:</span>
-                    <span className="field-val">{certData.packName}</span>
-                  </div>
-                  <div className="cert-field-row">
-                    <span className="field-name">Tempo & Key:</span>
-                    <span className="field-val font-mono">{certData.bpm} &bull; {certData.key}</span>
-                  </div>
-                  <div className="cert-field-row">
-                    <span className="field-name">Digital Fingerprint:</span>
-                    <span className="field-val font-mono text-muted-xs">{certData.fingerprint}</span>
-                  </div>
-                </div>
+          {/* Body Paragraph 2 */}
+          <p className="splice-cert-paragraph">
+            The use of the following content in accordance with our <a href="https://wavely.lol/terms" target="_blank" rel="noreferrer" className="splice-cert-link">Terms of Use</a> by <strong>{certData.licenseeName}</strong> shall therefore not constitute a valid basis for a copyright infringement or de-monetization claim by a third party (including claims for master or publishing rights of the same).
+          </p>
 
-              </div>
+          {/* Body Paragraph 3 - Platform Reference */}
+          <p className="splice-cert-paragraph" style={{ marginBottom: '8px' }}>
+            The content licensed can be referenced from our platform:
+          </p>
 
-              {/* Legal Terms Clause */}
-              <div className="cert-legal-clause-box">
-                <div className="cert-legal-title">
-                  <Lock size={13} />
-                  <span>Grant of Rights & Legal Clearance Clause</span>
-                </div>
-                <p className="cert-legal-text">
-                  Wavely hereby certifies that the registered licensee has acquired full, perpetual, non-exclusive, and royalty-free rights to commercially synchronize, release, perform, and distribute original sound recordings utilizing the cleared audio sample asset referenced herein. This certificate grants unrestricted worldwide commercial distribution across all digital streaming platforms (including <strong>Spotify, Apple Music, YouTube Music, Beatport, TikTok</strong>), YouTube Content ID monetization, broadcast radio, television synchronization, motion pictures, video games, and physical media with zero ongoing royalty obligations to original sound designers or Wavely Technologies.
-                </p>
-              </div>
+          {/* Bullet point sample line */}
+          <ul className="splice-cert-list">
+            <li>
+              <a href={certData.verifyUrl} target="_blank" rel="noreferrer" className="splice-cert-link">
+                {certData.sampleFilename}
+              </a>{' '}
+              <span style={{ color: '#000000' }}>(licensed {certData.shortDate})</span>
+            </li>
+          </ul>
 
-              {/* Bottom Stamp & Signature Area */}
-              <div className="cert-footer-row">
-                <div className="cert-signature-block">
-                  <div className="cert-sig-line">
-                    <span className="cert-sig-script">Wavely Licensing Trust</span>
-                  </div>
-                  <div className="cert-sig-meta">
-                    <strong>Wavely Technologies Inc.</strong>
-                    <span>Digital Rights Management & Verification Registry</span>
-                  </div>
-                </div>
+          {/* Body Paragraph 4 - Permitted Uses */}
+          <p className="splice-cert-paragraph">
+            Please see our <a href="https://wavely.lol/terms" target="_blank" rel="noreferrer" className="splice-cert-link">Terms of Use</a> for more specific information pertaining to the parameters and permitted uses of this license, which includes, without limitation, the right to create new derivative works embodying the content in both audio and audiovisual formats, and to distribute such content via any method or manner now known or hereafter created which shall include, without limitation, any digital service providers that the above licensee may choose.
+          </p>
 
-                <div className="cert-stamp-badge">
-                  <div className="cert-stamp-inner">
-                    <div className="cert-stamp-text-top">WAVELY CERTIFIED</div>
-                    <Award size={32} className="cert-stamp-icon" />
-                    <div className="cert-stamp-text-bot">100% ROYALTY FREE</div>
-                  </div>
-                </div>
+          {/* Body Paragraph 5 - Contact Clause */}
+          <p className="splice-cert-paragraph">
+            If further assistance is required in verifying the validity and scope of this license, please feel free to reach out to us directly at <a href="mailto:copyright@wavely.lol" className="splice-cert-link">copyright@wavely.lol</a>.
+          </p>
 
-                <div className="cert-verify-qr-block font-mono">
-                  <div className="cert-verify-link-title">VERIFY ONLINE:</div>
-                  <a href={certData.verifyUrl} target="_blank" rel="noreferrer" className="cert-verify-url">
-                    {certData.verifyUrl}
-                  </a>
-                  <div className="cert-verify-notice">Tamper-evident digital clearance record</div>
-                </div>
-              </div>
+          {/* Signature & Address Block */}
+          <div className="splice-cert-signature-block">
+            <p className="splice-cert-signoff-line">Thank you,</p>
+            <p className="splice-cert-signoff-line" style={{ marginBottom: '20px' }}>The Wavely Team</p>
 
+            <div className="splice-cert-company-address">
+              <p>Wavely Technologies, Inc.</p>
+              <p>817 Broadway, 4th Floor</p>
+              <p>New York, NY 10003</p>
             </div>
           </div>
 
