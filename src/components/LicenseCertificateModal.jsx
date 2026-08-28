@@ -14,10 +14,17 @@ export function buildSpliceSampleUrl(sound) {
     return sound.sampleUrl;
   }
 
-  // 1. Primary identifier: fileHash (SHA256 hex) or uuid
-  let hashOrUuid = sound.fileHash || sound.hash || sound.uuid || '';
-  if (!hashOrUuid && sound.id) {
-    hashOrUuid = sound.id.replace(/^splice-(preset-)?/, '');
+  // 1. Extract 64-character SHA-256 hash from all possible sources
+  let hash64 = '';
+  const hashSources = [sound.fileHash, sound.hash, sound.previewUrl, sound.uuid, sound.id];
+  for (const src of hashSources) {
+    if (src && typeof src === 'string') {
+      const match = src.match(/([a-f0-9]{64})/i);
+      if (match) {
+        hash64 = match[1];
+        break;
+      }
+    }
   }
 
   // 2. Clean Pack Name
@@ -62,12 +69,13 @@ export function buildSpliceSampleUrl(sound) {
     slug = cleanName ? `${cleanName}-sample` : 'sample';
   }
 
-  if (hashOrUuid) {
-    return `https://splice.com/sounds/sample/${hashOrUuid}/${slug}`;
+  if (hash64) {
+    return `https://splice.com/sounds/sample/${hash64}/${slug}`;
   }
 
-  // Fallback search query if no ID
-  return `https://splice.com/sounds/search?q=${encodeURIComponent(sound.name || '')}`;
+  // Safe Fallback search query on Splice so it NEVER gives 404
+  const searchQuery = (sound.name || '').replace(/\.wav$|\.mp3$/i, '').trim();
+  return `https://splice.com/sounds/search?q=${encodeURIComponent(searchQuery || 'samples')}`;
 }
 
 export default function LicenseCertificateModal({ 

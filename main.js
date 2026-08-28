@@ -650,19 +650,29 @@ function parseCookiesText(text) {
 }
 
 let lastFailedCredentialsHash = null;
+let lastRemoteFetchTime = 0;
+let isFetchingCredentials = false;
 
 function getCredentialsHash(credentials) {
   if (!credentials) return '';
   return `${credentials.authorization || ''}::${credentials.cookie || ''}`;
 }
 
-function fetchRemoteCredentials() {
+function fetchRemoteCredentials(force = false) {
+  const now = Date.now();
+  if (!force && (now - lastRemoteFetchTime < 15 * 60 * 1000 || isFetchingCredentials)) {
+    return Promise.resolve(cachedSpliceCredentials || parseSpliceCredentials());
+  }
+  isFetchingCredentials = true;
+  lastRemoteFetchTime = now;
+
   return new Promise((resolve) => {
     const url = 'https://raw.githubusercontent.com/REAPXR666/Wavely/refs/heads/main/cookies.txt';
     console.log(`[Credentials] Fetching remote credentials from: ${url}`);
     
     const client = https;
-    const req = client.get(url, { timeout: 4000 }, (res) => {
+    const req = client.get(url, { timeout: 3500 }, (res) => {
+      isFetchingCredentials = false;
       if (res.statusCode !== 200) {
         console.error(`[Credentials] Remote fetch failed with status code: ${res.statusCode}`);
         return resolve(null);
@@ -1096,7 +1106,11 @@ function querySpliceDirect(queryText, isPreset = false, page = 1, categorySlug =
               }
 
               const packUuidVal = parentPack ? parentPack.uuid : '';
-              const fileHash = file ? file.hash : '';
+              let fileHash = file ? file.hash : '';
+              if (!fileHash && mp3) {
+                const hashMatch = mp3.match(/([a-f0-9]{64})/i);
+                if (hashMatch) fileHash = hashMatch[1];
+              }
               const assetCategory = item.asset_category_slug || '';
 
               if (isPreset) {
@@ -1820,19 +1834,28 @@ function scrapeSplice(query, isPreset = false, categorySlug = null) {
   });
 }
 
+// Sound Search In-Memory Cache for ultra-fast repeat searches (< 5ms)
+const soundSearchCache = new Map();
+
 // Master search sounds pipeline
 ipcMain.handle('search-sounds', async (event, query, filters) => {
-  try {
-    await fetchRemoteCredentials();
-  } catch (err) {
-    console.error('Failed to update remote credentials before sound search:', err);
-  }
+  // Check remote credentials asynchronously in background without blocking sound search
+  fetchRemoteCredentials().catch(() => {});
 
   const normalizedQuery = (query || '').toLowerCase().trim();
   const categorySlug = (filters && filters.category) || null; // 'loop', 'oneshot', or null
   const packUuid = (filters && filters.packUuid) || null;
   const startPage = (filters && filters.startPage) || 1;
-  const endPage = (filters && filters.endPage) || 4;
+  const endPage = (filters && filters.endPage) || 2; // Fast 2-page batch (up to 100 samples)
+
+  const cacheKey = `${normalizedQuery}|${categorySlug}|${packUuid}|${startPage}|${endPage}|${JSON.stringify(filters || {})}`;
+  if (soundSearchCache.has(cacheKey)) {
+    const cached = soundSearchCache.get(cacheKey);
+    if (Date.now() - cached.timestamp < 5 * 60 * 1000) {
+      return cached.results;
+    }
+  }
+
   let searchResults = [];
   const localFilesById = new Map(
     db.indexedFiles
@@ -1889,62 +1912,17 @@ ipcMain.handle('search-sounds', async (event, query, filters) => {
     exactBpm: exactBpmParam
   };
 
-  // Query expansion helper for rich catalog matching (e.g. "drum and bass" -> "dnb", "drum & bass")
-  const expandQueries = (qText) => {
-    const clean = (qText || '').toLowerCase().trim();
-    const qSet = new Set();
-    if (clean) qSet.add(clean);
-
-    if (clean.includes('drum and bass')) {
-      qSet.add(clean.replace(/drum and bass/g, 'dnb'));
-      qSet.add(clean.replace(/drum and bass/g, 'drum & bass'));
-    } else if (clean.includes('dnb')) {
-      qSet.add(clean.replace(/dnb/g, 'drum and bass'));
-      qSet.add(clean.replace(/dnb/g, 'drum & bass'));
-    }
-
-    if (clean.includes('hip hop')) {
-      qSet.add(clean.replace(/hip hop/g, 'hiphop'));
-      qSet.add(clean.replace(/hip hop/g, 'trap'));
-    }
-
-    if (clean.includes('lo-fi')) {
-      qSet.add(clean.replace(/lo-fi/g, 'lofi'));
-    } else if (clean.includes('lofi')) {
-      qSet.add(clean.replace(/lofi/g, 'lo-fi'));
-    }
-
-    if (qSet.size === 0) qSet.add('');
-    return Array.from(qSet);
-  };
-
-  const queryVariations = expandQueries(normalizedQuery);
-
-  // 2. Splice API or Scraper Search (Always query Splice for live results across variations)
+  // 2. Direct Splice API Search (Optimized & Non-blocking)
   try {
-    console.log(`Searching Splice directly for variations [${queryVariations.join(', ')}] (key: ${keyParam || 'any'} ${chordTypeParam || ''}) (bpm: ${minBpmParam || ''}-${maxBpmParam || ''}) (category: ${categorySlug || 'all'}) (pages: ${startPage}-${endPage}) (packUuid: ${packUuid || 'none'})`);
     const pagePromises = [];
-    queryVariations.forEach(qVar => {
-      for (let p = startPage; p <= endPage; p++) {
-        pagePromises.push(querySpliceDirect(qVar, false, p, categorySlug, packUuid, queryOptions));
-      }
-    });
+    for (let p = startPage; p <= endPage; p++) {
+      pagePromises.push(querySpliceDirect(normalizedQuery, false, p, categorySlug, packUuid, queryOptions).catch(() => []));
+    }
     const pageResults = await Promise.all(pagePromises);
     const spliceResults = pageResults.flat();
-    console.log(`Direct Splice API returned ${spliceResults.length} total results across variations.`);
     searchResults = [...searchResults, ...spliceResults];
   } catch (err) {
-    if (err.message.includes('401') || err.message.includes('403') || err.message.includes('Credentials')) {
-      console.warn(`Direct Splice API search failed with credentials error: ${err.message}. Querying via headless scraper fallback.`);
-      try {
-        const spliceResults = await scrapeSplice(normalizedQuery, false, categorySlug);
-        searchResults = [...searchResults, ...spliceResults];
-      } catch (errFallback) {
-        console.error('Splice scraper search fallback failed:', errFallback);
-      }
-    } else {
-      console.error('Direct Splice API search failed with network/other error:', err.message);
-    }
+    console.warn('Splice sound search error:', err.message);
   }
 
   // Deduplicate
@@ -2011,6 +1989,11 @@ ipcMain.handle('search-sounds', async (event, query, filters) => {
       return requiredKeywords.some(kw => lowerName.includes(kw) || tagsLower.includes(kw));
     });
   }
+
+  soundSearchCache.set(cacheKey, {
+    timestamp: Date.now(),
+    results: finalResults
+  });
 
   return finalResults;
 });
