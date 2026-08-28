@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, Play, Pause, CloudDownload, Download, FolderOpen, Loader2, CheckCircle2, SlidersHorizontal, 
   HelpCircle, ChevronLeft, ChevronRight, ChevronDown, Check, X, Sparkles, Gem, Sliders,
@@ -25,6 +25,7 @@ export default function SoundsPage({
   user,
   subscription
 }) {
+  const activeSearchIdRef = useRef(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [activeTags, setActiveTags] = useState([]);
@@ -241,9 +242,10 @@ export default function SoundsPage({
 
   // Fetch sounds — only triggered on Enter key, tag click, sort change, or category change
   const fetchSounds = async (queryOverride) => {
+    const currentSearchId = ++activeSearchIdRef.current;
     const queryToUse = queryOverride !== undefined ? queryOverride : submittedQuery;
     setLoading(true);
-    setLoadedPages(4);
+    setLoadedPages(2);
     setHasMore(true);
     try {
       const filters = { 
@@ -257,7 +259,7 @@ export default function SoundsPage({
         maxBpm: appliedBpmFilter?.type === 'range' ? appliedBpmFilter.max : (appliedBpmFilter?.type === 'preset' ? appliedBpmFilter.max : null),
         bpm: appliedBpmFilter?.type === 'preset' ? appliedBpmFilter.presetCode : (appliedBpmFilter?.type === 'exact' ? appliedBpmFilter.exact : null),
         startPage: 1,
-        endPage: 4,
+        endPage: 2,
         packUuid: activePack ? activePack.uuid : null
       };
 
@@ -272,10 +274,14 @@ export default function SoundsPage({
       const query = queryTokens.filter(Boolean).join(' ').trim();
 
       const results = await window.electron.searchSounds(query, filters);
+      if (currentSearchId !== activeSearchIdRef.current) {
+        return; // Discard stale request
+      }
+
       setSoundsList(results);
 
       const spliceCount = results.filter(s => s.source === 'Splice').length;
-      if (spliceCount < 180) {
+      if (spliceCount < 90) {
         setHasMore(false);
       }
 
@@ -284,8 +290,11 @@ export default function SoundsPage({
       }
     } catch (err) {
       console.error('Failed to search sounds:', err);
+    } finally {
+      if (currentSearchId === activeSearchIdRef.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   };
 
   const loadMoreSounds = async () => {

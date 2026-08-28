@@ -2060,11 +2060,7 @@ ipcMain.handle('search-sounds', async (event, query, filters) => {
 
 // VST Preset search pipeline
 ipcMain.handle('search-presets', async (event, query, filters) => {
-  try {
-    await fetchRemoteCredentials();
-  } catch (err) {
-    console.error('Failed to update remote credentials before preset search:', err);
-  }
+  fetchRemoteCredentials().catch(() => {});
 
   const rawQuery = (query || '').trim();
   const synthFilter = filters && filters.synth && filters.synth !== 'All' ? filters.synth : '';
