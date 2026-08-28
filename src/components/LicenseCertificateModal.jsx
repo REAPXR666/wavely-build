@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Download, Copy, Check, ExternalLink, X, User, Mail, ShieldCheck, Loader2 } from 'lucide-react';
-import spliceLogoUrl from '../assets/splice-logo.webp';
+import { SPLICE_LOGO_BASE64 } from './spliceLogoBase64';
 
 // Robust helper to construct the exact Splice sample URL matching Splice website format
 export function buildSpliceSampleUrl(sound) {
@@ -207,7 +207,7 @@ export default function LicenseCertificateModal({
 </head>
 <body>
   <div class="logo-wrap">
-    <img src="${spliceLogoUrl}" class="logo-img" alt="Splice Logo" />
+    <img src="${SPLICE_LOGO_BASE64}" class="logo-img" alt="Splice Logo" />
   </div>
   <h1>Certificate of Content License</h1>
   <div class="date">${certData.formattedDate}</div>
@@ -381,7 +381,7 @@ New York, NY 10003`;
           {/* Centered Top Brand Logo Mark */}
           <div className="splice-cert-logo-center">
             <img 
-              src={spliceLogoUrl} 
+              src={SPLICE_LOGO_BASE64} 
               alt="Splice Logo" 
               style={{ width: '48px', height: '48px', objectFit: 'contain', display: 'block' }} 
             />

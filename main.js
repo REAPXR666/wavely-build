@@ -590,6 +590,7 @@ ipcMain.handle('save-certificate-pdf', async (event, { defaultFileName, certHtml
     });
 
     await printWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(certHtml)}`);
+    await new Promise((r) => setTimeout(r, 200));
 
     const pdfBuffer = await printWin.webContents.printToPDF({
       pageSize: 'Letter',
