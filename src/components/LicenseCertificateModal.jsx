@@ -32,16 +32,12 @@ export default function LicenseCertificateModal({
     }
   }, [email]);
 
-  // Compute display licensee name: entered full name, or fallback to 'Wavely'
+  // Compute display licensee name: entered full name, or fallback to 'WAVELY'
   const displayName = useMemo(() => {
     return fullName.trim() ? fullName.trim() : 'WAVELY';
   }, [fullName]);
 
-  const displayEmail = useMemo(() => {
-    return email.trim() ? email.trim() : 'support@wavely.lol';
-  }, [email]);
-
-  // Format date and sample filename
+  // Format date, sample filename, and exact Splice sample URL
   const certData = useMemo(() => {
     if (!sound) return null;
 
@@ -58,23 +54,49 @@ export default function LicenseCertificateModal({
       day: 'numeric'
     });
 
-    // Clean sample filename
+    // Clean sample filename (e.g. BOS_GTC_128_Vocal_Adlib_Loop_OhWoah_Wet_A#m.wav)
     let sampleFilename = sound.name || 'sample_asset.wav';
     if (!sampleFilename.toLowerCase().endsWith('.wav') && !sampleFilename.toLowerCase().endsWith('.mp3')) {
       sampleFilename = `${sampleFilename.replace(/\s+/g, '_')}.wav`;
     }
 
-    const certId = sound.uuid || sound.id || 'sample';
+    // Build exact Splice Sample URL: https://splice.com/sounds/sample/<uuid>/<slug>
+    const uuid = sound.uuid || sound.id || '';
+    const slug = (sound.name || 'sample')
+      .toLowerCase()
+      .replace(/\.wav$|\.mp3$/i, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    let sampleUrl = 'https://splice.com/sounds';
+    if (uuid && slug) {
+      sampleUrl = `https://splice.com/sounds/sample/${uuid}/${slug}`;
+    } else if (uuid) {
+      sampleUrl = `https://splice.com/sounds/sample/${uuid}`;
+    } else {
+      sampleUrl = `https://splice.com/sounds/search?q=${encodeURIComponent(sound.name || '')}`;
+    }
 
     return {
       formattedDate,
       shortDate,
       sampleFilename,
-      verifyUrl: `https://wavely.lol/certificate/${certId}?licensee=${encodeURIComponent(displayName)}&email=${encodeURIComponent(displayEmail)}`
+      sampleUrl,
+      termsUrl: 'https://splice.com/terms',
+      copyrightEmail: 'copyright@splice.com'
     };
-  }, [sound, displayName, displayEmail]);
+  }, [sound]);
 
   if (!certData) return null;
+
+  const handleLinkClick = (url, e) => {
+    if (e) e.preventDefault();
+    if (window.electron?.openExternal) {
+      window.electron.openExternal(url);
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   const handlePrint = () => {
     window.print();
@@ -89,14 +111,14 @@ To Whom It May Concern:
 
 Wavely Technologies Inc. (“Wavely”) holds the legal rights necessary to license the content further described herein and has licensed such content to ${displayName} on a perpetual, royalty-free, non-exclusive basis.
 
-The use of the following content in accordance with our Terms of Use by ${displayName} shall therefore not constitute a valid basis for a copyright infringement or de-monetization claim by a third party (including claims for master or publishing rights of the same).
+The use of the following content in accordance with our Terms of Use (${certData.termsUrl}) by ${displayName} shall therefore not constitute a valid basis for a copyright infringement or de-monetization claim by a third party (including claims for master or publishing rights of the same).
 
 The content licensed can be referenced from our platform:
-• ${certData.sampleFilename} (licensed ${certData.shortDate})
+• ${certData.sampleFilename} (${certData.sampleUrl}) (licensed ${certData.shortDate})
 
-Please see our Terms of Use for more specific information pertaining to the parameters and permitted uses of this license, which includes, without limitation, the right to create new derivative works embodying the content in both audio and audiovisual formats, and to distribute such content via any method or manner now known or hereafter created which shall include, without limitation, any digital service providers that the above licensee may choose.
+Please see our Terms of Use (${certData.termsUrl}) for more specific information pertaining to the parameters and permitted uses of this license, which includes, without limitation, the right to create new derivative works embodying the content in both audio and audiovisual formats, and to distribute such content via any method or manner now known or hereafter created which shall include, without limitation, any digital service providers that the above licensee may choose.
 
-If further assistance is required in verifying the validity and scope of this license, please feel free to reach out to us directly at copyright@wavely.lol.
+If further assistance is required in verifying the validity and scope of this license, please feel free to reach out to us directly at ${certData.copyrightEmail}.
 
 Thank you,
 The Wavely Team
@@ -110,14 +132,6 @@ New York, NY 10003`;
       if (showToast) showToast('License clearance statement copied to clipboard!', 'success');
       setTimeout(() => setCopied(false), 3000);
     });
-  };
-
-  const handleOpenVerifyUrl = () => {
-    if (window.electron?.openExternal) {
-      window.electron.openExternal(certData.verifyUrl);
-    } else {
-      window.open(certData.verifyUrl, '_blank');
-    }
   };
 
   return (
@@ -155,11 +169,11 @@ New York, NY 10003`;
 
               <button 
                 className="splice-cert-btn"
-                onClick={handleOpenVerifyUrl}
-                title="Open online verification on wavely.lol"
+                onClick={(e) => handleLinkClick(certData.sampleUrl, e)}
+                title="Open sample page on Splice"
               >
                 <ExternalLink size={14} />
-                <span>Verify Online</span>
+                <span>View Sample</span>
               </button>
 
               <button className="splice-cert-close" onClick={onClose} title="Close modal">
@@ -232,9 +246,19 @@ New York, NY 10003`;
             Wavely Technologies Inc. (“Wavely”) holds the legal rights necessary to license the content further described herein and has licensed such content to <strong>{displayName}</strong> on a perpetual, royalty-free, non-exclusive basis.
           </p>
 
-          {/* Body Paragraph 2 */}
+          {/* Body Paragraph 2 - Link 1: Terms of Use */}
           <p className="splice-cert-paragraph">
-            The use of the following content in accordance with our <a href="https://wavely.lol/terms" target="_blank" rel="noreferrer" className="splice-cert-link">Terms of Use</a> by <strong>{displayName}</strong> shall therefore not constitute a valid basis for a copyright infringement or de-monetization claim by a third party (including claims for master or publishing rights of the same).
+            The use of the following content in accordance with our{' '}
+            <a 
+              href={certData.termsUrl} 
+              onClick={(e) => handleLinkClick(certData.termsUrl, e)}
+              target="_blank" 
+              rel="noreferrer" 
+              className="splice-cert-link"
+            >
+              Terms of Use
+            </a>{' '}
+            by <strong>{displayName}</strong> shall therefore not constitute a valid basis for a copyright infringement or de-monetization claim by a third party (including claims for master or publishing rights of the same).
           </p>
 
           {/* Body Paragraph 3 - Platform Reference */}
@@ -242,24 +266,47 @@ New York, NY 10003`;
             The content licensed can be referenced from our platform:
           </p>
 
-          {/* Bullet point sample line */}
+          {/* Bullet point sample line - Link 2: Sample URL */}
           <ul className="splice-cert-list">
             <li>
-              <a href={certData.verifyUrl} target="_blank" rel="noreferrer" className="splice-cert-link">
+              <a 
+                href={certData.sampleUrl} 
+                onClick={(e) => handleLinkClick(certData.sampleUrl, e)}
+                target="_blank" 
+                rel="noreferrer" 
+                className="splice-cert-link"
+              >
                 {certData.sampleFilename}
               </a>{' '}
               <span style={{ color: '#000000' }}>(licensed {certData.shortDate})</span>
             </li>
           </ul>
 
-          {/* Body Paragraph 4 - Permitted Uses */}
+          {/* Body Paragraph 4 - Permitted Uses - Link 3: Terms of Use */}
           <p className="splice-cert-paragraph">
-            Please see our <a href="https://wavely.lol/terms" target="_blank" rel="noreferrer" className="splice-cert-link">Terms of Use</a> for more specific information pertaining to the parameters and permitted uses of this license, which includes, without limitation, the right to create new derivative works embodying the content in both audio and audiovisual formats, and to distribute such content via any method or manner now known or hereafter created which shall include, without limitation, any digital service providers that the above licensee may choose.
+            Please see our{' '}
+            <a 
+              href={certData.termsUrl} 
+              onClick={(e) => handleLinkClick(certData.termsUrl, e)}
+              target="_blank" 
+              rel="noreferrer" 
+              className="splice-cert-link"
+            >
+              Terms of Use
+            </a>{' '}
+            for more specific information pertaining to the parameters and permitted uses of this license, which includes, without limitation, the right to create new derivative works embodying the content in both audio and audiovisual formats, and to distribute such content via any method or manner now known or hereafter created which shall include, without limitation, any digital service providers that the above licensee may choose.
           </p>
 
-          {/* Body Paragraph 5 - Contact Clause */}
+          {/* Body Paragraph 5 - Contact Clause - Link 4: Email */}
           <p className="splice-cert-paragraph">
-            If further assistance is required in verifying the validity and scope of this license, please feel free to reach out to us directly at <a href="mailto:copyright@wavely.lol" className="splice-cert-link">copyright@wavely.lol</a>.
+            If further assistance is required in verifying the validity and scope of this license, please feel free to reach out to us directly at{' '}
+            <a 
+              href={`mailto:${certData.copyrightEmail}`}
+              onClick={(e) => handleLinkClick(`mailto:${certData.copyrightEmail}`, e)}
+              className="splice-cert-link"
+            >
+              {certData.copyrightEmail}
+            </a>.
           </p>
 
           {/* Signature & Address Block */}
