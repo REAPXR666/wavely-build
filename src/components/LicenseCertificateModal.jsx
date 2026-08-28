@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Printer, Copy, Check, ExternalLink, X, User, Mail, ShieldCheck } from 'lucide-react';
+import { Download, Copy, Check, ExternalLink, X, User, Mail, ShieldCheck, Loader2 } from 'lucide-react';
 import spliceLogoUrl from '../assets/splice-logo.webp';
 
 // Robust helper to construct the exact Splice sample URL matching Splice website format
@@ -86,6 +86,7 @@ export default function LicenseCertificateModal({
   showToast 
 }) {
   const [copied, setCopied] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Full Name and Email State (Saved in LocalStorage for automatic reuse across all samples)
   const [fullName, setFullName] = useState(() => {
@@ -161,13 +162,94 @@ export default function LicenseCertificateModal({
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   const companyName = 'Distributed Creation Inc. (“Splice”)';
   const teamName = 'The Splice Team';
   const companyEntity = 'Distributed Creation, Inc.';
+
+  // Save PDF using native OS Save As dialog
+  const handleSavePdf = async () => {
+    setIsSaving(true);
+    const cleanSampleName = certData.sampleFilename.replace(/\.wav$|\.mp3$/i, '');
+    const defaultFileName = `Certificate_${cleanSampleName.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+
+    const certHtml = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Certificate of Content License</title>
+<style>
+  @page { size: letter portrait; margin: 0.8in; }
+  body {
+    background: #ffffff;
+    color: #000000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.55;
+    font-size: 14.5px;
+    -webkit-print-color-adjust: exact;
+  }
+  .logo-wrap { text-align: center; margin-bottom: 38px; }
+  .logo-img { width: 48px; height: 48px; object-fit: contain; }
+  h1 { font-size: 26px; font-weight: 800; text-align: center; color: #000000; letter-spacing: -0.01em; margin: 0 0 42px 0; }
+  .date { font-size: 14.5px; color: #000000; margin-bottom: 22px; }
+  .salutation { font-size: 14.5px; color: #000000; margin-bottom: 18px; }
+  p { font-size: 14.5px; line-height: 1.55; color: #000000; margin: 0 0 18px 0; }
+  strong { font-weight: 700; color: #000000; }
+  a { color: #2563eb; text-decoration: underline; }
+  ul { list-style-type: disc; padding-left: 24px; margin: 0 0 18px 0; }
+  li { font-size: 14.5px; line-height: 1.55; color: #000000; }
+  .sig-block { margin-top: 32px; }
+  .sig-line { font-size: 14.5px; color: #000000; margin: 0 0 3px 0; }
+  .address { font-size: 14.5px; line-height: 1.4; color: #000000; }
+  .address p { margin: 0 0 2px 0; }
+</style>
+</head>
+<body>
+  <div class="logo-wrap">
+    <img src="${spliceLogoUrl}" class="logo-img" alt="Splice Logo" />
+  </div>
+  <h1>Certificate of Content License</h1>
+  <div class="date">${certData.formattedDate}</div>
+  <div class="salutation">To Whom It May Concern:</div>
+  <p>${companyName} holds the legal rights necessary to license the content further described herein and has licensed such content to <strong>${displayName}</strong> on a perpetual, royalty-free, non-exclusive basis.</p>
+  <p>The use of the following content in accordance with our <a href="${certData.termsUrl}">Terms of Use</a> by <strong>${displayName}</strong> shall therefore not constitute a valid basis for a copyright infringement or de-monetization claim by a third party (including claims for master or publishing rights of the same).</p>
+  <p style="margin-bottom: 8px;">The content licensed can be referenced from our platform:</p>
+  <ul>
+    <li><a href="${certData.sampleUrl}">${certData.sampleFilename}</a> <span>(licensed ${certData.shortDate})</span></li>
+  </ul>
+  <p>Please see our <a href="${certData.termsUrl}">Terms of Use</a> for more specific information pertaining to the parameters and permitted uses of this license, which includes, without limitation, the right to create new derivative works embodying the content in both audio and audiovisual formats, and to distribute such content via any method or manner now known or hereafter created which shall include, without limitation, any digital service providers that the above licensee may choose.</p>
+  <p>If further assistance is required in verifying the validity and scope of this license, please feel free to reach out to us directly at <a href="mailto:${certData.copyrightEmail}">${certData.copyrightEmail}</a>.</p>
+  <div class="sig-block">
+    <p class="sig-line">Thank you,</p>
+    <p class="sig-line" style="margin-bottom: 20px;">${teamName}</p>
+    <div class="address">
+      <p>${companyEntity}</p>
+      <p>817 Broadway, 4th Floor</p>
+      <p>New York, NY 10003</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    try {
+      if (window.electron?.saveCertificatePdf) {
+        const res = await window.electron.saveCertificatePdf({ defaultFileName, certHtml });
+        if (res?.success) {
+          if (showToast) showToast(`Certificate saved to: ${res.filePath}`, 'success');
+        } else if (!res?.canceled && res?.error) {
+          if (showToast) showToast(`Failed to save PDF: ${res.error}`, 'error');
+        }
+      } else {
+        window.print();
+      }
+    } catch (err) {
+      console.error('Error saving PDF:', err);
+      if (showToast) showToast('Failed to save certificate PDF', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleCopyClearance = () => {
     const text = `Certificate of Content License
@@ -205,7 +287,7 @@ New York, NY 10003`;
     <div className="splice-cert-overlay" onClick={onClose}>
       <div className="splice-cert-modal-container" onClick={(e) => e.stopPropagation()}>
         
-        {/* Top Control Bar & Licensee Prompt (Hidden in Print) */}
+        {/* Top Control Bar & Licensee Prompt */}
         <div className="splice-cert-toolbar no-print">
           
           {/* Header Row */}
@@ -225,13 +307,24 @@ New York, NY 10003`;
                 <span>{copied ? 'Copied Statement!' : 'Copy Dispute Text'}</span>
               </button>
 
+              {/* SAVE ONLY BUTTON with Native Save As Dialog */}
               <button 
                 className="splice-cert-btn primary"
-                onClick={handlePrint}
-                title="Save as PDF or print high-resolution document"
+                onClick={handleSavePdf}
+                disabled={isSaving}
+                title="Choose folder location and save certificate as PDF"
               >
-                <Printer size={14} />
-                <span>Print / Save PDF</span>
+                {isSaving ? (
+                  <>
+                    <Loader2 size={14} className="spin-animation" />
+                    <span>Saving PDF...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={14} />
+                    <span>Save PDF</span>
+                  </>
+                )}
               </button>
 
               <button 

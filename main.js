@@ -558,6 +558,66 @@ ipcMain.handle('select-folder', async () => {
   return result.filePaths[0];
 });
 
+// Save Certificate as PDF with native Save As file dialog
+ipcMain.handle('save-certificate-pdf', async (event, { defaultFileName, certHtml }) => {
+  try {
+    const defaultName = defaultFileName || 'Certificate_of_Content_License.pdf';
+    let defaultDir = app.getPath('documents');
+    if (db.settings && db.settings.downloadDir && fs.existsSync(db.settings.downloadDir)) {
+      defaultDir = db.settings.downloadDir;
+    }
+    
+    const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      title: 'Save Certificate of Content License',
+      defaultPath: path.join(defaultDir, defaultName),
+      filters: [
+        { name: 'PDF Documents (*.pdf)', extensions: ['pdf'] }
+      ]
+    });
+
+    if (canceled || !filePath) {
+      return { success: false, canceled: true };
+    }
+
+    const printWin = new BrowserWindow({
+      show: false,
+      width: 850,
+      height: 1100,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true
+      }
+    });
+
+    await printWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(certHtml)}`);
+
+    const pdfBuffer = await printWin.webContents.printToPDF({
+      pageSize: 'Letter',
+      printBackground: true,
+      margins: {
+        top: 0.8,
+        bottom: 0.8,
+        left: 0.8,
+        right: 0.8
+      }
+    });
+
+    printWin.close();
+
+    fs.writeFileSync(filePath, pdfBuffer);
+    console.log(`[Certificate] PDF saved successfully to: ${filePath}`);
+
+    return {
+      success: true,
+      filePath: filePath,
+      folderPath: path.dirname(filePath)
+    };
+  } catch (err) {
+    console.error('[Certificate] Failed to save PDF:', err);
+    return { success: false, error: err.message };
+  }
+});
+
 // --- SETTINGS STORAGE ---
 ipcMain.handle('get-settings', () => db.settings);
 ipcMain.handle('save-settings', (event, newSettings) => {

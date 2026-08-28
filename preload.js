@@ -62,6 +62,9 @@ contextBridge.exposeInMainWorld('electron', {
   openPackFolder: (folderPath) => ipcRenderer.invoke('open-pack-folder', folderPath),
   removeDownloadedPack: (uuid) => ipcRenderer.invoke('remove-downloaded-pack', uuid),
 
+  // Save Certificate PDF with native Save As dialog
+  saveCertificatePdf: (data) => ipcRenderer.invoke('save-certificate-pdf', data),
+
   // Security, HWID & Licensing Telemetry
   getLicensingState: () => ipcRenderer.invoke('get-licensing-state'),
   getAuthState: () => ipcRenderer.invoke('get-auth-state'),
