@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Printer, Copy, Check, ExternalLink, X } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Printer, Copy, Check, ExternalLink, X, User, Mail, ShieldCheck } from 'lucide-react';
 
 export default function LicenseCertificateModal({ 
   sound, 
@@ -9,6 +9,37 @@ export default function LicenseCertificateModal({
   showToast 
 }) {
   const [copied, setCopied] = useState(false);
+
+  // Full Name and Email State (Saved in LocalStorage for automatic reuse across all samples)
+  const [fullName, setFullName] = useState(() => {
+    return localStorage.getItem('wavely_licensee_fullname') || user?.fullName || user?.username || '';
+  });
+
+  const [email, setEmail] = useState(() => {
+    return localStorage.getItem('wavely_licensee_email') || user?.email || '';
+  });
+
+  // Save changes to localStorage
+  useEffect(() => {
+    if (fullName) {
+      localStorage.setItem('wavely_licensee_fullname', fullName);
+    }
+  }, [fullName]);
+
+  useEffect(() => {
+    if (email) {
+      localStorage.setItem('wavely_licensee_email', email);
+    }
+  }, [email]);
+
+  // Compute display licensee name: entered full name, or fallback to 'Wavely'
+  const displayName = useMemo(() => {
+    return fullName.trim() ? fullName.trim() : 'WAVELY';
+  }, [fullName]);
+
+  const displayEmail = useMemo(() => {
+    return email.trim() ? email.trim() : 'support@wavely.lol';
+  }, [email]);
 
   // Format date and sample filename
   const certData = useMemo(() => {
@@ -27,13 +58,11 @@ export default function LicenseCertificateModal({
       day: 'numeric'
     });
 
-    // Clean filename formatted like Splice sample names (e.g. VOX_KEH_126_vocal_hook_wet_Am.wav)
+    // Clean sample filename
     let sampleFilename = sound.name || 'sample_asset.wav';
     if (!sampleFilename.toLowerCase().endsWith('.wav') && !sampleFilename.toLowerCase().endsWith('.mp3')) {
       sampleFilename = `${sampleFilename.replace(/\s+/g, '_')}.wav`;
     }
-
-    const licenseeName = user?.username ? user.username : 'Louis Woolford-Jones';
 
     const certId = sound.uuid || sound.id || 'sample';
 
@@ -41,10 +70,9 @@ export default function LicenseCertificateModal({
       formattedDate,
       shortDate,
       sampleFilename,
-      licenseeName,
-      verifyUrl: `https://wavely.lol/certificate/${certId}`
+      verifyUrl: `https://wavely.lol/certificate/${certId}?licensee=${encodeURIComponent(displayName)}&email=${encodeURIComponent(displayEmail)}`
     };
-  }, [sound, user]);
+  }, [sound, displayName, displayEmail]);
 
   if (!certData) return null;
 
@@ -59,9 +87,9 @@ ${certData.formattedDate}
 
 To Whom It May Concern:
 
-Wavely Technologies Inc. (“Wavely”) holds the legal rights necessary to license the content further described herein and has licensed such content to ${certData.licenseeName} on a perpetual, royalty-free, non-exclusive basis.
+Wavely Technologies Inc. (“Wavely”) holds the legal rights necessary to license the content further described herein and has licensed such content to ${displayName} on a perpetual, royalty-free, non-exclusive basis.
 
-The use of the following content in accordance with our Terms of Use by ${certData.licenseeName} shall therefore not constitute a valid basis for a copyright infringement or de-monetization claim by a third party (including claims for master or publishing rights of the same).
+The use of the following content in accordance with our Terms of Use by ${displayName} shall therefore not constitute a valid basis for a copyright infringement or de-monetization claim by a third party (including claims for master or publishing rights of the same).
 
 The content licensed can be referenced from our platform:
 • ${certData.sampleFilename} (licensed ${certData.shortDate})
@@ -96,44 +124,81 @@ New York, NY 10003`;
     <div className="splice-cert-overlay" onClick={onClose}>
       <div className="splice-cert-modal-container" onClick={(e) => e.stopPropagation()}>
         
-        {/* Modal Top Control Bar (Hidden in Print) */}
+        {/* Top Control Bar & Licensee Prompt (Hidden in Print) */}
         <div className="splice-cert-toolbar no-print">
-          <div className="splice-cert-toolbar-title">
-            <span>Certificate of Content License</span>
+          
+          {/* Header Row */}
+          <div className="splice-cert-toolbar-top-row">
+            <div className="splice-cert-toolbar-title">
+              <ShieldCheck size={16} className="text-emerald" />
+              <span>Certificate of Content License</span>
+            </div>
+
+            <div className="splice-cert-toolbar-actions">
+              <button 
+                className="splice-cert-btn"
+                onClick={handleCopyClearance}
+                title="Copy statement for YouTube Content ID dispute or digital distributors"
+              >
+                {copied ? <Check size={14} className="text-emerald" /> : <Copy size={14} />}
+                <span>{copied ? 'Copied Statement!' : 'Copy Dispute Text'}</span>
+              </button>
+
+              <button 
+                className="splice-cert-btn primary"
+                onClick={handlePrint}
+                title="Save as PDF or print high-resolution document"
+              >
+                <Printer size={14} />
+                <span>Print / Save PDF</span>
+              </button>
+
+              <button 
+                className="splice-cert-btn"
+                onClick={handleOpenVerifyUrl}
+                title="Open online verification on wavely.lol"
+              >
+                <ExternalLink size={14} />
+                <span>Verify Online</span>
+              </button>
+
+              <button className="splice-cert-close" onClick={onClose} title="Close modal">
+                <X size={16} />
+              </button>
+            </div>
           </div>
 
-          <div className="splice-cert-toolbar-actions">
-            <button 
-              className="splice-cert-btn"
-              onClick={handleCopyClearance}
-              title="Copy statement for YouTube Content ID dispute or digital distributors"
-            >
-              {copied ? <Check size={14} className="text-emerald" /> : <Copy size={14} />}
-              <span>{copied ? 'Copied Statement!' : 'Copy Dispute Text'}</span>
-            </button>
+          {/* Prompt Fields for Full Name & Email */}
+          <div className="splice-cert-inputs-box">
+            <div className="splice-cert-input-field">
+              <label>
+                <User size={13} />
+                <span>Full Legal Name / Artist Name:</span>
+              </label>
+              <input 
+                type="text" 
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="e.g. Louis Woolford-Jones (or leave blank for 'WAVELY')"
+                className="splice-cert-text-input"
+              />
+            </div>
 
-            <button 
-              className="splice-cert-btn primary"
-              onClick={handlePrint}
-              title="Save as PDF or print high-resolution document"
-            >
-              <Printer size={14} />
-              <span>Print / Save PDF</span>
-            </button>
-
-            <button 
-              className="splice-cert-btn"
-              onClick={handleOpenVerifyUrl}
-              title="Open online verification"
-            >
-              <ExternalLink size={14} />
-              <span>Verify Online</span>
-            </button>
-
-            <button className="splice-cert-close" onClick={onClose} title="Close modal">
-              <X size={16} />
-            </button>
+            <div className="splice-cert-input-field">
+              <label>
+                <Mail size={13} />
+                <span>Email Address:</span>
+              </label>
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="e.g. producer@example.com"
+                className="splice-cert-text-input"
+              />
+            </div>
           </div>
+
         </div>
 
         {/* 1:1 Splice-Style Document Sheet */}
@@ -164,12 +229,12 @@ New York, NY 10003`;
 
           {/* Body Paragraph 1 */}
           <p className="splice-cert-paragraph">
-            Wavely Technologies Inc. (“Wavely”) holds the legal rights necessary to license the content further described herein and has licensed such content to <strong>{certData.licenseeName}</strong> on a perpetual, royalty-free, non-exclusive basis.
+            Wavely Technologies Inc. (“Wavely”) holds the legal rights necessary to license the content further described herein and has licensed such content to <strong>{displayName}</strong> on a perpetual, royalty-free, non-exclusive basis.
           </p>
 
           {/* Body Paragraph 2 */}
           <p className="splice-cert-paragraph">
-            The use of the following content in accordance with our <a href="https://wavely.lol/terms" target="_blank" rel="noreferrer" className="splice-cert-link">Terms of Use</a> by <strong>{certData.licenseeName}</strong> shall therefore not constitute a valid basis for a copyright infringement or de-monetization claim by a third party (including claims for master or publishing rights of the same).
+            The use of the following content in accordance with our <a href="https://wavely.lol/terms" target="_blank" rel="noreferrer" className="splice-cert-link">Terms of Use</a> by <strong>{displayName}</strong> shall therefore not constitute a valid basis for a copyright infringement or de-monetization claim by a third party (including claims for master or publishing rights of the same).
           </p>
 
           {/* Body Paragraph 3 - Platform Reference */}
