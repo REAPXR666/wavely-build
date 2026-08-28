@@ -225,6 +225,8 @@ export default function App() {
             setActiveTab={setActiveTab}
             activePack={activePack}
             setActivePack={setActivePack}
+            user={authState.user}
+            subscription={authState.subscription}
           />
         );
       case 'presets':
@@ -272,6 +274,8 @@ export default function App() {
             isDownloadsPage={true}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
+            user={authState.user}
+            subscription={authState.subscription}
           />
         );
       case 'settings':

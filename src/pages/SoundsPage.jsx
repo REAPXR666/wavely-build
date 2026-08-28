@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, Play, Pause, CloudDownload, Download, FolderOpen, Loader2, CheckCircle2, SlidersHorizontal, 
   HelpCircle, ChevronLeft, ChevronRight, ChevronDown, Check, X, Sparkles, Gem, Sliders,
-  Zap, RefreshCw, Music2, Disc3, Volume2, Layers
+  Zap, RefreshCw, Music2, Disc3, Volume2, Layers, Award, FileCheck, ShieldCheck
 } from 'lucide-react';
 import WaveformRenderer from '../components/WaveformRenderer';
+import LicenseCertificateModal from '../components/LicenseCertificateModal';
 
 export default function SoundsPage({ 
   currentSound, 
@@ -12,15 +13,17 @@ export default function SoundsPage({
   isPlaying, 
   setIsPlaying, 
   volume, 
-  isLooping,
-  setSoundsList,
-  soundsList,
-  showToast,
-  isDownloadsPage = false,
-  activeTab = 'sounds',
-  setActiveTab,
-  activePack: propActivePack,
-  setActivePack: propSetActivePack
+  isLooping, 
+  setSoundsList, 
+  soundsList, 
+  showToast, 
+  isDownloadsPage = false, 
+  activeTab = 'sounds', 
+  setActiveTab, 
+  activePack: propActivePack, 
+  setActivePack: propSetActivePack,
+  user,
+  subscription
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
@@ -53,6 +56,9 @@ export default function SoundsPage({
   const [selectedStemIndices, setSelectedStemIndices] = useState({ drums: 0, bass: 0, melody: 0, vocals: 0, fx: 0 });
   const [songStarterDownloading, setSongStarterDownloading] = useState(false);
   const [songStarterDownloadedFolder, setSongStarterDownloadedFolder] = useState(null);
+
+  // License Certificate Modal state
+  const [certificateModalSound, setCertificateModalSound] = useState(null);
 
 
   // Subscribe to pack download progress from Electron
@@ -1721,8 +1727,32 @@ export default function SoundsPage({
                 <div className="key-cell">{sound.key}</div>
                 <div className="bpm-cell">{sound.bpm}</div>
 
-                {/* Action button: Download / DAW Drag-and-Drop Cell */}
-                <div className="action-cell">
+                {/* Action button: Certificate + Download / DAW Drag-and-Drop Cell */}
+                <div className="action-cell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                  <button 
+                    className="action-btn cert-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCertificateModalSound(sound);
+                    }}
+                    title="Generate Royalty-Free License Certificate"
+                    style={{
+                      opacity: 0.7,
+                      transition: 'all 0.15s ease',
+                      color: 'var(--text-muted)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.color = '#fbbf24';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '0.7';
+                      e.currentTarget.style.color = 'var(--text-muted)';
+                    }}
+                  >
+                    <Award size={15} />
+                  </button>
+
                   {sound.isDownloaded ? (
                     <button 
                       className="action-btn downloaded pulse-playing"
@@ -1822,6 +1852,32 @@ export default function SoundsPage({
             minWidth: '220px'
           }}
         >
+          {/* Generate License Certificate */}
+          <div 
+            className="context-menu-item"
+            onClick={() => {
+              setCertificateModalSound(contextMenu.sound);
+              setContextMenu(null);
+            }}
+            style={{
+              padding: '10px 16px',
+              fontSize: '0.85rem',
+              color: '#fbbf24',
+              fontWeight: '700',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              transition: 'background-color 0.2s',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-dark, #1c1c1f)'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+          >
+            <Award size={15} color="#fbbf24" />
+            <span>Generate License Certificate</span>
+          </div>
+
           {/* Song Starter Creator */}
           <div 
             className="context-menu-item"
@@ -2060,6 +2116,17 @@ export default function SoundsPage({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Official License Certificate Modal */}
+      {certificateModalSound && (
+        <LicenseCertificateModal
+          sound={certificateModalSound}
+          user={user}
+          subscription={subscription}
+          onClose={() => setCertificateModalSound(null)}
+          showToast={showToast}
+        />
       )}
     </div>
   );
