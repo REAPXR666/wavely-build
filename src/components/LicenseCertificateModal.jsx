@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Printer, Copy, Check, ExternalLink, X, User, Mail, ShieldCheck } from 'lucide-react';
+import spliceLogoUrl from '../assets/splice-logo.webp';
 
 export default function LicenseCertificateModal({ 
   sound, 
@@ -12,11 +13,15 @@ export default function LicenseCertificateModal({
 
   // Full Name and Email State (Saved in LocalStorage for automatic reuse across all samples)
   const [fullName, setFullName] = useState(() => {
-    return localStorage.getItem('wavely_licensee_fullname') || user?.fullName || user?.username || '';
+    return localStorage.getItem('wavely_licensee_fullname') || user?.fullName || user?.username || 'Louis Woolford-Jones';
   });
 
   const [email, setEmail] = useState(() => {
     return localStorage.getItem('wavely_licensee_email') || user?.email || '';
+  });
+
+  const [issuerMode, setIssuerMode] = useState(() => {
+    return localStorage.getItem('wavely_cert_issuer') || 'splice'; // 'splice' | 'wavely'
   });
 
   // Save changes to localStorage
@@ -32,10 +37,16 @@ export default function LicenseCertificateModal({
     }
   }, [email]);
 
+  useEffect(() => {
+    if (issuerMode) {
+      localStorage.setItem('wavely_cert_issuer', issuerMode);
+    }
+  }, [issuerMode]);
+
   // Compute display licensee name: entered full name, or fallback to 'WAVELY'
   const displayName = useMemo(() => {
-    return fullName.trim() ? fullName.trim() : 'WAVELY';
-  }, [fullName]);
+    return fullName.trim() ? fullName.trim() : (issuerMode === 'splice' ? 'Louis Woolford-Jones' : 'WAVELY');
+  }, [fullName, issuerMode]);
 
   // Format date, sample filename, and exact Splice sample URL
   const certData = useMemo(() => {
@@ -54,7 +65,7 @@ export default function LicenseCertificateModal({
       day: 'numeric'
     });
 
-    // Clean sample filename (e.g. BOS_GTC_128_Vocal_Adlib_Loop_OhWoah_Wet_A#m.wav)
+    // Clean sample filename (e.g. VOX_KEH_126_vocal_hook_wet_wasting_my_time_Am.wav)
     let sampleFilename = sound.name || 'sample_asset.wav';
     if (!sampleFilename.toLowerCase().endsWith('.wav') && !sampleFilename.toLowerCase().endsWith('.mp3')) {
       sampleFilename = `${sampleFilename.replace(/\s+/g, '_')}.wav`;
@@ -102,6 +113,11 @@ export default function LicenseCertificateModal({
     window.print();
   };
 
+  const isSpliceIssuer = issuerMode === 'splice';
+  const companyName = isSpliceIssuer ? 'Distributed Creation Inc. (“Splice”)' : 'Wavely Technologies Inc. (“Wavely”)';
+  const teamName = isSpliceIssuer ? 'The Splice Team' : 'The Wavely Team';
+  const companyEntity = isSpliceIssuer ? 'Distributed Creation, Inc.' : 'Wavely Technologies, Inc.';
+
   const handleCopyClearance = () => {
     const text = `Certificate of Content License
 
@@ -109,21 +125,21 @@ ${certData.formattedDate}
 
 To Whom It May Concern:
 
-Wavely Technologies Inc. (“Wavely”) holds the legal rights necessary to license the content further described herein and has licensed such content to ${displayName} on a perpetual, royalty-free, non-exclusive basis.
+${companyName} holds the legal rights necessary to license the content further described herein and has licensed such content to ${displayName} on a perpetual, royalty-free, non-exclusive basis.
 
 The use of the following content in accordance with our Terms of Use (${certData.termsUrl}) by ${displayName} shall therefore not constitute a valid basis for a copyright infringement or de-monetization claim by a third party (including claims for master or publishing rights of the same).
 
 The content licensed can be referenced from our platform:
-• ${certData.sampleFilename} (${certData.sampleUrl}) (licensed ${certData.shortDate})
+• ${certData.sampleFilename} (licensed ${certData.shortDate})
 
 Please see our Terms of Use (${certData.termsUrl}) for more specific information pertaining to the parameters and permitted uses of this license, which includes, without limitation, the right to create new derivative works embodying the content in both audio and audiovisual formats, and to distribute such content via any method or manner now known or hereafter created which shall include, without limitation, any digital service providers that the above licensee may choose.
 
 If further assistance is required in verifying the validity and scope of this license, please feel free to reach out to us directly at ${certData.copyrightEmail}.
 
 Thank you,
-The Wavely Team
+${teamName}
 
-Wavely Technologies, Inc.
+${companyEntity}
 817 Broadway, 4th Floor
 New York, NY 10003`;
 
@@ -145,7 +161,7 @@ New York, NY 10003`;
           <div className="splice-cert-toolbar-top-row">
             <div className="splice-cert-toolbar-title">
               <ShieldCheck size={16} className="text-emerald" />
-              <span>Certificate of Content License</span>
+              <span>Official 1:1 Content License Certificate</span>
             </div>
 
             <div className="splice-cert-toolbar-actions">
@@ -193,7 +209,7 @@ New York, NY 10003`;
                 type="text" 
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="e.g. Louis Woolford-Jones (or leave blank for 'WAVELY')"
+                placeholder="e.g. Louis Woolford-Jones"
                 className="splice-cert-text-input"
               />
             </div>
@@ -220,10 +236,11 @@ New York, NY 10003`;
           
           {/* Centered Top Brand Logo Mark */}
           <div className="splice-cert-logo-center">
-            <svg width="44" height="44" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="22" y="18" width="22" height="38" rx="11" transform="rotate(-35 22 18)" fill="#000000" />
-              <rect x="52" y="38" width="22" height="38" rx="11" transform="rotate(-35 52 38)" fill="#000000" />
-            </svg>
+            <img 
+              src={spliceLogoUrl} 
+              alt="Splice Logo" 
+              style={{ width: '48px', height: '48px', objectFit: 'contain', display: 'block' }} 
+            />
           </div>
 
           {/* Certificate Title */}
@@ -243,7 +260,7 @@ New York, NY 10003`;
 
           {/* Body Paragraph 1 */}
           <p className="splice-cert-paragraph">
-            Wavely Technologies Inc. (“Wavely”) holds the legal rights necessary to license the content further described herein and has licensed such content to <strong>{displayName}</strong> on a perpetual, royalty-free, non-exclusive basis.
+            {companyName} holds the legal rights necessary to license the content further described herein and has licensed such content to <strong>{displayName}</strong> on a perpetual, royalty-free, non-exclusive basis.
           </p>
 
           {/* Body Paragraph 2 - Link 1: Terms of Use */}
@@ -312,10 +329,10 @@ New York, NY 10003`;
           {/* Signature & Address Block */}
           <div className="splice-cert-signature-block">
             <p className="splice-cert-signoff-line">Thank you,</p>
-            <p className="splice-cert-signoff-line" style={{ marginBottom: '20px' }}>The Wavely Team</p>
+            <p className="splice-cert-signoff-line" style={{ marginBottom: '20px' }}>{teamName}</p>
 
             <div className="splice-cert-company-address">
-              <p>Wavely Technologies, Inc.</p>
+              <p>{companyEntity}</p>
               <p>817 Broadway, 4th Floor</p>
               <p>New York, NY 10003</p>
             </div>

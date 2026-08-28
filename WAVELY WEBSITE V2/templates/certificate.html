@@ -21,10 +21,11 @@
     
     <!-- Centered Logo -->
     <div style="display:flex; justify-content:center; align-items:center; margin-bottom:42px;">
-      <svg width="44" height="44" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="22" y="18" width="22" height="38" rx="11" transform="rotate(-35 22 18)" fill="#000000" />
-        <rect x="52" y="38" width="22" height="38" rx="11" transform="rotate(-35 52 38)" fill="#000000" />
-      </svg>
+      <img 
+        src="{{ url_for('static', filename='images/splice-logo.webp') }}" 
+        alt="Splice Logo" 
+        style="width:48px; height:48px; object-fit:contain; display:block;" 
+      />
     </div>
 
     <!-- Title -->
