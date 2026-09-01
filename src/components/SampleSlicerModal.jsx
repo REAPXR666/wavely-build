@@ -15,6 +15,7 @@ const KEY_PAD_MAP = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', '1', '2', '3', '4',
 export default function SampleSlicerModal({ sound, onClose, showToast }) {
   const defaultBpm = parseFloat(sound?.bpm) || 120;
   const [bpm, setBpm] = useState(defaultBpm);
+  const [stepDivision, setStepDivision] = useState(1); // 1 = 1/4 note (1 step per beat - relaxed natural groove), 2 = 1/8 note, 0.5 = 1/2 note, 4 = 1/16 note
   const [sliceCount, setSliceCount] = useState(8);
   const [audioBuffer, setAudioBuffer] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +33,7 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
   const [isPlayingRecorded, setIsPlayingRecorded] = useState(false);
 
   // Procedural Random Pattern Sequencer States
-  const [patternStyle, setPatternStyle] = useState('groove'); // 'groove' | 'breakbeat' | 'stutter' | 'trap_roll' | 'reverse_roll'
+  const [patternStyle, setPatternStyle] = useState('groove'); // 'groove' | 'breakbeat' | 'stutter' | 'trap_roll'
   const [activeStepIndex, setActiveStepIndex] = useState(null);
   const [isPatternPlaying, setIsPatternPlaying] = useState(false);
   
@@ -96,7 +97,7 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
   const rollNewRandomPattern = (style = patternStyle) => {
     const newSeq = generateRandomPattern(sliceCount, style, 16);
     setSequence(newSeq);
-    if (showToast) showToast(`🎲 Generated new Random "${style.replace('_', ' ').toUpperCase()}" pattern!`, 'info');
+    if (showToast) showToast(`🎲 Rolled fresh "${style.replace('_', ' ').toUpperCase()}" pattern!`, 'info');
   };
 
   // Draw Waveform and Slice Markers
@@ -149,7 +150,7 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
   }, [audioBuffer, slices]);
 
   // Play Individual Slice (Routes to Speakers AND to MediaRecorder if recording)
-  const playSlice = (slice) => {
+  const playSlice = (slice, maxDuration = null) => {
     if (!audioBuffer) return;
     const audioCtx = getAudioContext();
     if (activeSourceRef.current) {
@@ -173,7 +174,8 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
     }
 
     const start = isReversed ? (audioBuffer.duration - slice.endTime) : slice.startTime;
-    source.start(0, Math.max(0, start), slice.duration);
+    const dur = maxDuration ? Math.min(slice.duration, maxDuration * 1.1) : slice.duration;
+    source.start(0, Math.max(0, start), dur);
     activeSourceRef.current = source;
     setActiveSliceIndex(slice.index);
 
@@ -336,11 +338,11 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
     }
   };
 
-  // Export MIDI Clip (.mid) with Custom Generated Random Pattern & Custom BPM
+  // Export MIDI Clip (.mid) with Custom Generated Random Pattern, Custom BPM & Step Division
   const exportMidiClip = () => {
     const cleanName = (sound.name || 'Sample').replace(/\.wav$|\.mp3$/i, '');
     const currentBpm = Math.max(40, Math.min(300, bpm));
-    const midiBlob = createCustomPatternMidi(sequence, sliceCount, currentBpm, 16);
+    const midiBlob = createCustomPatternMidi(sequence, sliceCount, currentBpm, stepDivision);
     const url = URL.createObjectURL(midiBlob);
     const a = document.createElement('a');
     a.href = url;
@@ -356,7 +358,7 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
     try {
       const audioCtx = getAudioContext();
       const currentBpm = Math.max(40, Math.min(300, bpm));
-      const stepDuration = (60 / currentBpm) / 4; // 1/16 note duration in seconds
+      const stepDuration = (60 / currentBpm) / Math.max(0.25, stepDivision);
       const totalDuration = sequence.length * stepDuration;
 
       const numChannels = audioBuffer.numberOfChannels;
@@ -398,28 +400,41 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
     }
   };
 
-  // Real-Time Procedural Pattern Sequencer Playback
+  // Toggle Live Sequencer Playback
   const togglePatternPlay = () => {
     if (isPatternPlaying) {
-      if (patternTimerRef.current) clearInterval(patternTimerRef.current);
       setIsPatternPlaying(false);
       setActiveStepIndex(null);
       setActiveSliceIndex(null);
+      if (patternTimerRef.current) clearInterval(patternTimerRef.current);
+      return;
+    }
+    setIsPatternPlaying(true);
+  };
+
+  // Dynamic Live Sequencer Timer: automatically adjusts speed instantly when BPM or stepDivision changes!
+  useEffect(() => {
+    if (!isPatternPlaying) {
+      if (patternTimerRef.current) clearInterval(patternTimerRef.current);
+      setActiveStepIndex(null);
       return;
     }
 
-    setIsPatternPlaying(true);
-    const currentBpm = Math.max(40, Math.min(300, bpm));
-    const stepDurationMs = ((60 / currentBpm) / 4) * 1000; // 1/16 note step
+    if (patternTimerRef.current) clearInterval(patternTimerRef.current);
 
-    let currentStep = 0;
+    const currentBpm = Math.max(40, Math.min(300, bpm));
+    // Step Duration in seconds: (60 / currentBpm) / stepDivision
+    const stepSeconds = (60 / currentBpm) / Math.max(0.25, stepDivision);
+    const stepDurationMs = stepSeconds * 1000;
+
+    let currentStep = activeStepIndex !== null ? activeStepIndex : 0;
     const runStep = () => {
       const stepVal = sequence[currentStep % sequence.length];
       setActiveStepIndex(currentStep % sequence.length);
 
       if (stepVal !== null && stepVal !== undefined && stepVal >= 0) {
         const slice = slices[stepVal % sliceCount];
-        if (slice) playSlice(slice);
+        if (slice) playSlice(slice, stepSeconds);
       }
 
       currentStep++;
@@ -427,15 +442,11 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
 
     runStep();
     patternTimerRef.current = setInterval(runStep, stepDurationMs);
-  };
 
-  // Stop playback on unmount
-  useEffect(() => {
     return () => {
       if (patternTimerRef.current) clearInterval(patternTimerRef.current);
-      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
     };
-  }, []);
+  }, [isPatternPlaying, bpm, stepDivision, sequence, slices, sliceCount]);
 
   const handleDragRecording = (e) => {
     e.stopPropagation();
@@ -450,7 +461,7 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
         className="modal-content" 
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: '920px',
+          width: '940px',
           maxWidth: '96vw',
           maxHeight: '94vh',
           backgroundColor: '#0b1120',
@@ -545,8 +556,8 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
               />
               <input
                 type="range"
-                min="60"
-                max="200"
+                min="50"
+                max="220"
                 value={bpm}
                 onChange={(e) => setBpm(parseFloat(e.target.value) || 120)}
                 style={{ width: '80px', accentColor: '#38bdf8', cursor: 'pointer' }}
@@ -626,7 +637,7 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
 
           {/* Sliced Waveform Visualizer */}
           <div style={{ position: 'relative', width: '100%', height: '100px', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <canvas ref={canvasRef} width={870} height={100} style={{ width: '100%', height: '100%', display: 'block' }} />
+            <canvas ref={canvasRef} width={890} height={100} style={{ width: '100%', height: '100%', display: 'block' }} />
           </div>
 
           {/* Recorded Performance Audio Deck (If Performance Recorded) */}
@@ -701,7 +712,7 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    minHeight: '72px',
+                    minHeight: '70px',
                     transition: 'all 0.08s ease',
                     boxShadow: isActive ? '0 0 16px rgba(56, 189, 248, 0.5)' : 'none'
                   }}
@@ -777,36 +788,68 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
                 </button>
               </div>
 
-              {/* Style Selector */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>Groove Style:</span>
-                {[
-                  { id: 'groove', label: 'Bounce' },
-                  { id: 'breakbeat', label: 'DnB Break' },
-                  { id: 'stutter', label: 'Glitch' },
-                  { id: 'trap_roll', label: 'Trap Roll' }
-                ].map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => {
-                      setPatternStyle(s.id);
-                      rollNewRandomPattern(s.id);
-                    }}
-                    style={{
-                      padding: '4px 8px',
-                      borderRadius: '6px',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      border: '1px solid',
-                      borderColor: patternStyle === s.id ? '#a855f7' : 'rgba(255,255,255,0.08)',
-                      background: patternStyle === s.id ? 'rgba(168, 85, 247, 0.25)' : 'transparent',
-                      color: patternStyle === s.id ? '#e9d5ff' : '#94a3b8',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {s.label}
-                  </button>
-                ))}
+              {/* Step Speed & Groove Style Selectors */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                {/* Step Speed / Grid Division */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 700 }}>Speed:</span>
+                  {[
+                    { div: 0.5, label: '1/2 (Slow)' },
+                    { div: 1, label: '1/4 (Standard)' },
+                    { div: 2, label: '1/8 (Upbeat)' },
+                    { div: 4, label: '1/16 (Fast)' }
+                  ].map(item => (
+                    <button
+                      key={item.div}
+                      onClick={() => setStepDivision(item.div)}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: '5px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        border: '1px solid',
+                        borderColor: stepDivision === item.div ? '#38bdf8' : 'rgba(255,255,255,0.08)',
+                        background: stepDivision === item.div ? 'rgba(56, 189, 248, 0.25)' : 'transparent',
+                        color: stepDivision === item.div ? '#38bdf8' : '#94a3b8',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Style Presets */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#c084fc', fontWeight: 700 }}>Style:</span>
+                  {[
+                    { id: 'groove', label: 'Bounce' },
+                    { id: 'breakbeat', label: 'Breakbeat' },
+                    { id: 'stutter', label: 'Glitch' },
+                    { id: 'trap_roll', label: 'Trap' }
+                  ].map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => {
+                        setPatternStyle(s.id);
+                        rollNewRandomPattern(s.id);
+                      }}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: '5px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        border: '1px solid',
+                        borderColor: patternStyle === s.id ? '#a855f7' : 'rgba(255,255,255,0.08)',
+                        background: patternStyle === s.id ? 'rgba(168, 85, 247, 0.25)' : 'transparent',
+                        color: patternStyle === s.id ? '#e9d5ff' : '#94a3b8',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -819,7 +862,6 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
                   <div
                     key={idx}
                     onClick={() => {
-                      // Cycle step pad index or clear
                       const newSeq = [...sequence];
                       if (stepPad === null) newSeq[idx] = 0;
                       else if (stepPad < sliceCount - 1) newSeq[idx] = stepPad + 1;
@@ -828,7 +870,7 @@ export default function SampleSlicerModal({ sound, onClose, showToast }) {
                     }}
                     title={`Step ${idx + 1}: ${hasNote ? `Pad ${stepPad + 1}` : 'Rest'} (Click to cycle)`}
                     style={{
-                      height: '42px',
+                      height: '40px',
                       borderRadius: '6px',
                       background: isCurrentStep 
                         ? '#38bdf8' 

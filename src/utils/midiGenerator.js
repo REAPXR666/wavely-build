@@ -104,13 +104,14 @@ export function generateMidiFile(notes = [], bpm = 120, ppq = 480) {
 }
 
 /**
- * Generates MIDI file from any arbitrary sequence of slice indices at custom BPM
+ * Generates MIDI file from any arbitrary sequence of slice indices at custom BPM and step division
  */
-export function createCustomPatternMidi(sequence = [], sliceCount = 8, bpm = 120, division = 16) {
+export function createCustomPatternMidi(sequence = [], sliceCount = 8, bpm = 120, stepDivision = 2) {
   const ppq = 480;
   const notes = [];
   const baseNote = 60; // C3
-  const stepTicks = Math.round((ppq * 4) / division); // e.g. 1/16 note = 120 ticks
+  // 1/4 note = 480 ticks, 1/8 note = 240 ticks, 1/16 note = 120 ticks
+  const stepTicks = Math.round(ppq / Math.max(0.25, stepDivision));
 
   sequence.forEach((step, idx) => {
     if (step !== null && step !== undefined && step >= 0) {
