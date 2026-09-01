@@ -87,6 +87,9 @@ contextBridge.exposeInMainWorld('electron', {
     return () => ipcRenderer.removeListener('demucs-progress', handler);
   },
 
+  // Strict Pack Samples Query
+  getPackSamples: (data) => ipcRenderer.invoke('get-pack-samples', data),
+
   // Custom Celebration In-App Updater
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates-manual'),
   startUpdateDownload: (updateData) => ipcRenderer.invoke('start-update-download', updateData),

@@ -160,33 +160,29 @@ export default function AnalyserPage({
     }
   }, [currentSound, demoPacks]);
 
-  // Load samples for the selected pack name
+  // Load samples strictly belonging to the selected pack
   useEffect(() => {
     if (!packTitle) return;
     const fetchPackSounds = async () => {
       try {
-        if (window.electron?.searchSounds) {
-          const cleanQuery = packTitle.replace(/sample pack|vol\.?\s*\d+|pack|official demo/gi, '').replace(/\(.*?\)/g, '').trim();
-          let results = [];
-          if (cleanQuery) {
-            results = await window.electron.searchSounds(cleanQuery, { startPage: 1, endPage: 2 });
+        if (window.electron?.getPackSamples) {
+          const res = await window.electron.getPackSamples({ 
+            packUuid: currentSound?.packUuid || currentSound?.uuid || null, 
+            packName: packTitle 
+          });
+          if (res?.success && Array.isArray(res.samples)) {
+            setPackSoundsList(res.samples);
+            return;
           }
-          
-          if (!results || results.length === 0) {
-            const firstWord = cleanQuery.split(/\s+/)[0] || '';
-            if (firstWord.length > 2) {
-              results = await window.electron.searchSounds(firstWord, { startPage: 1, endPage: 1 });
-            }
-          }
-
-          setPackSoundsList(results || []);
         }
+        setPackSoundsList([]);
       } catch (err) {
-        console.warn('Failed to fetch pack sounds:', err);
+        console.warn('Failed to fetch pack samples:', err);
+        setPackSoundsList([]);
       }
     };
     fetchPackSounds();
-  }, [packTitle]);
+  }, [packTitle, currentSound]);
 
   // Initialize WaveSurfer
   useEffect(() => {
@@ -297,17 +293,20 @@ export default function AnalyserPage({
     setHasAnalysed(false);
 
     try {
-      let candidates = [...packSoundsList];
-      if (candidates.length < 15 && window.electron?.searchSounds) {
-        const extra = await window.electron.searchSounds('', { startPage: 1, endPage: 2 });
-        candidates = [...candidates, ...extra];
+      if (!packSoundsList || packSoundsList.length === 0) {
+        setIsAnalysing(false);
+        if (showToast) {
+          showToast(`No samples indexed strictly for "${packTitle}".`, 'info');
+        }
+        return;
       }
 
-      const results = identifySamplesInSection(null, candidates, {
+      // STRICTLY analyze ONLY the samples from this pack
+      const results = identifySamplesInSection(null, packSoundsList, {
         startSec: startSec,
         endSec: endSec,
         packName: packTitle,
-        minConfidence: 55
+        maxResults: 10
       });
 
       setTimeout(() => {
@@ -315,9 +314,9 @@ export default function AnalyserPage({
         setIsAnalysing(false);
         setHasAnalysed(true);
         if (showToast) {
-          showToast(`🎯 Found ${results.length} identified samples between [${formatTime(startSec)} - ${formatTime(endSec)}]!`, 'success');
+          showToast(`🎯 Identified ${results.length} samples strictly from "${packTitle}"!`, 'success');
         }
-      }, 600);
+      }, 350);
     } catch (err) {
       console.error('Analysis error:', err);
       setIsAnalysing(false);

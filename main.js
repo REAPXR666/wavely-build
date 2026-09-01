@@ -3124,6 +3124,73 @@ ipcMain.handle('get-active-downloads', () => {
   return Array.from(activePackDownloadsMap.values());
 });
 
+// Retrieve ONLY samples strictly belonging to the specified pack
+ipcMain.handle('get-pack-samples', async (event, { packUuid, packName }) => {
+  try {
+    let packSamples = [];
+    const cleanPackName = (packName || '').toLowerCase().trim();
+    const seenIds = new Set();
+
+    // 1. Check local indexed files for exact pack matches
+    if (cleanPackName) {
+      const localPackMatches = db.indexedFiles.filter(file => {
+        if (!file.filePath || !fs.existsSync(file.filePath)) return false;
+        const p = (file.pack || file.packName || '').toLowerCase();
+        return p && (p === cleanPackName || cleanPackName.includes(p) || p.includes(cleanPackName));
+      }).map(file => ({
+        ...file,
+        isDownloaded: true,
+        previewUrl: toLocalMediaUrl(file.filePath)
+      }));
+      localPackMatches.forEach(s => {
+        if (!seenIds.has(s.id)) {
+          seenIds.add(s.id);
+          packSamples.push(s);
+        }
+      });
+    }
+
+    // 2. Query Splice online catalog specifically for this pack UUID
+    if (packUuid) {
+      try {
+        const res = await querySplicePackAssets(packUuid, 'sample', 1, 50);
+        if (res && Array.isArray(res.items)) {
+          res.items.forEach(s => {
+            if (!seenIds.has(s.id)) {
+              seenIds.add(s.id);
+              packSamples.push(s);
+            }
+          });
+        }
+      } catch (err) {
+        console.warn(`[GetPackSamples] Online pack fetch failed for ${packUuid}:`, err.message);
+      }
+    } else if (cleanPackName) {
+      try {
+        const searchRes = await querySpliceDirect(cleanPackName, false, 1, null, null);
+        if (Array.isArray(searchRes)) {
+          const strictPackResults = searchRes.filter(s => {
+            const p = (s.packName || s.pack || s.source || '').toLowerCase();
+            return p && (p === cleanPackName || p.includes(cleanPackName) || cleanPackName.includes(p));
+          });
+          strictPackResults.forEach(s => {
+            if (!seenIds.has(s.id)) {
+              seenIds.add(s.id);
+              packSamples.push(s);
+            }
+          });
+        }
+      } catch (err) {}
+    }
+
+    console.log(`[GetPackSamples] Retrieved ${packSamples.length} samples strictly for pack: "${packName}" (UUID: ${packUuid || 'N/A'})`);
+    return { success: true, samples: packSamples };
+  } catch (err) {
+    console.error('get-pack-samples error:', err);
+    return { success: false, error: err.message, samples: [] };
+  }
+});
+
 ipcMain.handle('download-entire-pack', async (event, packData) => {
   const packUuid = packData.packUuid;
   const packName = packData.packName || packData.name || 'Sample Pack';
