@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Play, Pause, Volume2, Volume1, VolumeX, SkipBack, SkipForward, Repeat,
   Layers, Music, Activity

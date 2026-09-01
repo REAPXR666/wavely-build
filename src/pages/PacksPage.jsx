@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, Download, FolderOpen, Play, Pause, Loader2, Check, AlertCircle, 
   Volume2, VolumeX, Sparkles, Music, Layers, RefreshCw, ChevronRight, X,
