@@ -623,19 +623,19 @@ ipcMain.handle('save-certificate-pdf', async (event, { defaultFileName, certHtml
 function getVst3Directories() {
   const dirs = [];
   if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
     const commonProgramFiles = process.env.CommonProgramFiles || 'C:\\Program Files\\Common Files';
     const commonProgramFilesX86 = process.env['CommonProgramFiles(x86)'] || 'C:\\Program Files (x86)\\Common Files';
-    const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
 
+    dirs.push(path.join(localAppData, 'Programs', 'Common', 'VST3'));
     dirs.push(path.join(commonProgramFiles, 'VST3'));
     dirs.push(path.join(commonProgramFilesX86, 'VST3'));
-    dirs.push(path.join(localAppData, 'Programs', 'Common', 'VST3'));
   } else if (process.platform === 'darwin') {
-    dirs.push('/Library/Audio/Plug-Ins/VST3');
     dirs.push(path.join(os.homedir(), 'Library', 'Audio', 'Plug-Ins', 'VST3'));
+    dirs.push('/Library/Audio/Plug-Ins/VST3');
   } else {
-    dirs.push('/usr/lib/vst3');
     dirs.push(path.join(os.homedir(), '.vst3'));
+    dirs.push('/usr/lib/vst3');
   }
   return dirs;
 }
