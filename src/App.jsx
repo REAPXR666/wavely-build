@@ -140,45 +140,53 @@ export default function App() {
     bootstrapApp();
 
     // Listen for live ban events pushed from admin
-    if (window.electron.onDeviceBanned) {
-      const unsubscribe = window.electron.onDeviceBanned((data) => {
+    const cleanups = [];
+
+    if (window.electron?.onDeviceBanned) {
+      const unsubBan = window.electron.onDeviceBanned((data) => {
         setIsPlaying(false);
         setBannedInfo(data);
       });
-      return () => {
-        if (unsubscribe) unsubscribe();
-      };
+      if (unsubBan) cleanups.push(unsubBan);
     }
 
     // Listen for subscription status updates
-    if (window.electron.onSubscriptionStatus) {
+    if (window.electron?.onSubscriptionStatus) {
       const unsubSub = window.electron.onSubscriptionStatus((subData) => {
         setAuthState(prev => ({ ...prev, subscription: subData }));
       });
-      return () => {
-        if (unsubSub) unsubSub();
-      };
+      if (unsubSub) cleanups.push(unsubSub);
     }
 
     // Listen for Mini Dock toggle updates
-    if (window.electron.onMiniDockStateChanged) {
+    if (window.electron?.onMiniDockStateChanged) {
       const unsubDock = window.electron.onMiniDockStateChanged((dockState) => {
         setIsMiniDock(dockState);
       });
-      return () => {
-        if (unsubDock) unsubDock();
-      };
+      if (unsubDock) cleanups.push(unsubDock);
     }
 
     // Listen for New Release Update available
-    if (window.electron.onUpdateAvailable) {
+    if (window.electron?.onUpdateAvailable) {
       const unsubUpdate = window.electron.onUpdateAvailable((updateInfo) => {
+        console.log('[UpdateUI] Update Available Received in React:', updateInfo);
         setAvailableUpdate(updateInfo);
       });
-      return () => {
-        if (unsubUpdate) unsubUpdate();
-      };
+      if (unsubUpdate) cleanups.push(unsubUpdate);
     }
+
+    // Trigger update check once React is mounted & ready
+    if (window.electron?.checkForUpdates) {
+      setTimeout(() => {
+        window.electron.checkForUpdates();
+      }, 1500);
+    }
+
+    return () => {
+      cleanups.forEach(fn => {
+        try { if (typeof fn === 'function') fn(); } catch (e) {}
+      });
+    };
   }, []);
 
   // Fetch all downloads when downloads tab is selected

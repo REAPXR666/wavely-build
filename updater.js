@@ -155,23 +155,31 @@ function downloadFileWithProgress(url, destPath, token, onProgress, onComplete) 
 }
 
 function checkForUpdates(mainWindow) {
-  if (!UPDATER_CONFIG.enabled || !mainWindow) return;
+  if (!UPDATER_CONFIG.enabled || !mainWindow || mainWindow.isDestroyed()) return;
 
-  console.log('[Updater] Checking for updates silently...');
-  fetchJson(UPDATER_CONFIG.versionUrl, UPDATER_CONFIG.githubToken, (err, updateData) => {
+  const currentVer = (app && typeof app.getVersion === 'function') ? app.getVersion() : '1.0.7';
+  const urlWithCacheBuster = `${UPDATER_CONFIG.versionUrl}?nocache=${Date.now()}`;
+
+  console.log(`[Updater] Checking for updates against ${urlWithCacheBuster}... (Current version: ${currentVer})`);
+  fetchJson(urlWithCacheBuster, UPDATER_CONFIG.githubToken, (err, updateData) => {
     if (err) {
       console.warn('[Updater] Version check notice:', err.message);
       return;
     }
 
-    if (!updateData || !updateData.version || !updateData.url) return;
+    if (!updateData || !updateData.version || !updateData.url) {
+      console.warn('[Updater] Invalid update payload received:', updateData);
+      return;
+    }
 
-    const hasUpdate = isNewerVersion(UPDATER_CONFIG.currentVersion, updateData.version);
-    console.log(`[Updater] Current: ${UPDATER_CONFIG.currentVersion}, Latest: ${updateData.version}. Update available: ${hasUpdate}`);
+    const hasUpdate = isNewerVersion(currentVer, updateData.version);
+    console.log(`[Updater] Current: ${currentVer}, Latest: ${updateData.version}. Update available: ${hasUpdate}`);
 
     if (hasUpdate) {
-      // Send custom event to React frontend to trigger the confetti celebration popup!
-      mainWindow.webContents.send('app-update-available', updateData);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        console.log(`[Updater] Dispatching app-update-available event to window for v${updateData.version}`);
+        mainWindow.webContents.send('app-update-available', updateData);
+      }
     }
   });
 }
