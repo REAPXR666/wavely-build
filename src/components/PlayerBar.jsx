@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
 import { 
   Play, Pause, Volume2, Volume1, VolumeX, SkipBack, SkipForward, Repeat,
-  Layers, Music
+  Layers, Music, Activity
 } from 'lucide-react';
 
 export default function PlayerBar({ 
@@ -13,7 +12,8 @@ export default function PlayerBar({
   isLooping, 
   setIsLooping,
   onNext,
-  onPrevious
+  onPrevious,
+  onOpenAnalyser
 }) {
   const audioRef = useRef(null);
   const canvasRef = useRef(null);
@@ -379,8 +379,32 @@ export default function PlayerBar({
         </div>
       </div>
 
-      {/* Right: Master Volume Control Slider */}
-      <div className="player-right">
+      {/* Right: Master Volume Control Slider & Analyser Trigger */}
+      <div className="player-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {currentSound && (
+          <button
+            onClick={() => onOpenAnalyser && onOpenAnalyser(currentSound)}
+            title="Open track in Wavely Demo Analyser to isolate samples"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '5px 12px',
+              borderRadius: '8px',
+              border: '1px solid rgba(6, 182, 212, 0.4)',
+              background: 'rgba(6, 182, 212, 0.15)',
+              color: '#38bdf8',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <Activity size={13} color="#06b6d4" />
+            <span>Open in Analyser</span>
+          </button>
+        )}
+
         <div className="volume-container">
           <button 
             className="volume-icon-btn"

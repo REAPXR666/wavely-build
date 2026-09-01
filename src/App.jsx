@@ -314,6 +314,11 @@ export default function App() {
             subscription={authState.subscription}
             showToast={showToast}
             volume={volume}
+            currentSound={currentSound}
+            setCurrentSound={setCurrentSound}
+            isPlaying={isPlaying}
+            setIsPlaying={setIsPlaying}
+            setActiveTab={setActiveTab}
           />
         );
       case 'settings':
@@ -455,6 +460,9 @@ export default function App() {
           setIsLooping={setIsLooping}
           onNext={handleNextSound}
           onPrevious={handlePreviousSound}
+          onOpenAnalyser={(sound) => {
+            setActiveTab('analyser');
+          }}
         />
 
         {/* Global Floating Download Status Indicator */}

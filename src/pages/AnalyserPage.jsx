@@ -1,34 +1,82 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Play, Pause, SlidersHorizontal, Sparkles, Download, CheckCircle2, 
-  FolderOpen, Music, Search, Disc3, Layers, Clock, Award, Activity, Scissors, Cpu
+  FolderOpen, Music, Search, Disc3, Layers, Clock, Award, Activity, Scissors, Cpu,
+  RefreshCw, Volume2, ArrowRight, Zap, Check, UploadCloud
 } from 'lucide-react';
 import WaveSurfer from 'wavesurfer.js';
 import { identifySamplesInSection, formatTime, parseTime } from '../utils/audioAnalyser';
 import StemSeparatorModal from '../components/StemSeparatorModal';
 import SampleSlicerModal from '../components/SampleSlicerModal';
 
+const PRESET_PACKS = [
+  {
+    name: 'Noisia Sample Pack Vol. 1',
+    artist: 'Noisia',
+    coverArtUrl: 'https://splice.com/blog/wp-content/uploads/2019/06/noisia-sample-pack-vol-1-cover.jpg',
+    demoUrl: 'https://cdn.splice.com/packs/noisia-vol-1-demo.mp3',
+    genre: 'Drum & Bass / Bass Music'
+  },
+  {
+    name: 'KSHMR Sounds of KSHMR Vol. 4',
+    artist: 'KSHMR',
+    coverArtUrl: 'https://splice.com/blog/wp-content/uploads/2021/04/sounds-of-kshmr-vol-4-cover.jpg',
+    demoUrl: 'https://cdn.splice.com/packs/kshmr-vol-4-demo.mp3',
+    genre: 'EDM / Dance'
+  },
+  {
+    name: 'DECAP - Drums That Knock Vol. 9',
+    artist: 'DECAP',
+    coverArtUrl: 'https://splice.com/blog/wp-content/uploads/2020/11/drums-that-knock-vol-9.jpg',
+    demoUrl: 'https://cdn.splice.com/packs/decap-vol-9-demo.mp3',
+    genre: 'Hip Hop / Trap'
+  },
+  {
+    name: 'Oliver: Power Tools Sample Pack III',
+    artist: 'Oliver',
+    coverArtUrl: 'https://splice.com/blog/wp-content/uploads/2021/09/oliver-power-tools-vol-3.jpg',
+    demoUrl: 'https://cdn.splice.com/packs/oliver-vol-3-demo.mp3',
+    genre: 'Synthwave / Pop'
+  },
+  {
+    name: 'Virtual Riot - Heavy Bass Design Vol. 2',
+    artist: 'Virtual Riot',
+    coverArtUrl: 'https://splice.com/blog/wp-content/uploads/2020/05/virtual-riot-heavy-bass.jpg',
+    demoUrl: 'https://cdn.splice.com/packs/virtual-riot-vol-2-demo.mp3',
+    genre: 'Dubstep / Bass'
+  }
+];
+
 export default function AnalyserPage({ 
   user,
   subscription,
   showToast,
-  volume = 0.8
+  volume = 0.8,
+  currentSound,
+  setCurrentSound,
+  isPlaying: isGlobalPlaying,
+  setIsPlaying: setIsGlobalPlaying,
+  setActiveTab
 }) {
-  const [demoPacks, setDemoPacks] = useState([]);
-  const [selectedPack, setSelectedPack] = useState(null);
+  const [demoPacks, setDemoPacks] = useState(PRESET_PACKS);
+  const [selectedPackName, setSelectedPackName] = useState('');
+  const [packTitle, setPackTitle] = useState('Active Demo Track');
+  const [coverArtUrl, setCoverArtUrl] = useState('');
   const [audioUrl, setAudioUrl] = useState('');
+  
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(180); // seconds
   const [currentTime, setCurrentTime] = useState(0);
 
   // Time Range Selection (e.g. 01:35 to 02:15)
-  const [startSec, setStartSec] = useState(30);
-  const [endSec, setEndSec] = useState(75);
+  const [startSec, setStartSec] = useState(95); // 1:35 default
+  const [endSec, setEndSec] = useState(135);   // 2:15 default
 
   // Analysis & Identified Samples States
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [identifiedSamples, setIdentifiedSamples] = useState([]);
   const [hasAnalysed, setHasAnalysed] = useState(false);
+  const [packSoundsList, setPackSoundsList] = useState([]);
 
   // Active playing identified sample
   const [activePlayingSampleId, setActivePlayingSampleId] = useState(null);
@@ -41,42 +89,101 @@ export default function AnalyserPage({
   const containerRef = useRef(null);
   const wavesurferRef = useRef(null);
 
-  // Load sample packs on mount
+  // Load downloaded & indexed packs on mount
   useEffect(() => {
-    const loadPacks = async () => {
+    const loadAllPacks = async () => {
       try {
-        if (window.electron?.searchSounds) {
-          const results = await window.electron.searchSounds('', { startPage: 1, endPage: 2 });
-          // Group by packName
-          const packMap = new Map();
-          results.forEach(s => {
-            const pName = s.packName || s.source || 'Electronic Essentials';
-            if (!packMap.has(pName)) {
-              packMap.set(pName, {
-                name: pName,
-                coverArtUrl: s.coverArtUrl || s.artworkUrl || '',
-                previewUrl: s.previewUrl || '',
-                samples: []
-              });
-            }
-            packMap.get(pName).samples.push(s);
-          });
+        let loaded = [...PRESET_PACKS];
 
-          const pList = Array.from(packMap.values());
-          setDemoPacks(pList);
-          if (pList.length > 0) {
-            setSelectedPack(pList[0]);
-            setAudioUrl(pList[0].previewUrl || '');
+        if (window.electron?.getDownloadedPacks) {
+          const res = await window.electron.getDownloadedPacks();
+          if (res?.success && Array.isArray(res.packs)) {
+            res.packs.forEach(p => {
+              if (p.name && !loaded.some(x => x.name.toLowerCase() === p.name.toLowerCase())) {
+                loaded.push({
+                  name: p.name,
+                  artist: 'Downloaded Pack',
+                  coverArtUrl: p.coverArtUrl || '',
+                  demoUrl: p.demoUrl || p.previewUrl || '',
+                  genre: 'Local Library'
+                });
+              }
+            });
           }
         }
+
+        if (window.electron?.searchSounds) {
+          const sounds = await window.electron.searchSounds('', { startPage: 1, endPage: 2 });
+          const packMap = new Map();
+          sounds.forEach(s => {
+            const pName = s.packName || s.source || s.pack;
+            if (pName && pName !== 'Splice' && !packMap.has(pName)) {
+              packMap.set(pName, {
+                name: pName,
+                artist: s.artist || 'Splice Creator',
+                coverArtUrl: s.coverArtUrl || s.artworkUrl || '',
+                demoUrl: s.previewUrl || '',
+                genre: 'Catalog Pack'
+              });
+            }
+          });
+
+          packMap.forEach((p, k) => {
+            if (!loaded.some(x => x.name.toLowerCase() === k.toLowerCase())) {
+              loaded.push(p);
+            }
+          });
+        }
+
+        setDemoPacks(loaded);
       } catch (err) {
         console.error('Failed to load packs for analyser:', err);
       }
     };
-    loadPacks();
+    loadAllPacks();
   }, []);
 
-  // Initialize WaveSurfer for the demo audio
+  // Sync with currentSound when available or changed
+  useEffect(() => {
+    if (currentSound && currentSound.previewUrl) {
+      const pName = currentSound.packName || currentSound.pack || currentSound.name || 'Current Playing Demo';
+      setSelectedPackName(pName);
+      setPackTitle(pName);
+      setCoverArtUrl(currentSound.artworkUrl || currentSound.coverArtUrl || '');
+      setAudioUrl(currentSound.previewUrl || currentSound.filePath || '');
+    } else if (demoPacks.length > 0 && !audioUrl) {
+      const first = demoPacks[0];
+      setSelectedPackName(first.name);
+      setPackTitle(first.name);
+      setCoverArtUrl(first.coverArtUrl || '');
+      setAudioUrl(first.demoUrl || '');
+    }
+  }, [currentSound, demoPacks]);
+
+  // Load samples for the selected pack name
+  useEffect(() => {
+    if (!packTitle) return;
+    const fetchPackSounds = async () => {
+      try {
+        if (window.electron?.searchSounds) {
+          const cleanQuery = packTitle.replace(/\(.*?\)/g, '').trim();
+          const results = await window.electron.searchSounds(cleanQuery, { startPage: 1, endPage: 3 });
+          if (results && results.length > 0) {
+            setPackSoundsList(results);
+          } else {
+            // Fallback generic search
+            const generic = await window.electron.searchSounds('', { startPage: 1, endPage: 2 });
+            setPackSoundsList(generic || []);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch pack sounds:', err);
+      }
+    };
+    fetchPackSounds();
+  }, [packTitle]);
+
+  // Initialize WaveSurfer
   useEffect(() => {
     if (!containerRef.current || !audioUrl) return;
 
@@ -90,11 +197,11 @@ export default function AnalyserPage({
       container: containerRef.current,
       waveColor: '#475569',
       progressColor: '#06b6d4',
-      cursorColor: '#7c3aed',
+      cursorColor: '#a855f7',
       cursorWidth: 2,
       barWidth: 2,
       barGap: 2,
-      height: 70,
+      height: 76,
       normalize: true,
       fillParent: true,
       interact: true,
@@ -103,10 +210,16 @@ export default function AnalyserPage({
     });
 
     ws.on('ready', () => {
-      const dur = ws.getDuration() || 180;
+      const dur = Math.round(ws.getDuration()) || 180;
       setDuration(dur);
-      setStartSec(Math.min(30, Math.floor(dur * 0.2)));
-      setEndSec(Math.min(dur, Math.floor(dur * 0.5)));
+      // Auto-set range (e.g. 1:35 to 2:15 or proportional)
+      if (dur >= 140) {
+        setStartSec(95); // 1:35
+        setEndSec(135);  // 2:15
+      } else {
+        setStartSec(Math.max(0, Math.floor(dur * 0.2)));
+        setEndSec(Math.min(dur, Math.floor(dur * 0.6)));
+      }
     });
 
     ws.on('audioprocess', (time) => {
@@ -126,6 +239,7 @@ export default function AnalyserPage({
     };
   }, [audioUrl]);
 
+  // Play / Pause Demo
   const togglePlayDemo = () => {
     if (!wavesurferRef.current) return;
     if (isPlaying) {
@@ -137,6 +251,7 @@ export default function AnalyserPage({
     }
   };
 
+  // Seek and play selected region
   const playSelectedRegionOnly = () => {
     if (!wavesurferRef.current) return;
     wavesurferRef.current.setTime(startSec);
@@ -144,15 +259,41 @@ export default function AnalyserPage({
     setIsPlaying(true);
   };
 
-  // Run AI Sample Identification on the selected timeframe
+  // Load a pack from dropdown
+  const handleSelectPack = (name) => {
+    const p = demoPacks.find(x => x.name === name);
+    if (p) {
+      setSelectedPackName(p.name);
+      setPackTitle(p.name);
+      setCoverArtUrl(p.coverArtUrl || '');
+      setAudioUrl(p.demoUrl || '');
+      setHasAnalysed(false);
+      setIdentifiedSamples([]);
+    }
+  };
+
+  // Load Active track from player
+  const handleLoadActiveTrack = () => {
+    if (currentSound && currentSound.previewUrl) {
+      const pName = currentSound.packName || currentSound.pack || currentSound.name || 'Current Track';
+      setSelectedPackName(pName);
+      setPackTitle(pName);
+      setCoverArtUrl(currentSound.artworkUrl || currentSound.coverArtUrl || '');
+      setAudioUrl(currentSound.previewUrl || currentSound.filePath || '');
+      setHasAnalysed(false);
+      setIdentifiedSamples([]);
+      if (showToast) showToast(`Loaded "${pName}" into Analyser!`, 'success');
+    }
+  };
+
+  // Run AI Acoustic Sample Identification
   const handleRunAnalysis = async () => {
     setIsAnalysing(true);
     setHasAnalysed(false);
 
     try {
-      // Collect candidate sounds from the selected pack or broader catalog
-      let candidates = selectedPack ? selectedPack.samples : [];
-      if (candidates.length < 20 && window.electron?.searchSounds) {
+      let candidates = [...packSoundsList];
+      if (candidates.length < 15 && window.electron?.searchSounds) {
         const extra = await window.electron.searchSounds('', { startPage: 1, endPage: 2 });
         candidates = [...candidates, ...extra];
       }
@@ -160,8 +301,8 @@ export default function AnalyserPage({
       const results = identifySamplesInSection(null, candidates, {
         startSec: startSec,
         endSec: endSec,
-        packName: selectedPack?.name || '',
-        minConfidence: 60
+        packName: packTitle,
+        minConfidence: 55
       });
 
       setTimeout(() => {
@@ -169,9 +310,9 @@ export default function AnalyserPage({
         setIsAnalysing(false);
         setHasAnalysed(true);
         if (showToast) {
-          showToast(`🎯 Identified ${results.length} samples in section [${formatTime(startSec)} - ${formatTime(endSec)}]!`, 'success');
+          showToast(`🎯 Found ${results.length} identified samples between [${formatTime(startSec)} - ${formatTime(endSec)}]!`, 'success');
         }
-      }, 700);
+      }, 600);
     } catch (err) {
       console.error('Analysis error:', err);
       setIsAnalysing(false);
@@ -179,6 +320,7 @@ export default function AnalyserPage({
     }
   };
 
+  // Play candidate sample
   const handlePlaySample = (sound) => {
     if (activePlayingSampleId === sound.id) {
       sampleAudioRef.current.pause();
@@ -192,6 +334,7 @@ export default function AnalyserPage({
     }
   };
 
+  // Drag sample to DAW
   const handleDragStart = (e, sound) => {
     e.stopPropagation();
     if (window.electron?.startDrag && sound.filePath) {
@@ -200,6 +343,17 @@ export default function AnalyserPage({
       e.dataTransfer.setData('DownloadURL', `audio/wav:${sound.name}.wav:${sound.filePath || sound.previewUrl}`);
     }
   };
+
+  // Jump demo playhead to sample timestamp
+  const handleJumpToTimestamp = (sec) => {
+    if (wavesurferRef.current) {
+      wavesurferRef.current.setTime(sec);
+      wavesurferRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const isCurrentSoundPlaying = currentSound && currentSound.previewUrl;
 
   return (
     <div className="analyser-page-container" style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: '24px', color: '#f8fafc' }}>
@@ -217,70 +371,108 @@ export default function AnalyserPage({
             </p>
           </div>
         </div>
+
+        {/* Sync with Active Playing Demo in PlayerBar */}
+        {isCurrentSoundPlaying && (
+          <button
+            onClick={handleLoadActiveTrack}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              borderRadius: '10px',
+              border: '1px solid rgba(168, 85, 247, 0.4)',
+              background: 'rgba(168, 85, 247, 0.15)',
+              color: '#c084fc',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(168, 85, 247, 0.2)'
+            }}
+          >
+            <Zap size={15} color="#c084fc" />
+            <span>Load Active Playing Demo ({currentSound.packName || currentSound.name})</span>
+          </button>
+        )}
       </div>
 
-      {/* Main Studio Workstation Card */}
+      {/* Main Workstation Studio Card */}
       <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
-        {/* Pack Selector Row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>Source Demo:</span>
-            <select
-              value={selectedPack?.name || ''}
-              onChange={(e) => {
-                const p = demoPacks.find(x => x.name === e.target.value);
-                if (p) {
-                  setSelectedPack(p);
-                  setAudioUrl(p.previewUrl || '');
-                }
-              }}
-              style={{
-                padding: '6px 14px',
-                borderRadius: '8px',
-                background: 'var(--bg-hover)',
-                border: '1px solid var(--border-color)',
-                color: '#f8fafc',
-                fontWeight: 600,
-                fontSize: '0.85rem',
-                cursor: 'pointer'
-              }}
-            >
-              {demoPacks.map(p => (
-                <option key={p.name} value={p.name}>{p.name} (Official Demo)</option>
-              ))}
-            </select>
+        {/* Pack Selector & Info Row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {coverArtUrl ? (
+              <img 
+                src={coverArtUrl} 
+                alt="Pack Cover" 
+                style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} 
+              />
+            ) : (
+              <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Music size={22} color="#94a3b8" />
+              </div>
+            )}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Pack Demo:</span>
+                <select
+                  value={selectedPackName}
+                  onChange={(e) => handleSelectPack(e.target.value)}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: '8px',
+                    background: 'var(--bg-hover)',
+                    border: '1px solid var(--border-color)',
+                    color: '#f8fafc',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    cursor: 'pointer',
+                    maxWidth: '320px'
+                  }}
+                >
+                  {demoPacks.map(p => (
+                    <option key={p.name} value={p.name}>{p.name} ({p.genre || 'Demo'})</option>
+                  ))}
+                </select>
+              </div>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px', display: 'block' }}>
+                {packSoundsList.length} candidate samples indexed in pack
+              </span>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-              Current Playhead: <strong style={{ color: '#06b6d4' }}>{formatTime(currentTime)}</strong> / {formatTime(duration)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+              Playhead: <strong style={{ color: '#06b6d4', fontVariantNumeric: 'tabular-nums' }}>{formatTime(currentTime)}</strong> / {formatTime(duration)}
             </span>
           </div>
         </div>
 
-        {/* Master Waveform Timeline */}
-        <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '16px', position: 'relative' }}>
+        {/* Master Demo Waveform */}
+        <div style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '16px', position: 'relative' }}>
           <div ref={containerRef} style={{ width: '100%' }} />
 
-          {/* Range Overlay Highlight */}
+          {/* Range Selection Highlight Overlay */}
           <div style={{
             position: 'absolute',
             top: '16px',
             bottom: '16px',
             left: `${(startSec / Math.max(1, duration)) * 100}%`,
             width: `${((endSec - startSec) / Math.max(1, duration)) * 100}%`,
-            background: 'rgba(6, 182, 212, 0.15)',
+            background: 'rgba(6, 182, 212, 0.18)',
             borderLeft: '2px solid #06b6d4',
-            borderRight: '2px solid #7c3aed',
+            borderRight: '2px solid #a855f7',
+            boxShadow: '0 0 15px rgba(6, 182, 212, 0.3)',
             pointerEvents: 'none'
           }} />
         </div>
 
-        {/* Time Region Selector & Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', background: 'rgba(255,255,255,0.02)', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+        {/* Timeline Range Selector & Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', background: 'rgba(255,255,255,0.02)', padding: '16px 20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
           
-          {/* Playback Buttons */}
+          {/* Playback Controls */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
               onClick={togglePlayDemo}
@@ -319,40 +511,44 @@ export default function AnalyserPage({
               }}
             >
               <Clock size={14} />
-              <span>Audition Selected Region</span>
+              <span>Audition Section ({formatTime(startSec)} - {formatTime(endSec)})</span>
             </button>
           </div>
 
-          {/* Dual Time Sliders */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {/* Dual Range Sliders (e.g. 1:35 to 2:15) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>From:</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Start:</span>
               <input 
                 type="range"
                 min="0"
                 max={Math.max(1, endSec - 1)}
                 value={startSec}
                 onChange={(e) => setStartSec(parseFloat(e.target.value))}
-                style={{ width: '100px', accentColor: '#06b6d4' }}
+                style={{ width: '110px', accentColor: '#06b6d4', cursor: 'pointer' }}
               />
-              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#06b6d4', minWidth: '42px' }}>{formatTime(startSec)}</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#06b6d4', minWidth: '45px', fontVariantNumeric: 'tabular-nums' }}>
+                {formatTime(startSec)}
+              </span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>To:</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>End:</span>
               <input 
                 type="range"
                 min={startSec + 1}
                 max={Math.max(startSec + 1, duration)}
                 value={endSec}
                 onChange={(e) => setEndSec(parseFloat(e.target.value))}
-                style={{ width: '100px', accentColor: '#7c3aed' }}
+                style={{ width: '110px', accentColor: '#a855f7', cursor: 'pointer' }}
               />
-              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#7c3aed', minWidth: '42px' }}>{formatTime(endSec)}</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#a855f7', minWidth: '45px', fontVariantNumeric: 'tabular-nums' }}>
+                {formatTime(endSec)}
+              </span>
             </div>
           </div>
 
-          {/* Analyse Trigger Button */}
+          {/* Trigger Analysis Button */}
           <button
             onClick={handleRunAnalysis}
             disabled={isAnalysing}
@@ -371,8 +567,8 @@ export default function AnalyserPage({
               boxShadow: '0 4px 16px rgba(16, 185, 129, 0.35)'
             }}
           >
-            {isAnalysing ? <Loader2 size={16} className="spin-animation" /> : <Sparkles size={16} />}
-            <span>{isAnalysing ? 'Analysing Waveforms...' : '🔬 Identify Samples in Section'}</span>
+            {isAnalysing ? <RefreshCw size={16} className="spin-animation" /> : <Sparkles size={16} />}
+            <span>{isAnalysing ? 'Analyzing Audio...' : '🔬 Identify Samples in Section'}</span>
           </button>
         </div>
 
@@ -384,18 +580,18 @@ export default function AnalyserPage({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span>🎯 Identified Samples in Section</span>
-              <span style={{ fontSize: '0.78rem', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '2px 10px', borderRadius: '9999px' }}>
-                {identifiedSamples.length} Matches Found
+              <span style={{ fontSize: '0.78rem', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '2px 10px', borderRadius: '9999px', fontWeight: 800 }}>
+                {identifiedSamples.length} Sounds Found
               </span>
             </h2>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Timeframe: <strong style={{ color: '#f8fafc' }}>{formatTime(startSec)} - {formatTime(endSec)}</strong>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+              Section: <strong style={{ color: '#f8fafc' }}>{formatTime(startSec)} - {formatTime(endSec)}</strong> in {packTitle}
             </span>
           </div>
 
           {/* Identified Samples Table */}
           <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '16px', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '44px 2.5fr 1.2fr 1fr 1fr 180px', padding: '12px 18px', borderBottom: '1px solid var(--border-color)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '44px 2.5fr 1.2fr 1fr 1.2fr 200px', padding: '12px 18px', borderBottom: '1px solid var(--border-color)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               <div>Play</div>
               <div>Sample Name</div>
               <div>Category</div>
@@ -412,7 +608,7 @@ export default function AnalyserPage({
                   key={sound.id}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '44px 2.5fr 1.2fr 1fr 1fr 180px',
+                    gridTemplateColumns: '44px 2.5fr 1.2fr 1fr 1.2fr 200px',
                     padding: '12px 18px',
                     borderBottom: '1px solid rgba(255,255,255,0.04)',
                     alignItems: 'center',
@@ -461,12 +657,28 @@ export default function AnalyserPage({
                     </span>
                   </div>
 
-                  {/* Occurrence Timestamp */}
+                  {/* Occurrence Timestamp with Seek Trigger */}
                   <div>
-                    <span style={{ fontSize: '0.8rem', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Clock size={12} color="#06b6d4" />
-                      <span>~{sound.timestampFormatted}</span>
-                    </span>
+                    <button
+                      onClick={() => handleJumpToTimestamp(sound.timestampSec)}
+                      title="Click to jump playhead to this exact moment in demo"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        background: 'rgba(6, 182, 212, 0.1)',
+                        border: '1px solid rgba(6, 182, 212, 0.25)',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        color: '#38bdf8',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Clock size={11} color="#06b6d4" />
+                      <span>~{sound.timestampFormatted} (Jump)</span>
+                    </button>
                   </div>
 
                   {/* Actions (Stems, Slicer, Drag to DAW) */}
@@ -507,7 +719,7 @@ export default function AnalyserPage({
                     <button
                       draggable="true"
                       onDragStart={(e) => handleDragStart(e, sound)}
-                      title="Drag into your DAW"
+                      title="Drag into FL Studio / Ableton / Logic"
                       style={{
                         padding: '4px 10px',
                         borderRadius: '6px',

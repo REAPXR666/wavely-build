@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, Download, FolderOpen, Play, Pause, Loader2, Check, AlertCircle, 
   Volume2, VolumeX, Sparkles, Music, Layers, RefreshCw, ChevronRight, X,
   Trash2, HardDrive, Compass, Clock, CheckCircle2, SlidersHorizontal, Settings as SettingsIcon,
-  XCircle
+  XCircle, Activity
 } from 'lucide-react';
 
 const GENRE_TAGS = [
@@ -709,6 +708,35 @@ export default function PacksPage({
                         >
                           <Layers size={14} />
                           <span>Browse Pack</span>
+                        </button>
+
+                        {/* Analyse Pack Demo Button */}
+                        <button 
+                          className="live-pack-browse-btn"
+                          onClick={() => {
+                            if (setCurrentSound) {
+                              setCurrentSound({
+                                productType: 'pack-demo',
+                                name: pack.name,
+                                packName: pack.name,
+                                uuid: pack.uuid || pack.id,
+                                previewUrl: pack.demoUrl,
+                                artworkUrl: pack.coverArtUrl,
+                                coverArtUrl: pack.coverArtUrl
+                              });
+                            }
+                            if (setIsPlaying) setIsPlaying(true);
+                            if (setActiveTab) setActiveTab('analyser');
+                          }}
+                          title="Open pack demo in Wavely Analyser to pinpoint & isolate samples"
+                          style={{
+                            background: 'rgba(6, 182, 212, 0.12)',
+                            borderColor: 'rgba(6, 182, 212, 0.35)',
+                            color: '#38bdf8'
+                          }}
+                        >
+                          <Activity size={14} />
+                          <span>Analyse Demo</span>
                         </button>
 
                         {isAlreadyDownloaded ? (
