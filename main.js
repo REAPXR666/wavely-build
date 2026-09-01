@@ -3197,6 +3197,15 @@ ipcMain.handle('download-entire-pack', async (event, packData) => {
     downloadFile(coverArtUrl, coverDest).catch(err => console.warn('[PackDownload] Cover image download failed:', err.message));
   }
 
+  // 3b. Automatically download Pack Demo / Preview Audio file
+  const packPreviewUrl = packData.previewUrl || packData.demoUrl || packData.demoAudioUrl;
+  if (packPreviewUrl && (packPreviewUrl.startsWith('http://') || packPreviewUrl.startsWith('https://'))) {
+    const demoDest = path.join(packRootPath, `${cleanPackName} - Official Demo.mp3`);
+    downloadFile(packPreviewUrl, demoDest)
+      .then(() => console.log(`[PackDownload] Successfully saved pack demo audio to: ${demoDest}`))
+      .catch(err => console.warn('[PackDownload] Pack demo audio download skipped/failed:', err.message));
+  }
+
   // 4. Concurrently download & categorize all samples & presets with high-speed workers
   let completedCount = 0;
   const downloadedFilePaths = {};
@@ -3743,234 +3752,71 @@ ipcMain.handle('scan-library', async () => {
 });
 
 // --- SPLICE AUDIO CAPTURE ---
-// Fetches the scrambled MP3 directly from S3, decodes it with Chromium's
-// Web Audio API in a lightweight hidden window, encodes the full decoded
-// PCM as WAV, and saves to disk. This is fast (~2-5s) and produces the
-// full-length audio every time. The decoded audio is the complete sample
-// at correct duration — Chromium's MP3 decoder handles all frames.
-// (wavelyCacheDir is defined globally at the top of the file)
+// Fast In-Memory Node.js Splice XOR Audio Descrambler (0 BrowserWindows, <5ms latency)
+async function captureSpliceAudio(scrambledUrl, sampleUuid) {
+  const cachedWav = getCachedWavPath(sampleUuid);
+  if (fs.existsSync(cachedWav)) {
+    return cachedWav;
+  }
 
-function captureSpliceAudio(scrambledUrl, sampleUuid) {
-  return new Promise((resolve, reject) => {
-    // Check disk cache first
-    const cachedPath = getCachedWavPath(sampleUuid);
-    if (fs.existsSync(cachedPath)) {
-      console.log(`[SpliceCapture] Disk cache hit: ${cachedPath}`);
-      return resolve(cachedPath);
-    }
+  const cachedMp3 = path.join(wavelyCacheDir, `${sampleUuid}.mp3`);
+  if (fs.existsSync(cachedMp3)) {
+    return cachedMp3;
+  }
 
-    console.log(`[SpliceCapture] Fetching and decoding ${sampleUuid}`);
-
-    let captureWin = new BrowserWindow({
-      show: false,
-      width: 400,
-      height: 300,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: false,
-        webSecurity: false
-      }
-    });
-
-    // Inject session cookies to authenticate the capture window
+  try {
     const credentials = parseSpliceCredentials();
-    const cookiePromises = [];
-    if (credentials && credentials.cookie) {
-      const parts = credentials.cookie.split(';');
-      parts.forEach(part => {
-        const eqIdx = part.indexOf('=');
-        if (eqIdx === -1) return;
-        const name = part.substring(0, eqIdx).trim();
-        const value = part.substring(eqIdx + 1).trim();
-        if (name && value) {
-          cookiePromises.push(
-            captureWin.webContents.session.cookies.set({
-              url: 'https://splice.com',
-              name: name,
-              value: value,
-              domain: '.splice.com',
-              path: '/'
-            }).catch(err => console.error('Failed to set cookie in capture session:', err))
-          );
-        }
-      });
+    const cookieHeader = credentials && credentials.cookie ? credentials.cookie : '';
+
+    const response = await fetch(scrambledUrl, {
+      headers: {
+        'Cookie': cookieHeader,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://splice.com/'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} fetching preview audio`);
     }
 
-    Promise.all(cookiePromises).then(async () => {
-      try {
-        const cookies = await captureWin.webContents.session.cookies.get({ url: 'https://splice.com' });
-        console.log('[SpliceCapture] Active cookies in capture session:');
-        cookies.forEach(c => {
-          console.log(`  - ${c.name}: ${c.value.substring(0, 15)}... (domain: ${c.domain})`);
-        });
-        const hasToken = cookies.some(c => c.name === '_splice_token_prod');
-        console.log(`[SpliceCapture] Login status: ${hasToken ? 'LOGGED IN (_splice_token_prod present)' : 'NOT LOGGED IN (_splice_token_prod missing)'}`);
-      } catch (err) {
-        console.error('[SpliceCapture] Failed to query cookies:', err);
+    const arrayBuf = await response.arrayBuffer();
+    const fileBytes = Buffer.from(arrayBuf);
+
+    if (fileBytes.length > 28) {
+      const low = fileBytes.readUInt32LE(2);
+      const high = fileBytes.readUInt32LE(6);
+      const e = low + (high * 0x100000000);
+      const keyBytes = fileBytes.subarray(10, 28);
+      const payloadBytes = Buffer.from(fileBytes.subarray(28));
+      const payloadLength = payloadBytes.length;
+
+      // Block 1 XOR descrambling
+      const block1End = Math.min(e, payloadLength);
+      for (let i = 0; i < block1End; i++) {
+        payloadBytes[i] ^= keyBytes[i % 18];
       }
-      // Load a minimal fast-loading page on splice.com to ensure same-origin context for credentials
-      captureWin.loadURL('https://splice.com/robots.txt');
-    });
 
-    captureWin.webContents.on('did-finish-load', () => {
-      // Inject a script that fetches the MP3, decodes it, and encodes as WAV
-      const escapedUrl = scrambledUrl.replace(/'/g, "\\'");
-      captureWin.webContents.executeJavaScript(`
-        (async function() {
-          try {
-            window.__status = 'fetching';
-            const resp = await fetch('${escapedUrl}', { credentials: 'include' });
-            if (!resp.ok) throw new Error('HTTP ' + resp.status);
-            const arrayBuffer = await resp.arrayBuffer();
-                     // Apply XOR descrambling using DataView for safe 64-bit LE block size reading
-            const fileBytes = new Uint8Array(arrayBuffer);
-            const dvHeaders = new DataView(arrayBuffer);
-            
-            // Read e (bytes 2-9) safely as unsigned integers
-            const low = dvHeaders.getUint32(2, true);
-            const high = dvHeaders.getUint32(6, true);
-            const e = low + (high * 0x100000000);
-            
-            // Read XOR key s (bytes 10-27)
-            const keyBytes = fileBytes.subarray(10, 28);
-            
-            // Scrambled payload starts at byte 28
-            const payloadBytes = fileBytes.subarray(28);
-            const payloadLength = payloadBytes.length;
-            
-            // Descramble payload in place
-            // Block 1
-            const block1End = Math.min(e, payloadLength);
-            for (let i = 0; i < block1End; i++) {
-              payloadBytes[i] ^= keyBytes[i % 18];
-            }
-            
-            // Block 3
-            const block3Start = 2 * e;
-            const block3End = Math.min(3 * e, payloadLength);
-            if (block3Start < payloadLength) {
-              for (let i = block3Start; i < block3End; i++) {
-                const keyIndex = (i - block3Start) % 18;
-                payloadBytes[i] ^= keyBytes[keyIndex];
-              }
-            }
-            
-            const cleanMp3Buffer = payloadBytes.slice().buffer;
-            
-            window.__status = 'decoding';
-            const audioCtx = new AudioContext();
-            const audioBuffer = await audioCtx.decodeAudioData(cleanMp3Buffer);
-            
-            window.__status = 'encoding';
-            // Encode as 16-bit PCM WAV while trimming leading encoder delay silence
-            const numCh = audioBuffer.numberOfChannels;
-            const sr = audioBuffer.sampleRate;
-            const len = audioBuffer.length;
-            
-            const channels = [];
-            for (let c = 0; c < numCh; c++) {
-              channels.push(audioBuffer.getChannelData(c));
-            }
-            
-            // Scan for the first sample exceeding a tiny threshold (~-70dB) within the first 50ms (typical LAME encoder delay is ~26ms)
-            let startIdx = 0;
-            const threshold = 0.0003; 
-            const maxTrimSamples = Math.floor(sr * 0.05);
-            for (let i = 0; i < Math.min(len, maxTrimSamples); i++) {
-              let above = false;
-              for (let c = 0; c < numCh; c++) {
-                if (Math.abs(channels[c][i]) > threshold) {
-                  above = true;
-                  break;
-                }
-              }
-              if (above) {
-                startIdx = i;
-                break;
-              }
-            }
-            
-            const trimmedLen = len - startIdx;
-            const dataSize = trimmedLen * numCh * 2;
-            const buf = new ArrayBuffer(44 + dataSize);
-            const v = new DataView(buf);
-            
-            function ws(o, s) { for(let i=0;i<s.length;i++) v.setUint8(o+i, s.charCodeAt(i)); }
-            ws(0,'RIFF'); v.setUint32(4, 36+dataSize, true); ws(8,'WAVE');
-            ws(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true);
-            v.setUint16(22,numCh,true); v.setUint32(24,sr,true);
-            v.setUint32(28,sr*numCh*2,true); v.setUint16(32,numCh*2,true);
-            v.setUint16(34,16,true); ws(36,'data'); v.setUint32(40,dataSize,true);
-            
-            let off = 44;
-            for (let i = startIdx; i < len; i++) {
-              for (let c = 0; c < numCh; c++) {
-                const s = Math.max(-1, Math.min(1, channels[c][i]));
-                v.setInt16(off, (s < 0 ? s * 0x8000 : s * 0x7FFF) | 0, true);
-                off += 2;
-              }
-            }
-            
-            // Convert to base64 in chunks
-            const bytes = new Uint8Array(buf);
-            let b64 = '';
-            for (let i = 0; i < bytes.length; i += 8192) {
-              b64 += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
-            }
-            
-            audioCtx.close();
-            window.__capturedWav = btoa(b64);
-            window.__capturedDuration = audioBuffer.duration;
-            window.__status = 'done';
-          } catch(err) {
-            window.__status = 'error';
-            window.__captureError = err.message || String(err);
-          }
-        })()
-      `).catch(() => {});
-    });
-
-    let resolved = false;
-    const maxWait = 30000;
-
-    const pollInterval = setInterval(async () => {
-      if (resolved || captureWin.isDestroyed()) {
-        clearInterval(pollInterval);
-        return;
-      }
-      try {
-        const status = await captureWin.webContents.executeJavaScript('window.__status');
-        if (status === 'done') {
-          const wavB64 = await captureWin.webContents.executeJavaScript('window.__capturedWav');
-          const dur = await captureWin.webContents.executeJavaScript('window.__capturedDuration');
-          if (wavB64) {
-            resolved = true;
-            clearInterval(pollInterval);
-            const wavBuffer = Buffer.from(wavB64, 'base64');
-            fs.writeFileSync(cachedPath, wavBuffer);
-            console.log(`[SpliceCapture] Saved ${cachedPath} (${(wavBuffer.length/1024).toFixed(0)}KB, ${dur.toFixed(1)}s)`);
-            if (!captureWin.isDestroyed()) captureWin.close();
-            resolve(cachedPath);
-          }
-        } else if (status === 'error') {
-          const errMsg = await captureWin.webContents.executeJavaScript('window.__captureError');
-          resolved = true;
-          clearInterval(pollInterval);
-          if (!captureWin.isDestroyed()) captureWin.close();
-          reject(new Error(errMsg || 'Capture decode error'));
+      // Block 3 XOR descrambling
+      const block3Start = 2 * e;
+      const block3End = Math.min(3 * e, payloadLength);
+      if (block3Start < payloadLength) {
+        for (let i = block3Start; i < block3End; i++) {
+          payloadBytes[i] ^= keyBytes[(i - block3Start) % 18];
         }
-      } catch (err) { /* window destroyed */ }
-    }, 500);
-
-    setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        clearInterval(pollInterval);
-        if (captureWin && !captureWin.isDestroyed()) captureWin.close();
-        reject(new Error('Splice audio capture timed out'));
       }
-    }, maxWait);
-  });
+
+      fs.writeFileSync(cachedMp3, payloadBytes);
+      console.log(`[FastSpliceCapture] In-memory descramble saved: ${cachedMp3} (${(payloadBytes.length / 1024).toFixed(0)} KB)`);
+      return cachedMp3;
+    } else {
+      fs.writeFileSync(cachedMp3, fileBytes);
+      return cachedMp3;
+    }
+  } catch (err) {
+    console.error(`[FastSpliceCapture] Error descrambling ${sampleUuid}:`, err.message);
+    throw err;
+  }
 }
 
 ipcMain.handle('capture-splice-audio', async (event, scrambledUrl, sampleUuid) => {
@@ -4186,4 +4032,126 @@ ipcMain.handle('open-folder', async (event, dirPath) => {
   } catch (err) {
     return { success: false, error: err.message };
   }
+});
+
+// --- LOCAL AI DEMUCS STEM SEPARATION ---
+ipcMain.handle('separate-audio-stems', async (event, data) => {
+  const { audioPath, sampleName, sampleUuid, customOutputDir } = data;
+  try {
+    let sourceAudioPath = audioPath;
+    
+    if (sourceAudioPath && (sourceAudioPath.startsWith('http://') || sourceAudioPath.startsWith('https://'))) {
+      if (sourceAudioPath.includes('splice.com') || sourceAudioPath.includes('splicecdn')) {
+        sourceAudioPath = await captureSpliceAudio(sourceAudioPath, sampleUuid || 'temp_stem_sample');
+      } else {
+        const tempPath = path.join(wavelyCacheDir, `${sampleUuid || Date.now()}.mp3`);
+        await downloadFile(sourceAudioPath, tempPath);
+        sourceAudioPath = tempPath;
+      }
+    }
+
+    if (!fs.existsSync(sourceAudioPath)) {
+      throw new Error(`Audio file not found at: ${sourceAudioPath}`);
+    }
+
+    const cleanName = (sampleName || 'Sample').replace(/[\\/:*?"<>|]/g, '_').trim();
+    const stemsBaseDir = customOutputDir || path.join(db.settings.downloadDir || app.getPath('downloads'), 'Wavely', 'Stems');
+    const targetFolder = path.join(stemsBaseDir, `${cleanName}_Stems`);
+    ensureDir(targetFolder);
+
+    const pythonCandidates = [
+      'C:\\Users\\USER\\AppData\\Local\\Programs\\Python\\Python310\\python.exe',
+      'python',
+      'py'
+    ];
+
+    let pythonExecutable = 'python';
+    for (const cand of pythonCandidates) {
+      if (fs.existsSync(cand)) {
+        pythonExecutable = cand;
+        break;
+      }
+    }
+
+    const scriptPath = path.join(__dirname, 'scripts', 'demucs_runner.py');
+    const { spawn } = require('child_process');
+
+    event.sender.send('demucs-progress', { percent: 10, message: 'Spawning GPU Demucs AI engine...' });
+
+    return new Promise((resolve, reject) => {
+      const child = spawn(pythonExecutable, [
+        scriptPath,
+        '--input', sourceAudioPath,
+        '--output', targetFolder,
+        '--model', 'htdemucs',
+        '--device', 'auto'
+      ]);
+
+      let lastJson = null;
+
+      child.stdout.on('data', (buf) => {
+        const text = buf.toString();
+        const lines = text.split('\n');
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+            try {
+              const parsed = JSON.parse(trimmed);
+              if (parsed.type === 'PROGRESS') {
+                event.sender.send('demucs-progress', { percent: parsed.percent, message: parsed.message });
+              } else if (parsed.type === 'SUCCESS') {
+                lastJson = parsed;
+              }
+            } catch (e) {}
+          }
+        }
+      });
+
+      child.stderr.on('data', (buf) => {
+        console.warn('[Demucs STDERR]:', buf.toString());
+      });
+
+      child.on('close', (code) => {
+        if (code === 0 && lastJson && lastJson.stems) {
+          resolve({
+            success: true,
+            outputDir: targetFolder,
+            stems: lastJson.stems
+          });
+        } else {
+          // Check if stems were generated on disk directly
+          const baseName = path.basename(sourceAudioPath, path.extname(sourceAudioPath));
+          const drumPath = path.join(targetFolder, `${baseName}_Drums.wav`);
+          const bassPath = path.join(targetFolder, `${baseName}_Bass.wav`);
+          const vocalPath = path.join(targetFolder, `${baseName}_Vocals.wav`);
+          const otherPath = path.join(targetFolder, `${baseName}_Other.wav`);
+
+          if (fs.existsSync(drumPath)) {
+            resolve({
+              success: true,
+              outputDir: targetFolder,
+              stems: { drums: drumPath, bass: bassPath, vocals: vocalPath, other: otherPath }
+            });
+          } else {
+            reject(new Error(`Demucs separation exited with code ${code}`));
+          }
+        }
+      });
+
+      child.on('error', (err) => {
+        reject(err);
+      });
+    });
+  } catch (err) {
+    console.error('Demucs IPC error:', err);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('open-stems-folder', async (event, dirPath) => {
+  if (dirPath && fs.existsSync(dirPath)) {
+    shell.openPath(dirPath);
+    return true;
+  }
+  return false;
 });

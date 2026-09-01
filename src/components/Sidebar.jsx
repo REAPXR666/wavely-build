@@ -1,11 +1,12 @@
 import React from 'react';
-import { Music, Search, Layers, FolderDown, Settings, Database } from 'lucide-react';
+import { Music, Search, Layers, FolderDown, Settings, Database, Activity } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab, stats }) {
   const menuItems = [
     { id: 'sounds', label: 'Sounds', icon: Search, section: 'browse' },
     { id: 'presets', label: 'Presets', icon: Layers, section: 'browse' },
     { id: 'packs', label: 'Packs', icon: Music, section: 'browse' },
+    { id: 'analyser', label: 'Analyser', icon: Activity, section: 'browse' },
     { id: 'downloads', label: 'Downloads', icon: FolderDown, section: 'library' },
     { id: 'settings', label: 'Settings', icon: Settings, section: 'system' }
   ];

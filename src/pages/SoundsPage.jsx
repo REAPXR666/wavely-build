@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, Play, Pause, CloudDownload, Download, FolderOpen, Loader2, CheckCircle2, SlidersHorizontal, 
   HelpCircle, ChevronLeft, ChevronRight, ChevronDown, Check, X, Sparkles, Gem, Sliders,
-  Zap, RefreshCw, Music2, Disc3, Volume2, Layers, Award, FileCheck, ShieldCheck, Scissors
+  Zap, RefreshCw, Music2, Disc3, Volume2, Layers, Award, FileCheck, ShieldCheck, Scissors, Cpu
 } from 'lucide-react';
 import WaveformRenderer from '../components/WaveformRenderer';
 import LicenseCertificateModal from '../components/LicenseCertificateModal';
 import SampleSlicerModal from '../components/SampleSlicerModal';
+import StemSeparatorModal from '../components/StemSeparatorModal';
 import { findSimilarSounds } from '../utils/acousticSimilarity';
 import { getHarmonicMatches } from '../utils/harmonicTheory';
 
@@ -70,6 +71,9 @@ export default function SoundsPage({
 
   // Pro Transient Slicer Modal state
   const [slicerSound, setSlicerSound] = useState(null);
+
+  // Demucs AI Stem Separator Modal state
+  const [stemModalSound, setStemModalSound] = useState(null);
 
 
   // Subscribe to pack download progress from Electron
@@ -1840,6 +1844,31 @@ export default function SoundsPage({
 
                 {/* Action button: Certificate + Download / DAW Drag-and-Drop Cell */}
                 <div className="action-cell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                  {/* Local AI Demucs Stem Separator Button */}
+                  <button 
+                    className="action-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setStemModalSound(sound);
+                    }}
+                    title="Separate into 4 isolated audio stems with local AI Demucs"
+                    style={{
+                      opacity: 0.7,
+                      transition: 'all 0.15s ease',
+                      color: 'var(--text-muted)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.color = '#a855f7';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '0.7';
+                      e.currentTarget.style.color = 'var(--text-muted)';
+                    }}
+                  >
+                    <Cpu size={14} />
+                  </button>
+
                   {/* Pro Transient Slicer Button */}
                   <button 
                     className="action-btn"
@@ -2295,6 +2324,15 @@ export default function SoundsPage({
         <SampleSlicerModal
           sound={slicerSound}
           onClose={() => setSlicerSound(null)}
+          showToast={showToast}
+        />
+      )}
+
+      {/* Local AI Demucs Stem Separator Modal */}
+      {stemModalSound && (
+        <StemSeparatorModal
+          sound={stemModalSound}
+          onClose={() => setStemModalSound(null)}
           showToast={showToast}
         />
       )}

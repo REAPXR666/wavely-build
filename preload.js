@@ -78,6 +78,15 @@ contextBridge.exposeInMainWorld('electron', {
     return () => ipcRenderer.removeListener('mini-dock-state-changed', handler);
   },
 
+  // Local AI Demucs Stem Separation
+  separateAudioStems: (data) => ipcRenderer.invoke('separate-audio-stems', data),
+  openStemsFolder: (dirPath) => ipcRenderer.invoke('open-stems-folder', dirPath),
+  onDemucsProgress: (callback) => {
+    const handler = (event, data) => callback(data);
+    ipcRenderer.on('demucs-progress', handler);
+    return () => ipcRenderer.removeListener('demucs-progress', handler);
+  },
+
   // Security, HWID & Licensing Telemetry
   getLicensingState: () => ipcRenderer.invoke('get-licensing-state'),
   getAuthState: () => ipcRenderer.invoke('get-auth-state'),

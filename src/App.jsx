@@ -9,6 +9,7 @@ import SubscriptionGate from './components/SubscriptionGate';
 import SoundsPage from './pages/SoundsPage';
 import PresetsPage from './pages/PresetsPage';
 import PacksPage from './pages/PacksPage';
+import AnalyserPage from './pages/AnalyserPage';
 import SettingsPage from './pages/SettingsPage';
 
 export default function App() {
@@ -292,6 +293,15 @@ export default function App() {
             subscription={authState.subscription}
           />
         );
+      case 'analyser':
+        return (
+          <AnalyserPage 
+            user={authState.user}
+            subscription={authState.subscription}
+            showToast={showToast}
+            volume={volume}
+          />
+        );
       case 'settings':
         return (
           <SettingsPage 
@@ -310,6 +320,7 @@ export default function App() {
     sounds: 'Sounds',
     presets: 'Presets',
     packs: 'Packs',
+    analyser: 'Analyser',
     downloads: 'Downloads',
     settings: 'Settings'
   };
