@@ -11,7 +11,7 @@ const UPDATER_CONFIG = {
   enabled: true,
   versionUrl: 'https://raw.githubusercontent.com/REAPXR666/Wavely/refs/heads/main/version.json',
   githubToken: null, 
-  currentVersion: '1.0.6'
+  currentVersion: (app && typeof app.getVersion === 'function') ? app.getVersion() : '1.0.7'
 };
 
 let downloadedInstallerPath = null;
