@@ -90,6 +90,10 @@ contextBridge.exposeInMainWorld('electron', {
   // Strict Pack Samples Query
   getPackSamples: (data) => ipcRenderer.invoke('get-pack-samples', data),
 
+  // Slicer & Live Performance Chops Exporter
+  exportSampleChops: (data) => ipcRenderer.invoke('export-sample-chops', data),
+  saveTempRecording: (data) => ipcRenderer.invoke('save-temp-recording', data),
+
   // Custom Celebration In-App Updater
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates-manual'),
   startUpdateDownload: (updateData) => ipcRenderer.invoke('start-update-download', updateData),

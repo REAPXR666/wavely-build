@@ -4228,3 +4228,45 @@ ipcMain.handle('open-stems-folder', async (event, dirPath) => {
   }
   return false;
 });
+
+// Export all individual sliced chops to disk
+ipcMain.handle('export-sample-chops', async (event, { sampleName, chops }) => {
+  try {
+    const cleanName = (sampleName || 'Sample').replace(/[\\/:*?"<>|]/g, '_').trim();
+    const chopsBaseDir = path.join(db.settings.downloadDir || app.getPath('downloads'), 'Wavely', 'Chops');
+    const targetFolder = path.join(chopsBaseDir, `${cleanName}_Chops`);
+    ensureDir(targetFolder);
+
+    let savedCount = 0;
+    if (Array.isArray(chops)) {
+      for (const chop of chops) {
+        if (chop.name && chop.bufferB64) {
+          const chopPath = path.join(targetFolder, `${chop.name}.wav`);
+          const buf = Buffer.from(chop.bufferB64, 'base64');
+          fs.writeFileSync(chopPath, buf);
+          savedCount++;
+        }
+      }
+    }
+
+    shell.openPath(targetFolder);
+    return { success: true, folderPath: targetFolder, count: savedCount };
+  } catch (err) {
+    console.error('Export chops error:', err);
+    return { success: false, error: err.message };
+  }
+});
+
+// Save live performance recording to temp folder for DAW drag & drop
+ipcMain.handle('save-temp-recording', async (event, { bufferB64, filename }) => {
+  try {
+    const cleanName = (filename || `Recording_${Date.now()}`).replace(/[\\/:*?"<>|]/g, '_').trim();
+    const destPath = path.join(wavelyCacheDir, `${cleanName}.wav`);
+    const buf = Buffer.from(bufferB64, 'base64');
+    fs.writeFileSync(destPath, buf);
+    return { success: true, filePath: destPath };
+  } catch (err) {
+    console.error('Save temp recording error:', err);
+    return { success: false, error: err.message };
+  }
+});
