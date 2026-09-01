@@ -785,10 +785,11 @@ body {
   height: var(--player-height);
   background-color: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) minmax(280px, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
+  gap: 20px;
+  padding: 0 24px;
   z-index: 100;
   box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
@@ -797,17 +798,18 @@ body {
 .player-left {
   display: flex;
   align-items: center;
-  gap: 16px;
-  width: 25%;
+  gap: 12px;
+  min-width: 0;
+  width: 100%;
 }
 
 .player-pack-art {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  min-height: 48px;
-  max-width: 48px;
-  max-height: 48px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 44px;
+  max-height: 44px;
   object-fit: cover;
   background: var(--accent-gradient);
   border-radius: 8px;
@@ -824,13 +826,14 @@ body {
 .player-meta {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   overflow: hidden;
-  max-width: 200px;
+  min-width: 0;
+  flex: 1;
 }
 
 .player-title {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -838,7 +841,7 @@ body {
 }
 
 .player-subtitle {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -850,7 +853,9 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  width: 50%;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
 .player-controls {
@@ -972,7 +977,8 @@ body {
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  width: 25%;
+  width: auto;
+  flex-shrink: 0;
 }
 
 .volume-container {

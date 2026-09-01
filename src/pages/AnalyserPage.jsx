@@ -166,15 +166,20 @@ export default function AnalyserPage({
     const fetchPackSounds = async () => {
       try {
         if (window.electron?.searchSounds) {
-          const cleanQuery = packTitle.replace(/\(.*?\)/g, '').trim();
-          const results = await window.electron.searchSounds(cleanQuery, { startPage: 1, endPage: 3 });
-          if (results && results.length > 0) {
-            setPackSoundsList(results);
-          } else {
-            // Fallback generic search
-            const generic = await window.electron.searchSounds('', { startPage: 1, endPage: 2 });
-            setPackSoundsList(generic || []);
+          const cleanQuery = packTitle.replace(/sample pack|vol\.?\s*\d+|pack|official demo/gi, '').replace(/\(.*?\)/g, '').trim();
+          let results = [];
+          if (cleanQuery) {
+            results = await window.electron.searchSounds(cleanQuery, { startPage: 1, endPage: 2 });
           }
+          
+          if (!results || results.length === 0) {
+            const firstWord = cleanQuery.split(/\s+/)[0] || '';
+            if (firstWord.length > 2) {
+              results = await window.electron.searchSounds(firstWord, { startPage: 1, endPage: 1 });
+            }
+          }
+
+          setPackSoundsList(results || []);
         }
       } catch (err) {
         console.warn('Failed to fetch pack sounds:', err);
