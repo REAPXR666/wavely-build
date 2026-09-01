@@ -157,7 +157,7 @@ function postJson(urlStr, data, timeoutMs = 6000) {
         headers: {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(body),
-          'User-Agent': 'WavelyClient/1.0.6',
+          'User-Agent': 'WavelyClient/1.0.7',
           ...(authState.token ? { 'Authorization': `Bearer ${authState.token}` } : {})
         },
         timeout: timeoutMs
@@ -202,7 +202,7 @@ function getJson(urlStr, timeoutMs = 6000) {
         path: url.pathname + (url.search || ''),
         method: 'GET',
         headers: {
-          'User-Agent': 'WavelyClient/1.0.6'
+          'User-Agent': 'WavelyClient/1.0.7'
         },
         timeout: timeoutMs
       }, (res) => {

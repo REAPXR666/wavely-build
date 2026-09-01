@@ -98,7 +98,7 @@ export default function Sidebar({ activeTab, setActiveTab, stats }) {
         </div>
         <div className="desktop-version">
           <span className="status-dot"></span>
-          Desktop v1.0.6
+          Desktop v1.0.7
         </div>
       </div>
     </aside>

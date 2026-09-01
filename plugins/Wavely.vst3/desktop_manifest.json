@@ -1,6 +1,6 @@
 {
   "pluginName": "Wavely Connect",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "type": "VST3",
   "vendor": "Wavely Technologies Inc.",
   "bridgeUrl": "ws://127.0.0.1:6768",

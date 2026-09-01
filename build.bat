@@ -47,6 +47,6 @@ echo             BUILD COMPLETED SUCCESSFULLY!
 echo ===================================================
 echo.
 echo Your installer is ready at:
-echo %~dp0release\Wavely Setup 1.0.6.exe
+echo %~dp0release\Wavely Setup 1.0.7.exe
 echo.
 pause

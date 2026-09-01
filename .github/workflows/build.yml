@@ -50,7 +50,7 @@ jobs:
 
       - name: Publish to GitHub Releases Assets
         run: |
-          gh release create v1.0.6 release_out/* --title "Wavely Desktop v1.0.6" --notes "Official macOS DMG and Windows release" --clobber || gh release upload v1.0.6 release_out/* --clobber
+          gh release create v1.0.7 release_out/* --title "Wavely Desktop v1.0.7" --notes "Official macOS DMG and Windows release" --clobber || gh release upload v1.0.7 release_out/* --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -94,6 +94,6 @@ jobs:
 
       - name: Publish to GitHub Releases Assets
         run: |
-          gh release create v1.0.6 (Get-ChildItem release_out\* | Select-Object -ExpandProperty FullName) --title "Wavely Desktop v1.0.6" --notes "Official macOS DMG and Windows release" --clobber; if ($LASTEXITCODE -ne 0) { gh release upload v1.0.6 (Get-ChildItem release_out\* | Select-Object -ExpandProperty FullName) --clobber }
+          gh release create v1.0.7 (Get-ChildItem release_out\* | Select-Object -ExpandProperty FullName) --title "Wavely Desktop v1.0.7" --notes "Official macOS DMG and Windows release" --clobber; if ($LASTEXITCODE -ne 0) { gh release upload v1.0.7 (Get-ChildItem release_out\* | Select-Object -ExpandProperty FullName) --clobber }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
