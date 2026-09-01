@@ -5,7 +5,7 @@ const http = require('http');
 const https = require('https');
 const cheerio = require('cheerio');
 const AdmZip = require('adm-zip');
-const { checkForUpdates } = require('./updater');
+const { checkForUpdates, registerUpdateIpc } = require('./updater');
 const { 
   setMainWindow, initializeAuthSession, verifyDevice, startHeartbeat, getLicensingState, getHwidInfo,
   fetchCaptcha, loginUser, registerUser, logoutUser, getAuthState 
@@ -498,8 +498,14 @@ app.whenReady().then(() => {
   // Asynchronously pre-fetch remote credentials on launch
   fetchRemoteCredentials().catch(err => console.error('Failed to pre-fetch remote credentials on launch:', err));
 
-  // Run auto-updater check
+  // Run auto-updater check & IPC registration
+  registerUpdateIpc(mainWindow);
   checkForUpdates(mainWindow);
+
+  ipcMain.handle('check-for-updates-manual', async () => {
+    checkForUpdates(mainWindow);
+    return { success: true };
+  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

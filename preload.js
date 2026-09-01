@@ -87,6 +87,26 @@ contextBridge.exposeInMainWorld('electron', {
     return () => ipcRenderer.removeListener('demucs-progress', handler);
   },
 
+  // Custom Celebration In-App Updater
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates-manual'),
+  startUpdateDownload: (updateData) => ipcRenderer.invoke('start-update-download', updateData),
+  installDownloadedUpdate: () => ipcRenderer.invoke('install-downloaded-update'),
+  onUpdateAvailable: (callback) => {
+    const handler = (event, data) => callback(data);
+    ipcRenderer.on('app-update-available', handler);
+    return () => ipcRenderer.removeListener('app-update-available', handler);
+  },
+  onUpdateProgress: (callback) => {
+    const handler = (event, data) => callback(data);
+    ipcRenderer.on('app-update-progress', handler);
+    return () => ipcRenderer.removeListener('app-update-progress', handler);
+  },
+  onUpdateReady: (callback) => {
+    const handler = (event, data) => callback(data);
+    ipcRenderer.on('app-update-ready', handler);
+    return () => ipcRenderer.removeListener('app-update-ready', handler);
+  },
+
   // Security, HWID & Licensing Telemetry
   getLicensingState: () => ipcRenderer.invoke('get-licensing-state'),
   getAuthState: () => ipcRenderer.invoke('get-auth-state'),

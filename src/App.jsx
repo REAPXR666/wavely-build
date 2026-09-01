@@ -11,6 +11,7 @@ import PresetsPage from './pages/PresetsPage';
 import PacksPage from './pages/PacksPage';
 import AnalyserPage from './pages/AnalyserPage';
 import SettingsPage from './pages/SettingsPage';
+import UpdateCelebrationModal from './components/UpdateCelebrationModal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('sounds');
@@ -56,6 +57,9 @@ export default function App() {
 
   // Floating Always-on-Top Mini DAW Dock State
   const [isMiniDock, setIsMiniDock] = useState(false);
+
+  // New Release Update Celebration State
+  const [availableUpdate, setAvailableUpdate] = useState(null);
 
   const handleBrowsePack = (pack) => {
     setActivePack({
@@ -163,6 +167,16 @@ export default function App() {
       });
       return () => {
         if (unsubDock) unsubDock();
+      };
+    }
+
+    // Listen for New Release Update available
+    if (window.electron.onUpdateAvailable) {
+      const unsubUpdate = window.electron.onUpdateAvailable((updateInfo) => {
+        setAvailableUpdate(updateInfo);
+      });
+      return () => {
+        if (unsubUpdate) unsubUpdate();
       };
     }
   }, []);
@@ -535,6 +549,14 @@ export default function App() {
             <span>Opening your studio…</span>
           </div>
         </div>
+      )}
+
+      {/* New Release Celebration Confetti Modal */}
+      {availableUpdate && (
+        <UpdateCelebrationModal
+          updateData={availableUpdate}
+          onClose={() => setAvailableUpdate(null)}
+        />
       )}
     </div>
   );
