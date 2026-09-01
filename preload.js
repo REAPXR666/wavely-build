@@ -67,7 +67,7 @@ contextBridge.exposeInMainWorld('electron', {
 
   // VST3 DAW Plugin & Local Bridge
   getVstStatus: () => ipcRenderer.invoke('get-vst-status'),
-  installVstPlugin: () => ipcRenderer.invoke('install-vst-plugin'),
+  installVstPlugin: (customPath) => ipcRenderer.invoke('install-vst-plugin', customPath),
   openVstFolder: () => ipcRenderer.invoke('open-vst-folder'),
 
   // Mini DAW Dock Mode

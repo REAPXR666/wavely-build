@@ -665,16 +665,22 @@ ipcMain.handle('open-vst-folder', async () => {
   return false;
 });
 
-ipcMain.handle('install-vst-plugin', async () => {
+ipcMain.handle('install-vst-plugin', async (event, customTargetPath) => {
   try {
-    const sourceDir = path.join(__dirname, 'plugins', 'Wavely.vst3');
-    if (!fs.existsSync(sourceDir)) {
-      throw new Error('Bundled VST3 plugin template not found at: ' + sourceDir);
+    let targetBaseDir = customTargetPath;
+    if (!targetBaseDir) {
+      targetBaseDir = getVst3Directories()[0];
     }
-
-    const targetBaseDir = getVst3Directories()[0];
     ensureDir(targetBaseDir);
-    const targetDir = path.join(targetBaseDir, 'Wavely.vst3');
+
+    const releaseSource = path.join(__dirname, 'plugins', 'vst3-source', 'build', 'Release', 'Wavely.vst3');
+    const bundleSource = path.join(__dirname, 'plugins', 'Wavely.vst3');
+
+    let targetBundleDir = targetBaseDir;
+    if (!targetBaseDir.toLowerCase().endsWith('.vst3')) {
+      targetBundleDir = path.join(targetBaseDir, 'Wavely.vst3');
+    }
+    ensureDir(targetBundleDir);
 
     function copyDirRecursive(src, dest) {
       ensureDir(dest);
@@ -690,9 +696,22 @@ ipcMain.handle('install-vst-plugin', async () => {
       }
     }
 
-    copyDirRecursive(sourceDir, targetDir);
-    console.log(`[VST3] Plugin installed successfully to: ${targetDir}`);
-    return { success: true, path: targetDir };
+    if (fs.existsSync(bundleSource)) {
+      copyDirRecursive(bundleSource, targetBundleDir);
+    }
+
+    // Ensure the binary from Release/Wavely.vst3 is deployed
+    if (fs.existsSync(releaseSource)) {
+      const win64Dir = path.join(targetBundleDir, 'Contents', 'x86_64-win');
+      ensureDir(win64Dir);
+      fs.copyFileSync(releaseSource, path.join(win64Dir, 'Wavely.vst3'));
+      if (!targetBaseDir.toLowerCase().endsWith('.vst3')) {
+        fs.copyFileSync(releaseSource, path.join(targetBaseDir, 'Wavely.vst3'));
+      }
+    }
+
+    console.log(`[VST3] Plugin installed successfully to: ${targetBundleDir}`);
+    return { success: true, path: targetBundleDir, directory: targetBaseDir };
   } catch (err) {
     console.error('[VST3] Installation error:', err);
     return { success: false, error: err.message };

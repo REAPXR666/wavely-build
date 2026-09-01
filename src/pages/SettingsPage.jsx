@@ -360,22 +360,43 @@ function DeviceLicenseCard() {
             Install the <strong>Wavely VST3 plugin</strong> into your DAW to unlock real-time project tempo sync, direct mixer monitoring, and 0-latency sample drag-and-drop into your arrangement playlist.
           </p>
 
-          <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '4px', flexWrap: 'wrap' }}>
             <button
               className="settings-btn"
-              style={{ flex: 1, background: 'rgba(16, 185, 129, 0.2)', borderColor: 'rgba(16, 185, 129, 0.5)', color: '#34d399', fontWeight: '700' }}
+              style={{ flex: 1, minWidth: '200px', background: 'rgba(16, 185, 129, 0.2)', borderColor: 'rgba(16, 185, 129, 0.5)', color: '#34d399', fontWeight: '700' }}
               onClick={async () => {
                 if (window.electron?.installVstPlugin) {
                   const res = await window.electron.installVstPlugin();
                   if (res?.success) {
-                    alert(`✅ Wavely VST3 Plugin successfully installed to:\n${res.path}\n\nOpen your DAW and run a plugin scan to use it!`);
+                    alert(`✅ Wavely VST3 Plugin successfully installed to:\n${res.path}\n\nOpen your DAW (FL Studio / Ableton / Logic) and run a plugin scan!`);
                   } else {
                     alert(`⚠️ Installation notice: ${res?.error || 'Could not copy to system folder. Try running as administrator.'}`);
                   }
                 }
               }}
             >
-              ⚡ 1-Click Install / Update VST3
+              ⚡ Install to Default VST3 Folder
+            </button>
+            <button
+              className="settings-btn"
+              style={{ background: 'rgba(56, 189, 248, 0.15)', borderColor: 'rgba(56, 189, 248, 0.4)', color: '#38bdf8' }}
+              onClick={async () => {
+                try {
+                  const customDir = await window.electron?.selectFolder?.();
+                  if (customDir) {
+                    const res = await window.electron.installVstPlugin(customDir);
+                    if (res?.success) {
+                      alert(`✅ Wavely VST3 Plugin installed to custom path:\n${res.path}\n\nPoint your DAW to this directory and scan!`);
+                    } else {
+                      alert(`⚠️ Custom installation failed: ${res?.error}`);
+                    }
+                  }
+                } catch (e) {
+                  console.error('Custom VST install error:', e);
+                }
+              }}
+            >
+              📁 Choose Custom Folder & Install
             </button>
             <button
               className="settings-btn"
