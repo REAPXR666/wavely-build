@@ -5,7 +5,7 @@ import {
   RefreshCw, Volume2, ArrowRight, Zap, Check, UploadCloud
 } from 'lucide-react';
 import WaveSurfer from 'wavesurfer.js';
-import { identifySamplesInSection, formatTime, parseTime } from '../utils/audioAnalyser';
+import { identifySamplesInSection, extractSectionFeatures, formatTime, parseTime } from '../utils/audioAnalyser';
 import StemSeparatorModal from '../components/StemSeparatorModal';
 import SampleSlicerModal from '../components/SampleSlicerModal';
 
@@ -301,12 +301,21 @@ export default function AnalyserPage({
         return;
       }
 
-      // STRICTLY analyze ONLY the samples from this pack
-      const results = identifySamplesInSection(null, packSoundsList, {
+      // Extract real audio waveform features from the WaveSurfer Web Audio buffer
+      let audioFeatures = null;
+      try {
+        const audioBuffer = wavesurferRef.current?.getDecodedData?.() || wavesurferRef.current?.backend?.buffer;
+        audioFeatures = extractSectionFeatures(audioBuffer, startSec, endSec);
+      } catch (e) {
+        console.warn('Waveform feature extraction notice:', e);
+      }
+
+      // STRICTLY analyze ONLY the samples from this pack, prioritizing full drum loops, basslines, and melodic layers
+      const results = identifySamplesInSection(audioFeatures, packSoundsList, {
         startSec: startSec,
         endSec: endSec,
         packName: packTitle,
-        maxResults: 10
+        maxResults: 8
       });
 
       setTimeout(() => {
@@ -314,7 +323,7 @@ export default function AnalyserPage({
         setIsAnalysing(false);
         setHasAnalysed(true);
         if (showToast) {
-          showToast(`🎯 Identified ${results.length} samples strictly from "${packTitle}"!`, 'success');
+          showToast(`🎯 Identified ${results.length} core samples from "${packTitle}"!`, 'success');
         }
       }, 350);
     } catch (err) {
