@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, ChevronRight } from 'lucide-react';
+import { ShieldAlert, ChevronRight, Minimize2 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PlayerBar from './components/PlayerBar';
 import DownloadStatusIndicator from './components/DownloadStatusIndicator';
+import MiniDockPlayer from './components/MiniDockPlayer';
 import AuthModal from './components/AuthModal';
 import SubscriptionGate from './components/SubscriptionGate';
 import SoundsPage from './pages/SoundsPage';
@@ -51,6 +52,9 @@ export default function App() {
 
   // Pack browsing state shared between tabs
   const [activePack, setActivePack] = useState(null);
+
+  // Floating Always-on-Top Mini DAW Dock State
+  const [isMiniDock, setIsMiniDock] = useState(false);
 
   const handleBrowsePack = (pack) => {
     setActivePack({
@@ -148,6 +152,16 @@ export default function App() {
       });
       return () => {
         if (unsubSub) unsubSub();
+      };
+    }
+
+    // Listen for Mini Dock toggle updates
+    if (window.electron.onMiniDockStateChanged) {
+      const unsubDock = window.electron.onMiniDockStateChanged((dockState) => {
+        setIsMiniDock(dockState);
+      });
+      return () => {
+        if (unsubDock) unsubDock();
       };
     }
   }, []);
@@ -303,6 +317,32 @@ export default function App() {
   const displayName = authState.user?.username || 'Producer';
   const displayInitial = displayName.charAt(0).toUpperCase();
 
+  // If in Mini DAW Dock Mode, render floating player directly
+  if (isMiniDock) {
+    return (
+      <MiniDockPlayer 
+        currentSound={currentSound}
+        isPlaying={isPlaying}
+        setIsPlaying={setIsPlaying}
+        onExitMiniDock={() => {
+          if (window.electron?.setMiniDockMode) {
+            window.electron.setMiniDockMode(false);
+          }
+        }}
+        onSearch={(q) => {
+          if (window.electron?.setMiniDockMode) {
+            window.electron.setMiniDockMode(false);
+          }
+          setActiveTab('sounds');
+        }}
+        pitchSemitones={0}
+        setPitchSemitones={() => {}}
+        speedMultiplier={1.0}
+        setSpeedMultiplier={() => {}}
+      />
+    );
+  }
+
   return (
     <div className="app-container">
       {/* Sidebar navigation */}
@@ -320,6 +360,34 @@ export default function App() {
             <strong>{activePageLabel}</strong>
           </div>
           <div className="topbar-actions">
+            {/* Floating Mini DAW Dock Mode Trigger */}
+            <button
+              type="button"
+              className="topbar-action-btn"
+              title="Switch to Floating Always-On-Top Mini DAW Dock"
+              onClick={() => {
+                if (window.electron?.setMiniDockMode) {
+                  window.electron.setMiniDockMode(true);
+                }
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '4px 10px',
+                background: 'rgba(56, 189, 248, 0.12)',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                borderRadius: '6px',
+                color: '#38bdf8',
+                fontSize: '0.78rem',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+            >
+              <Minimize2 size={13} />
+              <span>Mini Dock</span>
+            </button>
+
             <span className="topbar-ready"><span></span>Ready</span>
             <button type="button" className="account-button" onClick={() => setActiveTab('settings')}>
               <span className="account-avatar">{displayInitial}</span>

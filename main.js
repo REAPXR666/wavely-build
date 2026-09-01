@@ -619,6 +619,113 @@ ipcMain.handle('save-certificate-pdf', async (event, { defaultFileName, certHtml
   }
 });
 
+// --- WAVELY VST3 DAW PLUGIN BRIDGE & INSTALLER ---
+function getVst3Directories() {
+  const dirs = [];
+  if (process.platform === 'win32') {
+    const commonProgramFiles = process.env.CommonProgramFiles || 'C:\\Program Files\\Common Files';
+    const commonProgramFilesX86 = process.env['CommonProgramFiles(x86)'] || 'C:\\Program Files (x86)\\Common Files';
+    const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
+
+    dirs.push(path.join(commonProgramFiles, 'VST3'));
+    dirs.push(path.join(commonProgramFilesX86, 'VST3'));
+    dirs.push(path.join(localAppData, 'Programs', 'Common', 'VST3'));
+  } else if (process.platform === 'darwin') {
+    dirs.push('/Library/Audio/Plug-Ins/VST3');
+    dirs.push(path.join(os.homedir(), 'Library', 'Audio', 'Plug-Ins', 'VST3'));
+  } else {
+    dirs.push('/usr/lib/vst3');
+    dirs.push(path.join(os.homedir(), '.vst3'));
+  }
+  return dirs;
+}
+
+function checkVst3Installed() {
+  const dirs = getVst3Directories();
+  for (const d of dirs) {
+    const target = path.join(d, 'Wavely.vst3');
+    if (fs.existsSync(target)) {
+      return { installed: true, path: target, directory: d };
+    }
+  }
+  return { installed: false, path: null, directory: dirs[0] || '' };
+}
+
+ipcMain.handle('get-vst-status', async () => {
+  return checkVst3Installed();
+});
+
+ipcMain.handle('open-vst-folder', async () => {
+  const status = checkVst3Installed();
+  const dir = status.installed ? path.dirname(status.path) : getVst3Directories()[0];
+  if (fs.existsSync(dir)) {
+    shell.openPath(dir);
+    return true;
+  }
+  return false;
+});
+
+ipcMain.handle('install-vst-plugin', async () => {
+  try {
+    const sourceDir = path.join(__dirname, 'plugins', 'Wavely.vst3');
+    if (!fs.existsSync(sourceDir)) {
+      throw new Error('Bundled VST3 plugin template not found at: ' + sourceDir);
+    }
+
+    const targetBaseDir = getVst3Directories()[0];
+    ensureDir(targetBaseDir);
+    const targetDir = path.join(targetBaseDir, 'Wavely.vst3');
+
+    function copyDirRecursive(src, dest) {
+      ensureDir(dest);
+      const entries = fs.readdirSync(src, { withFileTypes: true });
+      for (const entry of entries) {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+        if (entry.isDirectory()) {
+          copyDirRecursive(srcPath, destPath);
+        } else {
+          fs.copyFileSync(srcPath, destPath);
+        }
+      }
+    }
+
+    copyDirRecursive(sourceDir, targetDir);
+    console.log(`[VST3] Plugin installed successfully to: ${targetDir}`);
+    return { success: true, path: targetDir };
+  } catch (err) {
+    console.error('[VST3] Installation error:', err);
+    return { success: false, error: err.message };
+  }
+});
+
+// Mini DAW Dock Mode Toggle
+let isMiniDockMode = false;
+let preMiniBounds = null;
+
+ipcMain.handle('set-mini-dock-mode', async (event, enabled) => {
+  if (!mainWindow || mainWindow.isDestroyed()) return false;
+  isMiniDockMode = enabled;
+
+  if (enabled) {
+    preMiniBounds = mainWindow.getBounds();
+    mainWindow.setAlwaysOnTop(true, 'floating');
+    mainWindow.setResizable(true);
+    mainWindow.setSize(520, 150);
+  } else {
+    mainWindow.setAlwaysOnTop(false);
+    if (preMiniBounds) {
+      mainWindow.setBounds(preMiniBounds);
+    } else {
+      mainWindow.setSize(1280, 800);
+      mainWindow.center();
+    }
+  }
+
+  mainWindow.webContents.send('mini-dock-state-changed', isMiniDockMode);
+  return isMiniDockMode;
+});
+
 // --- SETTINGS STORAGE ---
 ipcMain.handle('get-settings', () => db.settings);
 ipcMain.handle('save-settings', (event, newSettings) => {

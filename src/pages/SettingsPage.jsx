@@ -343,6 +343,51 @@ function DeviceLicenseCard() {
         </div>
       </div>
 
+      {/* DAW Plugin & VST3 Bridge Management Card */}
+      <div className="settings-card" style={{ border: '1px solid rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.03)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <h3 className="settings-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#10b981' }}>🔌</span>
+            <span>DAW Companion Plugin (VST3 Bridge)</span>
+          </h3>
+          <span style={{ fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', padding: '2px 8px', borderRadius: '9999px' }}>
+            FL Studio • Ableton • Logic • Reaper
+          </span>
+        </div>
+
+        <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '14px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.85rem' }}>
+          <p style={{ margin: 0, color: '#cbd5e1', lineHeight: '1.5' }}>
+            Install the <strong>Wavely VST3 plugin</strong> into your DAW to unlock real-time project tempo sync, direct mixer monitoring, and 0-latency sample drag-and-drop into your arrangement playlist.
+          </p>
+
+          <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+            <button
+              className="settings-btn"
+              style={{ flex: 1, background: 'rgba(16, 185, 129, 0.2)', borderColor: 'rgba(16, 185, 129, 0.5)', color: '#34d399', fontWeight: '700' }}
+              onClick={async () => {
+                if (window.electron?.installVstPlugin) {
+                  const res = await window.electron.installVstPlugin();
+                  if (res?.success) {
+                    alert(`✅ Wavely VST3 Plugin successfully installed to:\n${res.path}\n\nOpen your DAW and run a plugin scan to use it!`);
+                  } else {
+                    alert(`⚠️ Installation notice: ${res?.error || 'Could not copy to system folder. Try running as administrator.'}`);
+                  }
+                }
+              }}
+            >
+              ⚡ 1-Click Install / Update VST3
+            </button>
+            <button
+              className="settings-btn"
+              style={{ background: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.15)', color: '#f8fafc' }}
+              onClick={() => window.electron?.openVstFolder?.()}
+            >
+              📂 Open VST3 Folder
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Device Security Card */}
       <div className="settings-card" style={{ border: '1px solid rgba(124, 58, 237, 0.25)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>

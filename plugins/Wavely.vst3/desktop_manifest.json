@@ -1,0 +1,15 @@
+{
+  "pluginName": "Wavely Connect",
+  "version": "1.0.6",
+  "type": "VST3",
+  "vendor": "Wavely Technologies Inc.",
+  "bridgeUrl": "ws://127.0.0.1:6768",
+  "installedAt": "2026-09-01T17:00:00.000Z",
+  "capabilities": [
+    "DAW_TEMPO_SYNC",
+    "DAW_TRANSPORT_SYNC",
+    "DIRECT_MIXER_MONITORING",
+    "PLAYHEAD_POSITION_TRACKING",
+    "ARRANGEMENT_DRAG_DROP"
+  ]
+}

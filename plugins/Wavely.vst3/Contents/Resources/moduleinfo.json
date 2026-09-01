@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/steinbergmedia/vst3_doc/master/moduleinfo.schema.json",
+  "Name": "Wavely",
+  "Version": "1.0.6",
+  "Factory Info": {
+    "Vendor": "Wavely Technologies Inc.",
+    "URL": "https://wavely.lol",
+    "E-Mail": "support@wavely.lol",
+    "Flags": {
+      "Unicode": true,
+      "Classes Discardable": false,
+      "Component Non Discardable": false
+    }
+  },
+  "Classes": [
+    {
+      "CID": "4A5B6C7D-8E9F-0123-4567-89ABCDEF0123",
+      "Category": "Audio Module Class",
+      "Name": "Wavely Connect",
+      "Vendor": "Wavely Technologies Inc.",
+      "Version": "1.0.6",
+      "SDKVersion": "VST 3.7.8",
+      "Sub Categories": [
+        "Instrument",
+        "Sampler",
+        "Fx",
+        "Tools"
+      ]
+    }
+  ],
+  "Compatibility": {
+    "Hosts": ["FL Studio", "Ableton Live", "Logic Pro", "Studio One", "Reaper", "Cubase", "Bitwig Studio", "Pro Tools"]
+  },
+  "Bridge": {
+    "IPC_Port": 6768,
+    "Protocol": "ws",
+    "Host": "127.0.0.1",
+    "AutoSyncTempo": true,
+    "AutoSyncTransport": true
+  }
+}

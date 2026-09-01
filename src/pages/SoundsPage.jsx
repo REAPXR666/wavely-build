@@ -2,10 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, Play, Pause, CloudDownload, Download, FolderOpen, Loader2, CheckCircle2, SlidersHorizontal, 
   HelpCircle, ChevronLeft, ChevronRight, ChevronDown, Check, X, Sparkles, Gem, Sliders,
-  Zap, RefreshCw, Music2, Disc3, Volume2, Layers, Award, FileCheck, ShieldCheck
+  Zap, RefreshCw, Music2, Disc3, Volume2, Layers, Award, FileCheck, ShieldCheck, Scissors
 } from 'lucide-react';
 import WaveformRenderer from '../components/WaveformRenderer';
 import LicenseCertificateModal from '../components/LicenseCertificateModal';
+import SampleSlicerModal from '../components/SampleSlicerModal';
+import { findSimilarSounds } from '../utils/acousticSimilarity';
+import { getHarmonicMatches } from '../utils/harmonicTheory';
 
 export default function SoundsPage({ 
   currentSound, 
@@ -35,6 +38,10 @@ export default function SoundsPage({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
+  // Real-Time DSP Audio States (Pitch shifting & Time-stretching)
+  const [pitchSemitones, setPitchSemitones] = useState(0);
+  const [speedMultiplier, setSpeedMultiplier] = useState(1.0);
+
   // Pagination states
   const [loadedPages, setLoadedPages] = useState(4);
   const [hasMore, setHasMore] = useState(true);
@@ -60,6 +67,9 @@ export default function SoundsPage({
 
   // License Certificate Modal state
   const [certificateModalSound, setCertificateModalSound] = useState(null);
+
+  // Pro Transient Slicer Modal state
+  const [slicerSound, setSlicerSound] = useState(null);
 
 
   // Subscribe to pack download progress from Electron
@@ -352,6 +362,21 @@ export default function SoundsPage({
       showToast('Failed to load more results', 'error');
     }
     setLoadingMore(false);
+  };
+
+  // Find Acoustically Similar Sounds
+  const handleFindSimilar = (targetSound) => {
+    if (!targetSound || !soundsList || soundsList.length === 0) return;
+    const similar = findSimilarSounds(targetSound, soundsList, 25);
+    if (similar.length > 0) {
+      setSoundsList([targetSound, ...similar]);
+      setCurrentPage(1);
+      if (showToast) showToast(`✨ Ranked ${similar.length} acoustically similar sounds for "${targetSound.name}"`, 'success');
+    } else {
+      if (showToast) showToast('Searching broader catalog for similar sounds...', 'info');
+      const cleanName = (targetSound.name || '').split('_')[0] || '';
+      if (cleanName) fetchSounds(cleanName);
+    }
   };
 
   // Submit search on Enter key
@@ -822,9 +847,29 @@ export default function SoundsPage({
               : 'Search, audition, and drop it straight into your session.'}
         </p>
 
-        {/* Splice-style search bar with clear & submit buttons */}
+        {/* Splice-style search bar with clear, submit & audio drop-to-search */}
         <form 
           className="splice-search-bar"
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.currentTarget.style.borderColor = '#10b981';
+          }}
+          onDragLeave={(e) => {
+            e.currentTarget.style.borderColor = '';
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.currentTarget.style.borderColor = '';
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              const file = e.dataTransfer.files[0];
+              const cleanFileName = file.name.replace(/\.wav$|\.mp3$|\.aif$|\.flac$/i, '').replace(/[^a-zA-Z0-9_\-\s]/g, ' ').trim();
+              setSearchQuery(cleanFileName);
+              setSubmittedQuery(cleanFileName);
+              setCurrentPage(1);
+              fetchSounds(cleanFileName);
+              if (showToast) showToast(`🎯 Dropped "${file.name}" - Searching catalog for matches!`, 'success');
+            }
+          }}
           onSubmit={(e) => {
             e.preventDefault();
             setSubmittedQuery(searchQuery);
@@ -836,7 +881,7 @@ export default function SoundsPage({
           <div className="splice-search-input-area">
             <input 
               type="text" 
-              placeholder={isDownloadsPage ? "Search your downloaded sounds" : "Try ‘UK garage vocal’ or ‘warm Rhodes’"} 
+              placeholder={isDownloadsPage ? "Search your downloaded sounds" : "Search sounds, or drop an audio file here to reverse match"} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="splice-search-input"
@@ -877,26 +922,81 @@ export default function SoundsPage({
         </form>
       </div>
 
-      {/* Navigation tabs */}
-      <div className="nav-tabs-row">
-        <button 
-          className={`nav-tab-btn ${activeTab === 'sounds' ? 'active' : ''}`}
-          onClick={() => setActiveTab('sounds')}
-        >
-          Samples
-        </button>
-        <button 
-          className={`nav-tab-btn ${activeTab === 'presets' ? 'active' : ''}`}
-          onClick={() => setActiveTab('presets')}
-        >
-          Presets
-        </button>
-        <button 
-          className={`nav-tab-btn ${activeTab === 'packs' ? 'active' : ''}`}
-          onClick={() => setActiveTab('packs')}
-        >
-          Packs
-        </button>
+      {/* Navigation tabs & Pro Real-Time DSP Audio Bar */}
+      <div className="nav-tabs-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <button 
+            className={`nav-tab-btn ${activeTab === 'sounds' ? 'active' : ''}`}
+            onClick={() => setActiveTab('sounds')}
+          >
+            Samples
+          </button>
+          <button 
+            className={`nav-tab-btn ${activeTab === 'presets' ? 'active' : ''}`}
+            onClick={() => setActiveTab('presets')}
+          >
+            Presets
+          </button>
+          <button 
+            className={`nav-tab-btn ${activeTab === 'packs' ? 'active' : ''}`}
+            onClick={() => setActiveTab('packs')}
+          >
+            Packs
+          </button>
+        </div>
+
+        {/* Real-Time Studio DSP Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '4px 10px' }}>
+          {/* Pitch Shifter */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            <span style={{ fontWeight: '600' }}>Pitch:</span>
+            <button 
+              onClick={() => setPitchSemitones(p => Math.max(-12, p - 1))}
+              style={{ padding: '2px 6px', background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#f8fafc', cursor: 'pointer', fontSize: '0.75rem' }}
+            >
+              -
+            </button>
+            <span 
+              onClick={() => setPitchSemitones(0)}
+              title="Click to reset pitch to 0"
+              style={{ minWidth: '32px', textAlign: 'center', fontWeight: '800', color: pitchSemitones !== 0 ? '#38bdf8' : '#cbd5e1', cursor: 'pointer' }}
+            >
+              {pitchSemitones > 0 ? `+${pitchSemitones}` : pitchSemitones} st
+            </span>
+            <button 
+              onClick={() => setPitchSemitones(p => Math.min(12, p + 1))}
+              style={{ padding: '2px 6px', background: 'var(--bg-hover)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#f8fafc', cursor: 'pointer', fontSize: '0.75rem' }}
+            >
+              +
+            </button>
+          </div>
+
+          <div style={{ width: '1px', height: '16px', background: 'var(--border-color)' }} />
+
+          {/* Speed / Time-Stretch */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            <span style={{ fontWeight: '600' }}>Speed:</span>
+            {[0.5, 1.0, 2.0].map(s => (
+              <button
+                key={s}
+                onClick={() => setSpeedMultiplier(s)}
+                style={{
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  border: '1px solid',
+                  borderColor: speedMultiplier === s ? '#10b981' : 'var(--border-color)',
+                  background: speedMultiplier === s ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+                  color: speedMultiplier === s ? '#10b981' : 'var(--text-muted)',
+                  cursor: 'pointer'
+                }}
+              >
+                {s}x
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Filter pills row */}
@@ -1716,6 +1816,8 @@ export default function SoundsPage({
                         sampleName={sound.name}
                         sampleTags={sound.tags}
                         volume={volume}
+                        pitchSemitones={pitchSemitones}
+                        speedMultiplier={speedMultiplier}
                         onError={(msg) => showToast(msg, 'error')}
                       />
                     )
@@ -1738,6 +1840,56 @@ export default function SoundsPage({
 
                 {/* Action button: Certificate + Download / DAW Drag-and-Drop Cell */}
                 <div className="action-cell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                  {/* Pro Transient Slicer Button */}
+                  <button 
+                    className="action-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSlicerSound(sound);
+                    }}
+                    title="Chop and slice loop in Transient Slicer"
+                    style={{
+                      opacity: 0.7,
+                      transition: 'all 0.15s ease',
+                      color: 'var(--text-muted)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.color = '#38bdf8';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '0.7';
+                      e.currentTarget.style.color = 'var(--text-muted)';
+                    }}
+                  >
+                    <Scissors size={14} />
+                  </button>
+
+                  {/* AI Acoustic Similarity Button */}
+                  <button 
+                    className="action-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFindSimilar(sound);
+                    }}
+                    title="Find Acoustically Similar Sounds"
+                    style={{
+                      opacity: 0.7,
+                      transition: 'all 0.15s ease',
+                      color: 'var(--text-muted)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.color = '#10b981';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '0.7';
+                      e.currentTarget.style.color = 'var(--text-muted)';
+                    }}
+                  >
+                    <Sparkles size={14} />
+                  </button>
+
                   <button 
                     className="action-btn cert-btn"
                     onClick={(e) => {
@@ -2134,6 +2286,15 @@ export default function SoundsPage({
           user={user}
           subscription={subscription}
           onClose={() => setCertificateModalSound(null)}
+          showToast={showToast}
+        />
+      )}
+
+      {/* Pro Transient Slicer Modal */}
+      {slicerSound && (
+        <SampleSlicerModal
+          sound={slicerSound}
+          onClose={() => setSlicerSound(null)}
           showToast={showToast}
         />
       )}

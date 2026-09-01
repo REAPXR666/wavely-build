@@ -65,6 +65,19 @@ contextBridge.exposeInMainWorld('electron', {
   // Save Certificate PDF with native Save As dialog
   saveCertificatePdf: (data) => ipcRenderer.invoke('save-certificate-pdf', data),
 
+  // VST3 DAW Plugin & Local Bridge
+  getVstStatus: () => ipcRenderer.invoke('get-vst-status'),
+  installVstPlugin: () => ipcRenderer.invoke('install-vst-plugin'),
+  openVstFolder: () => ipcRenderer.invoke('open-vst-folder'),
+
+  // Mini DAW Dock Mode
+  setMiniDockMode: (enabled) => ipcRenderer.invoke('set-mini-dock-mode', enabled),
+  onMiniDockStateChanged: (callback) => {
+    const handler = (event, data) => callback(data);
+    ipcRenderer.on('mini-dock-state-changed', handler);
+    return () => ipcRenderer.removeListener('mini-dock-state-changed', handler);
+  },
+
   // Security, HWID & Licensing Telemetry
   getLicensingState: () => ipcRenderer.invoke('get-licensing-state'),
   getAuthState: () => ipcRenderer.invoke('get-auth-state'),

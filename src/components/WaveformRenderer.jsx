@@ -13,6 +13,8 @@ export default function WaveformRenderer({
   sampleName, 
   sampleTags, 
   volume = 0.8, 
+  pitchSemitones = 0,
+  speedMultiplier = 1.0,
   onError 
 }) {
   const containerRef = useRef(null);
@@ -112,6 +114,19 @@ export default function WaveformRenderer({
       }
     }
   }, [volume]);
+
+  // Sync pitch and speed rate changes
+  useEffect(() => {
+    if (wavesurferRef.current) {
+      try {
+        const pitchRatio = Math.pow(2, (pitchSemitones || 0) / 12);
+        const effectiveRate = (speedMultiplier || 1.0) * pitchRatio;
+        wavesurferRef.current.setPlaybackRate(effectiveRate, false);
+      } catch (err) {
+        console.warn('Error setting pitch/speed:', err);
+      }
+    }
+  }, [pitchSemitones, speedMultiplier]);
 
   // Sync playback state
   useEffect(() => {
