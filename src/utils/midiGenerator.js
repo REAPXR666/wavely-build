@@ -1,6 +1,7 @@
 /**
- * Wavely MIDI Clip (.mid) Generator
- * Creates standard Type 0 SMF MIDI files for sample chops and rhythmic sequences.
+ * Wavely MIDI Clip (.mid) Generator & Procedural Pattern Engine
+ * Creates standard Type 0 SMF MIDI files for sample chops, dynamic grooves,
+ * and custom randomized chop sequences at any user-defined BPM.
  */
 
 // Variable Length Quantity (VLQ) encoder for MIDI delta times
@@ -30,20 +31,16 @@ function writeVarInt(value) {
  * @returns {Blob} Standard MIDI file Blob
  */
 export function generateMidiFile(notes = [], bpm = 120, ppq = 480) {
-  const events = [];
-
   // 1. Set Tempo Meta Event (00 FF 51 03 tt tt tt)
-  // Microseconds per quarter note = 60,000,000 / BPM
-  const mpqn = Math.round(60000000 / Math.max(20, Math.min(300, bpm)));
+  const mpqn = Math.round(60000000 / Math.max(20, Math.min(320, bpm)));
   const tempoBytes = [
     (mpqn >> 16) & 0xff,
     (mpqn >> 8) & 0xff,
     mpqn & 0xff
   ];
 
-  // Raw MIDI events list with absolute tick times
   const rawEvents = [
-    { absTick: 0, bytes: [0xff, 0x51, 0x03, ...tempoBytes] } // Tempo
+    { absTick: 0, bytes: [0xff, 0x51, 0x03, ...tempoBytes] }
   ];
 
   // Convert notes into NoteOn and NoteOff events
@@ -51,7 +48,7 @@ export function generateMidiFile(notes = [], bpm = 120, ppq = 480) {
     const midiNote = Math.max(0, Math.min(127, n.note || 60));
     const velocity = Math.max(1, Math.min(127, n.velocity || 100));
     const startTick = Math.max(0, Math.round(n.startTick || 0));
-    const duration = Math.max(1, Math.round(n.durationTicks || ppq));
+    const duration = Math.max(1, Math.round(n.durationTicks || (ppq / 2)));
 
     // Note On (Channel 0: 0x90)
     rawEvents.push({
@@ -84,7 +81,6 @@ export function generateMidiFile(notes = [], bpm = 120, ppq = 480) {
   trackData.push(0x00, 0xff, 0x2f, 0x00);
 
   // 2. Construct MThd (Header) Chunk
-  // MThd (4 bytes), Length = 6 (4 bytes), Format 0 (2 bytes), Tracks = 1 (2 bytes), Division (2 bytes)
   const header = [
     0x4d, 0x54, 0x68, 0x64, // "MThd"
     0x00, 0x00, 0x00, 0x06, // length 6
@@ -94,7 +90,6 @@ export function generateMidiFile(notes = [], bpm = 120, ppq = 480) {
   ];
 
   // 3. Construct MTrk (Track) Chunk
-  // MTrk (4 bytes), Length (4 bytes), track data
   const trackLen = trackData.length;
   const trackHeader = [
     0x4d, 0x54, 0x72, 0x6b, // "MTrk"
@@ -109,47 +104,83 @@ export function generateMidiFile(notes = [], bpm = 120, ppq = 480) {
 }
 
 /**
- * Generates chromatic MIDI notes for slices (C3, C#3, D3, D#3...) in sequential bars.
+ * Generates MIDI file from any arbitrary sequence of slice indices at custom BPM
  */
-export function createChopMidiPattern(sliceCount = 8, bpm = 120, patternType = 'linear') {
+export function createCustomPatternMidi(sequence = [], sliceCount = 8, bpm = 120, division = 16) {
   const ppq = 480;
   const notes = [];
-  const baseNote = 60; // C3 (Standard DAW sampler root key)
+  const baseNote = 60; // C3
+  const stepTicks = Math.round((ppq * 4) / division); // e.g. 1/16 note = 120 ticks
 
-  if (patternType === 'linear') {
-    // 1 slice per 1/8th note or 1/4 note
-    const stepTicks = ppq / 2; // 1/8 note
-    for (let i = 0; i < sliceCount; i++) {
+  sequence.forEach((step, idx) => {
+    if (step !== null && step !== undefined && step >= 0) {
+      const sliceIdx = step % sliceCount;
+      const isAccent = (idx % 4 === 0);
       notes.push({
-        note: baseNote + i,
-        startTick: i * stepTicks,
-        durationTicks: stepTicks - 10,
-        velocity: 100
+        note: baseNote + sliceIdx,
+        startTick: idx * stepTicks,
+        durationTicks: Math.max(10, stepTicks - 12),
+        velocity: isAccent ? 118 : Math.floor(90 + Math.random() * 20)
       });
     }
-  } else if (patternType === 'stutter') {
-    // Rhythmic stutter sequence: 1-1-2-3-4-4-3-2...
-    const sequence = [0, 0, 1, 2, 3, 3, 2, 1, 4, 4, 5, 6, 7, 7, 6, 5];
-    const stepTicks = ppq / 4; // 1/16 note
-    sequence.slice(0, Math.min(sequence.length, sliceCount * 2)).forEach((sliceIdx, step) => {
-      notes.push({
-        note: baseNote + (sliceIdx % sliceCount),
-        startTick: step * stepTicks,
-        durationTicks: stepTicks - 5,
-        velocity: (step % 4 === 0) ? 115 : 95
-      });
-    });
-  } else if (patternType === 'reverse') {
-    const stepTicks = ppq / 2;
-    for (let i = 0; i < sliceCount; i++) {
-      notes.push({
-        note: baseNote + (sliceCount - 1 - i),
-        startTick: i * stepTicks,
-        durationTicks: stepTicks - 10,
-        velocity: 100
-      });
+  });
+
+  return generateMidiFile(notes, bpm, ppq);
+}
+
+/**
+ * Procedurally generates creative, musically coherent random chop patterns
+ */
+export function generateRandomPattern(sliceCount = 8, style = 'groove', steps = 16) {
+  const pattern = [];
+
+  if (style === 'breakbeat') {
+    // Syncopated breakbeat rhythm (e.g. 0, 0, 2, 4, 1, 3, 5, 0...)
+    for (let i = 0; i < steps; i++) {
+      if (i % 4 === 0) {
+        pattern.push(0); // Kick / Root slice on downbeat
+      } else if (i % 4 === 2) {
+        pattern.push(Math.min(sliceCount - 1, Math.floor(sliceCount / 2))); // Snare / Mid slice
+      } else if (Math.random() > 0.4) {
+        pattern.push(Math.floor(Math.random() * sliceCount));
+      } else {
+        pattern.push(null); // Rest / Ghost
+      }
+    }
+  } else if (style === 'stutter') {
+    // Glitchy stutter repeats (e.g. 0, 0, 0, 1, 2, 2, 3, 4...)
+    let currentSlice = 0;
+    for (let i = 0; i < steps; i++) {
+      if (i % 2 === 0 || Math.random() > 0.6) {
+        currentSlice = Math.floor(Math.random() * sliceCount);
+      }
+      pattern.push(currentSlice);
+    }
+  } else if (style === 'trap_roll') {
+    // Rapid rolls and bounces
+    for (let i = 0; i < steps; i++) {
+      if (i >= 12 && Math.random() > 0.3) {
+        pattern.push(sliceCount - 1); // roll on last 4 steps
+      } else {
+        pattern.push((i * 2 + Math.floor(Math.random() * 2)) % sliceCount);
+      }
+    }
+  } else if (style === 'reverse_roll') {
+    for (let i = 0; i < steps; i++) {
+      pattern.push((sliceCount - 1 - (i % sliceCount)));
+    }
+  } else {
+    // General creative groove: weighted toward low & high pads
+    for (let i = 0; i < steps; i++) {
+      if (i === 0) {
+        pattern.push(0);
+      } else if (Math.random() > 0.25) {
+        pattern.push(Math.floor(Math.random() * sliceCount));
+      } else {
+        pattern.push(null); // Rest
+      }
     }
   }
 
-  return generateMidiFile(notes, bpm, ppq);
+  return pattern;
 }
