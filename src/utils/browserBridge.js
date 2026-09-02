@@ -66,6 +66,41 @@ async function directSpliceSearch(queryText = '', page = 1, categorySlug = null)
   }
 }
 
+function formatAudioPreviewUrl(sound) {
+  if (!sound) return sound;
+  let rawUrl = sound.previewUrl || sound.url || '';
+  if (!rawUrl && sound.filePath) rawUrl = sound.filePath;
+  if (!rawUrl) return sound;
+
+  if (rawUrl.startsWith('http://127.0.0.1:6768/api/proxy-audio')) {
+    return sound;
+  }
+
+  if (rawUrl.startsWith('wavely-media://') || rawUrl.startsWith('file://')) {
+    const cleanPath = rawUrl.replace(/^wavely-media:\/\/\/?/, '').replace(/^file:\/\/\/?/, '');
+    return {
+      ...sound,
+      previewUrl: `${LOCAL_BRIDGE_URL}/api/proxy-audio?path=${encodeURIComponent(cleanPath)}`
+    };
+  }
+
+  if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+    return {
+      ...sound,
+      previewUrl: `${LOCAL_BRIDGE_URL}/api/proxy-audio?url=${encodeURIComponent(rawUrl)}`
+    };
+  }
+
+  if (sound.filePath) {
+    return {
+      ...sound,
+      previewUrl: `${LOCAL_BRIDGE_URL}/api/proxy-audio?path=${encodeURIComponent(sound.filePath)}`
+    };
+  }
+
+  return sound;
+}
+
 if (typeof window !== 'undefined' && !window.electron) {
   console.log('[WavelyBridge] Initializing Ableton Live 12 Real Auth WebView Bridge...');
 
@@ -242,12 +277,15 @@ if (typeof window !== 'undefined' && !window.electron) {
         });
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) return data;
+          if (Array.isArray(data) && data.length > 0) {
+            return data.map(formatAudioPreviewUrl);
+          }
         }
       } catch (e) {}
 
       // Fallback directly to Splice GraphQL
-      return await directSpliceSearch(query, options.startPage || 1);
+      const fallback = await directSpliceSearch(query, options.startPage || 1);
+      return fallback.map(formatAudioPreviewUrl);
     },
 
     getPackSamples: async ({ packUuid, packName }) => {
@@ -257,10 +295,19 @@ if (typeof window !== 'undefined' && !window.electron) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ packUuid, packName })
         });
-        if (res.ok) return await res.json();
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.samples)) {
+            return {
+              ...data,
+              samples: data.samples.map(formatAudioPreviewUrl)
+            };
+          }
+          return data;
+        }
       } catch (e) {}
       const fallback = await directSpliceSearch(packName || '', 1);
-      return { success: true, samples: fallback };
+      return { success: true, samples: fallback.map(formatAudioPreviewUrl) };
     },
 
     downloadSound: async (sound) => {

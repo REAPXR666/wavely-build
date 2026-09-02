@@ -454,6 +454,107 @@ function startLocalBridgeServer() {
       const pathname = url.pathname;
 
       try {
+        if (pathname === '/api/proxy-audio') {
+          const rawUrl = url.searchParams.get('url');
+          const rawPath = url.searchParams.get('path');
+
+          if (rawPath) {
+            let cleanPath = rawPath.replace(/^wavely-media:\/\/local\/?/, '').replace(/^wavely-media:\/\/\/?/, '').replace(/^file:\/\/\/?/, '');
+            if (process.platform === 'win32') cleanPath = cleanPath.replace(/^\/+/, '');
+            if (fs.existsSync(cleanPath)) {
+              const stat = fs.statSync(cleanPath);
+              const ext = path.extname(cleanPath).toLowerCase();
+              const contentType = ext === '.wav' ? 'audio/wav' : ext === '.ogg' ? 'audio/ogg' : 'audio/mpeg';
+              
+              const range = req.headers['range'];
+              if (range) {
+                const parts = range.replace(/bytes=/, '').split('-');
+                const start = parseInt(parts[0], 10);
+                const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+                const chunksize = (end - start) + 1;
+                res.writeHead(206, {
+                  'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+                  'Accept-Ranges': 'bytes',
+                  'Content-Length': chunksize,
+                  'Content-Type': contentType,
+                  'Access-Control-Allow-Origin': '*'
+                });
+                fs.createReadStream(cleanPath, { start, end }).pipe(res);
+                return;
+              }
+
+              res.writeHead(200, {
+                'Content-Type': contentType,
+                'Content-Length': stat.size,
+                'Accept-Ranges': 'bytes',
+                'Access-Control-Allow-Origin': '*'
+              });
+              fs.createReadStream(cleanPath).pipe(res);
+              return;
+            }
+          }
+
+          if (rawUrl) {
+            if (rawUrl.startsWith('wavely-media://') || rawUrl.startsWith('file://') || rawUrl.match(/^[a-zA-Z]:[\\\/]/)) {
+              let cleanPath = rawUrl.replace(/^wavely-media:\/\/local\/?/, '').replace(/^wavely-media:\/\/\/?/, '').replace(/^file:\/\/\/?/, '');
+              if (process.platform === 'win32') cleanPath = cleanPath.replace(/^\/+/, '');
+              if (fs.existsSync(cleanPath)) {
+                const stat = fs.statSync(cleanPath);
+                const ext = path.extname(cleanPath).toLowerCase();
+                const contentType = ext === '.wav' ? 'audio/wav' : ext === '.ogg' ? 'audio/ogg' : 'audio/mpeg';
+                res.writeHead(200, {
+                  'Content-Type': contentType,
+                  'Content-Length': stat.size,
+                  'Accept-Ranges': 'bytes',
+                  'Access-Control-Allow-Origin': '*'
+                });
+                fs.createReadStream(cleanPath).pipe(res);
+                return;
+              }
+            }
+
+            if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+              try {
+                const isHttps = rawUrl.startsWith('https:');
+                const client = isHttps ? https : http;
+                
+                const reqHeaders = {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Referer': 'https://splice.com/',
+                  'Origin': 'https://splice.com'
+                };
+                if (req.headers['range']) reqHeaders['Range'] = req.headers['range'];
+
+                const proxyReq = client.get(rawUrl, { headers: reqHeaders }, (proxyRes) => {
+                  const headers = {
+                    'Content-Type': proxyRes.headers['content-type'] || 'audio/mpeg',
+                    'Accept-Ranges': 'bytes',
+                    'Access-Control-Allow-Origin': '*'
+                  };
+                  if (proxyRes.headers['content-length']) headers['Content-Length'] = proxyRes.headers['content-length'];
+                  if (proxyRes.headers['content-range']) headers['Content-Range'] = proxyRes.headers['content-range'];
+                  res.writeHead(proxyRes.statusCode || 200, headers);
+                  proxyRes.pipe(res);
+                });
+
+                proxyReq.on('error', (err) => {
+                  res.writeHead(502, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ error: err.message }));
+                });
+                return;
+              } catch (e) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: e.message }));
+                return;
+              }
+            }
+          }
+
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Audio file not found' }));
+          return;
+        }
+
         if (pathname === '/api/status') {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ status: 'ok', version: app.getVersion(), app: 'Wavely' }));
@@ -484,8 +585,25 @@ function startLocalBridgeServer() {
             try {
               const parsed = JSON.parse(body || '{}');
               const results = await performMasterSoundSearch(parsed.query, parsed.options || parsed.filters || parsed);
+              const formatted = (results || []).map(item => {
+                const originalPreview = item.previewUrl || '';
+                if (originalPreview.startsWith('wavely-media://') || originalPreview.startsWith('file://') || item.filePath) {
+                  const rawPath = item.filePath || originalPreview.replace(/^wavely-media:\/\/local\/?/, '').replace(/^wavely-media:\/\/\/?/, '').replace(/^file:\/\/\/?/, '');
+                  return {
+                    ...item,
+                    previewUrl: `http://127.0.0.1:6768/api/proxy-audio?path=${encodeURIComponent(rawPath)}`
+                  };
+                }
+                if (originalPreview.startsWith('http://') || originalPreview.startsWith('https://')) {
+                  return {
+                    ...item,
+                    previewUrl: `http://127.0.0.1:6768/api/proxy-audio?url=${encodeURIComponent(originalPreview)}`
+                  };
+                }
+                return item;
+              });
               res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify(results));
+              res.end(JSON.stringify(formatted));
             } catch (err) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ error: err.message }));
@@ -524,7 +642,7 @@ function startLocalBridgeServer() {
               }).map(f => ({
                 ...f,
                 isDownloaded: true,
-                previewUrl: f.filePath ? `file:///${f.filePath.replace(/\\/g, '/')}` : ''
+                previewUrl: `http://127.0.0.1:6768/api/proxy-audio?path=${encodeURIComponent(f.filePath)}`
               }));
 
               if (localFiles.length > 0) {
@@ -535,8 +653,12 @@ function startLocalBridgeServer() {
 
               // Query online
               const onlineSamples = await querySpliceDirect('', false, 1, null, packUuid);
+              const formattedOnline = (onlineSamples || []).map(s => ({
+                ...s,
+                previewUrl: s.previewUrl ? `http://127.0.0.1:6768/api/proxy-audio?url=${encodeURIComponent(s.previewUrl)}` : ''
+              }));
               res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ success: true, samples: onlineSamples }));
+              res.end(JSON.stringify({ success: true, samples: formattedOnline }));
             } catch (err) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ error: err.message }));
