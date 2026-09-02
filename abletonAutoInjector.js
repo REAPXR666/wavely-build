@@ -71,7 +71,6 @@ function findAbletonDirectories() {
       try {
         const abletonEditions = fs.readdirSync(progData);
         for (const edition of abletonEditions) {
-          // Look for any Live 12 or future edition
           if (edition.toLowerCase().includes('live 12') || edition.toLowerCase().includes('live 13')) {
             const editionPath = path.join(progData, edition);
             targets.programDataAbletonFolders.push(editionPath);
@@ -113,94 +112,9 @@ function copyDirRecursive(src, dest) {
   }
 }
 
-// Safely binary patch VST3 class definition "Splice" -> "Wavely"
-function patchVst3BinaryName(binPath) {
-  if (!fs.existsSync(binPath)) return { patched: false, reason: 'File not found' };
-
-  try {
-    const backupPath = `${binPath}.bak`;
-    if (!fs.existsSync(backupPath)) {
-      try { fs.copyFileSync(binPath, backupPath); } catch (e) {}
-    }
-
-    const buf = fs.readFileSync(binPath);
-    const splicePClass = Buffer.from('Splice\0\0\0\0\0\0\0\0\0\0', 'utf8');
-    const wavelyPClass = Buffer.from('Wavely\0\0\0\0\0\0\0\0\0\0', 'utf8');
-
-    let pos = 0;
-    let patchCount = 0;
-    while ((pos = buf.indexOf(splicePClass, pos)) !== -1) {
-      wavelyPClass.copy(buf, pos);
-      patchCount++;
-      pos += 16;
-    }
-
-    if (patchCount > 0) {
-      fs.writeFileSync(binPath, buf);
-      return { patched: true, count: patchCount };
-    }
-
-    return { patched: true, count: 0, reason: 'Already patched' };
-  } catch (err) {
-    if (err.code === 'EBUSY') {
-      return { patched: false, reason: 'File locked by running Ableton instance' };
-    }
-    return { patched: false, reason: err.message };
-  }
-}
-
-// Safely patch UI strings inside Ableton Live executable from "Splice" -> "Wavely"
-function patchAbletonExeStrings(editionPath) {
-  const exePath = path.join(editionPath, 'Program', 'Ableton Live 12 Suite.exe');
-  const genericExe = path.join(editionPath, 'Program', 'Ableton Live.exe');
-  const targetExe = fs.existsSync(exePath) ? exePath : (fs.existsSync(genericExe) ? genericExe : null);
-
-  if (!targetExe) return { patched: false, reason: 'Executable not found' };
-
-  try {
-    const bakPath = `${targetExe}.bak`;
-    if (!fs.existsSync(bakPath)) {
-      try { fs.copyFileSync(targetExe, bakPath); } catch (e) {}
-    }
-
-    const buf = fs.readFileSync(targetExe);
-    const sU8 = Buffer.from('Splice', 'utf8');
-    const wU8 = Buffer.from('Wavely', 'utf8');
-    const sU16 = Buffer.from('Splice', 'utf16le');
-    const wU16 = Buffer.from('Wavely', 'utf16le');
-
-    let count8 = 0;
-    let count16 = 0;
-    let pos = 0;
-    while ((pos = buf.indexOf(sU8, pos)) !== -1) {
-      wU8.copy(buf, pos);
-      count8++;
-      pos += 6;
-    }
-
-    pos = 0;
-    while ((pos = buf.indexOf(sU16, pos)) !== -1) {
-      wU16.copy(buf, pos);
-      count16++;
-      pos += 12;
-    }
-
-    if (count8 > 0 || count16 > 0) {
-      fs.writeFileSync(targetExe, buf);
-      return { patched: true, count8, count16 };
-    }
-    return { patched: true, count8: 0, count16: 0, reason: 'Already patched' };
-  } catch (err) {
-    if (err.code === 'EBUSY') {
-      return { patched: false, reason: 'File locked by running Ableton instance' };
-    }
-    return { patched: false, reason: err.message };
-  }
-}
-
 /**
  * Main Auto-Injection function
- * Runs on app startup and can be triggered on-demand
+ * Injects Wavely React UI safely into Ableton Live's Places browser container
  */
 async function autoInjectAbletonLive() {
   console.log('[AbletonInjector] Scanning system for Ableton Live 12 installations...');
@@ -222,26 +136,20 @@ async function autoInjectAbletonLive() {
   }
 
   const targets = findAbletonDirectories();
-  console.log(`[AbletonInjector] Found ${targets.localAppDataSpliceDirs.length} AppData target(s) and ${targets.programDataAbletonFolders.length} ProgramData edition(s).`);
+  console.log(`[AbletonInjector] Found ${targets.localAppDataSpliceDirs.length} AppData target(s).`);
 
   let injectedCount = 0;
   const results = [];
 
-  // 1. Inject into each LocalAppData Splice location
+  // Inject into each LocalAppData Splice location
   for (const target of targets.localAppDataSpliceDirs) {
     try {
       console.log(`[AbletonInjector] Injecting Wavely UI into ${target.distDir}...`);
       copyDirRecursive(distSource, target.distDir);
-
-      // Attempt to patch binary name to "Wavely"
-      const patchRes = patchVst3BinaryName(target.binPath);
-      console.log(`[AbletonInjector] Binary patch result for ${target.binPath}:`, patchRes);
-
       injectedCount++;
       results.push({
         path: target.distDir,
-        success: true,
-        patchedBinary: patchRes.patched
+        success: true
       });
     } catch (err) {
       console.error(`[AbletonInjector] Failed to inject into ${target.distDir}:`, err.message);
@@ -250,16 +158,6 @@ async function autoInjectAbletonLive() {
         success: false,
         error: err.message
       });
-    }
-  }
-
-  // 2. Patch Ableton Live executable string tables
-  for (const editionPath of targets.programDataAbletonFolders) {
-    try {
-      const exePatchRes = patchAbletonExeStrings(editionPath);
-      console.log(`[AbletonInjector] Ableton executable patch result for ${editionPath}:`, exePatchRes);
-    } catch (e) {
-      console.warn(`[AbletonInjector] Executable patch notice for ${editionPath}:`, e.message);
     }
   }
 
@@ -273,7 +171,5 @@ async function autoInjectAbletonLive() {
 
 module.exports = {
   findAbletonDirectories,
-  autoInjectAbletonLive,
-  patchVst3BinaryName,
-  patchAbletonExeStrings
+  autoInjectAbletonLive
 };
