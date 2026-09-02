@@ -41,6 +41,7 @@
     "files": [
       "dist/**/*",
       "main.js",
+      "abletonAutoInjector.js",
       "mediaUtils.js",
       "audioWorker.js",
       "audioWorkerPool.js",

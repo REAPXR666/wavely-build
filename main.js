@@ -6,7 +6,14 @@ const https = require('https');
 const cheerio = require('cheerio');
 const AdmZip = require('adm-zip');
 const { checkForUpdates, registerUpdateIpc } = require('./updater');
-const { autoInjectAbletonLive } = require('./abletonAutoInjector');
+
+let autoInjectAbletonLive = null;
+try {
+  const injectorModule = require('./abletonAutoInjector');
+  autoInjectAbletonLive = injectorModule.autoInjectAbletonLive;
+} catch (err) {
+  console.warn('[AbletonInjector] Optional module load notice:', err.message);
+}
 const { 
   setMainWindow, initializeAuthSession, verifyDevice, startHeartbeat, getLicensingState, getHwidInfo,
   fetchCaptcha, loginUser, registerUser, logoutUser, getAuthState 
@@ -697,16 +704,21 @@ app.whenReady().then(() => {
   startLocalBridgeServer();
 
   // Automatically scan and inject Wavely into any Ableton Live 12 installations
-  setTimeout(() => {
-    autoInjectAbletonLive().then(res => {
-      console.log('[AbletonInjector] Startup auto-injection result:', res);
-    }).catch(err => {
-      console.warn('[AbletonInjector] Startup notice:', err.message);
-    });
-  }, 3000);
+  if (typeof autoInjectAbletonLive === 'function') {
+    setTimeout(() => {
+      autoInjectAbletonLive().then(res => {
+        console.log('[AbletonInjector] Startup auto-injection result:', res);
+      }).catch(err => {
+        console.warn('[AbletonInjector] Startup notice:', err.message);
+      });
+    }, 3000);
+  }
 
   ipcMain.handle('inject-ableton-live', async () => {
-    return await autoInjectAbletonLive();
+    if (typeof autoInjectAbletonLive === 'function') {
+      return await autoInjectAbletonLive();
+    }
+    return { success: false, error: 'Ableton auto-injector module not available' };
   });
 
   ipcMain.handle('check-for-updates-manual', async () => {
