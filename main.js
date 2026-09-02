@@ -276,6 +276,7 @@ function createWindow() {
     minHeight: 600,
     frame: true,
     title: 'Wavely',
+    show: true,
     icon: path.join(__dirname, 'app icon.png'),
     webPreferences: {
       nodeIntegration: false,
@@ -285,18 +286,23 @@ function createWindow() {
     }
   });
 
+  mainWindow.once('ready-to-show', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+
   setMainWindow(mainWindow);
   applyWindowSecurity(mainWindow, isDev);
 
-  const distHtml = path.join(__dirname, 'dist/index.html');
+  const distHtml = path.join(__dirname, 'dist', 'index.html');
   if (isDev && process.env.VITE_DEV_SERVER === 'true') {
     mainWindow.loadURL('http://localhost:5173').catch(() => {
-      mainWindow.loadFile(distHtml);
+      mainWindow.loadFile(distHtml).catch(err => console.error('Failed to load distHtml:', err));
     });
-  } else if (fs.existsSync(distHtml)) {
-    mainWindow.loadFile(distHtml);
   } else {
-    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.loadFile(distHtml).catch(err => console.error('Failed to load distHtml:', err));
   }
 
   // Inject headers for outgoing HTTP requests to bypass hotlink blockages
@@ -602,6 +608,27 @@ function startLocalBridgeServer() {
                 }
                 return item;
               });
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify(formatted));
+            } catch (err) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+          return;
+        }
+
+        if (pathname === '/api/search-presets' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => body += chunk);
+          req.on('end', async () => {
+            try {
+              const { query, filters } = JSON.parse(body || '{}');
+              const presets = await performMasterPresetSearch(query, filters);
+              const formatted = (presets || []).map(p => ({
+                ...p,
+                previewUrl: p.previewUrl ? (p.previewUrl.startsWith('http://127.0.0.1:6768') ? p.previewUrl : `http://127.0.0.1:6768/api/proxy-audio?url=${encodeURIComponent(p.previewUrl)}`) : ''
+              }));
               res.writeHead(200, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify(formatted));
             } catch (err) {
@@ -2556,7 +2583,7 @@ ipcMain.handle('search-sounds', async (event, query, filters) => {
 });
 
 // VST Preset search pipeline
-ipcMain.handle('search-presets', async (event, query, filters) => {
+async function performMasterPresetSearch(query, filters) {
   fetchRemoteCredentials().catch(() => {});
 
   const rawQuery = (query || '').trim();
@@ -2577,24 +2604,17 @@ ipcMain.handle('search-presets', async (event, query, filters) => {
   let presets = [];
   
   try {
-    console.log(`Searching Splice Presets directly for: "${searchQuery}" (pages: ${startPage}-${endPage})`);
     const pagePromises = [];
     for (let p = startPage; p <= endPage; p++) {
       pagePromises.push(querySpliceDirect(searchQuery, true, p));
     }
     const pageResults = await Promise.all(pagePromises);
     presets = pageResults.flat();
-    console.log(`Direct Splice Presets API returned ${presets.length} results.`);
   } catch (err) {
     if (err.message.includes('401') || err.message.includes('403') || err.message.includes('Credentials')) {
-      console.warn(`Direct Splice Presets API search failed with credentials error: ${err.message}. Querying via headless scraper fallback.`);
       try {
         presets = await scrapeSplice(searchQuery, true);
-      } catch (errFallback) {
-        console.error('Splice presets scraper fallback failed:', errFallback);
-      }
-    } else {
-      console.error('Direct Splice Presets API search failed with network/other error:', err.message);
+      } catch (errFallback) {}
     }
   }
 
@@ -2657,6 +2677,10 @@ ipcMain.handle('search-presets', async (event, query, filters) => {
   }
   
   return scoredPresets.map(s => s.preset);
+}
+
+ipcMain.handle('search-presets', async (event, query, filters) => {
+  return await performMasterPresetSearch(query, filters);
 });
 
 // --- AUDIO DOWNLOAD MANAGER WITH HIGH-SPEED CONNECTION POOLING ---

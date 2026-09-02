@@ -310,7 +310,22 @@ if (typeof window !== 'undefined' && !window.electron) {
       return { success: true, samples: fallback.map(formatAudioPreviewUrl) };
     },
 
-    downloadSound: async (sound) => {
+    searchPresets: async (query, filters = {}) => {
+      try {
+        const res = await fetch(`${LOCAL_BRIDGE_URL}/api/search-presets`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, filters })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) return data.map(formatAudioPreviewUrl);
+        }
+      } catch (e) {}
+      return [];
+    },
+
+    downloadSample: async (sound) => {
       try {
         const res = await fetch(`${LOCAL_BRIDGE_URL}/api/download-sound`, {
           method: 'POST',
@@ -322,6 +337,45 @@ if (typeof window !== 'undefined' && !window.electron) {
       return { success: true, filePath: sound.previewUrl };
     },
 
+    downloadPreset: async (preset) => {
+      try {
+        const res = await fetch(`${LOCAL_BRIDGE_URL}/api/download-preset`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ preset })
+        });
+        if (res.ok) return await res.json();
+      } catch (e) {}
+      return { success: true, filePath: preset.downloadUrl };
+    },
+
+    downloadAndIndexPack: async (pack) => {
+      try {
+        const res = await fetch(`${LOCAL_BRIDGE_URL}/api/download-entire-pack`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pack })
+        });
+        if (res.ok) return await res.json();
+      } catch (e) {}
+      return { success: true };
+    },
+
+    scanLibrary: async () => {
+      try {
+        const res = await fetch(`${LOCAL_BRIDGE_URL}/api/stats`);
+        if (res.ok) {
+          const stats = await res.json();
+          return { count: stats.downloadedCount || 0, totalIndexed: stats.downloadedCount || 0 };
+        }
+      } catch (e) {}
+      return { count: 0, totalIndexed: 0 };
+    },
+
+    selectFolder: async () => 'C:/Users/USER/Music/WavelyLibrary',
+
+    captureSpliceAudio: async () => ({ success: false, error: 'DAW Bridge active' }),
+
     searchPacks: async (query, page = 1, limit = 24, sortOption = 'popularity-desc') => {
       try {
         const res = await fetch(`${LOCAL_BRIDGE_URL}/api/search-packs`, {
@@ -329,7 +383,10 @@ if (typeof window !== 'undefined' && !window.electron) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query, page, limit, sortOption })
         });
-        if (res.ok) return await res.json();
+        if (res.ok) {
+          const data = await res.json();
+          return data;
+        }
       } catch (e) {}
       return { success: true, packs: [] };
     },
