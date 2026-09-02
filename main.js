@@ -516,6 +516,77 @@ function startLocalBridgeServer() {
           return;
         }
 
+        if (pathname === '/api/auth-state') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(getAuthState()));
+          return;
+        }
+
+        if (pathname === '/api/captcha') {
+          try {
+            const captcha = await fetchCaptcha();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(captcha));
+          } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err.message }));
+          }
+          return;
+        }
+
+        if (pathname === '/api/login' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => body += chunk);
+          req.on('end', async () => {
+            try {
+              const { username, password } = JSON.parse(body || '{}');
+              const authRes = await loginUser(username, password);
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify(authRes));
+            } catch (err) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+          return;
+        }
+
+        if (pathname === '/api/register' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => body += chunk);
+          req.on('end', async () => {
+            try {
+              const { username, email, password, captchaToken, captchaAnswer } = JSON.parse(body || '{}');
+              const authRes = await registerUser(username, email, password, captchaToken, captchaAnswer);
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify(authRes));
+            } catch (err) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+          return;
+        }
+
+        if (pathname === '/api/logout') {
+          logoutUser();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+          return;
+        }
+
+        if (pathname === '/api/verify-subscription') {
+          try {
+            const sub = await verifyDevice();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(sub));
+          } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err.message }));
+          }
+          return;
+        }
+
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Endpoint not found' }));
       } catch (err) {
