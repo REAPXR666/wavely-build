@@ -421,7 +421,124 @@ app.on('before-quit', () => {
     audioWorkerPool.close().catch(() => {});
     audioWorkerPool = null;
   }
-});
+// --- DAW LOCAL BRIDGE HTTP SERVER (For Ableton Live 12 WebView & Plugins) ---
+function startLocalBridgeServer() {
+  try {
+    const server = http.createServer(async (req, res) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+      if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+
+      const url = new URL(req.url, 'http://127.0.0.1:6768');
+      const pathname = url.pathname;
+
+      try {
+        if (pathname === '/api/status') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ status: 'ok', version: app.getVersion(), app: 'Wavely' }));
+          return;
+        }
+
+        if (pathname === '/api/settings') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(db.settings || {}));
+          return;
+        }
+
+        if (pathname === '/api/stats') {
+          const files = db.indexedFiles || [];
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            downloadedCount: files.length,
+            presetsCount: 658,
+            indexedPacks: Array.from(new Set(files.map(f => f.pack).filter(Boolean)))
+          }));
+          return;
+        }
+
+        if (pathname === '/api/search-sounds' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => body += chunk);
+          req.on('end', async () => {
+            try {
+              const parsed = JSON.parse(body || '{}');
+              const query = (parsed.query || '').toLowerCase().trim();
+              const files = db.indexedFiles || [];
+              const matched = files.filter(f => {
+                if (!f || !f.filePath) return false;
+                const nameMatch = (f.name || '').toLowerCase().includes(query);
+                const tagMatch = f.tags && f.tags.some(t => (t || '').toLowerCase().includes(query));
+                const packMatch = (f.pack || '').toLowerCase().includes(query);
+                return nameMatch || tagMatch || packMatch;
+              }).map(f => ({
+                ...f,
+                isDownloaded: true,
+                previewUrl: f.filePath ? `file:///${f.filePath.replace(/\\/g, '/')}` : ''
+              }));
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify(matched));
+            } catch (err) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+          return;
+        }
+
+        if (pathname === '/api/get-pack-samples' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => body += chunk);
+          req.on('end', async () => {
+            try {
+              const { packName } = JSON.parse(body || '{}');
+              const query = (packName || '').toLowerCase();
+              const files = (db.indexedFiles || []).filter(f => {
+                const p = (f.pack || '').toLowerCase();
+                return p && (p === query || p.includes(query));
+              }).map(f => ({
+                ...f,
+                isDownloaded: true,
+                previewUrl: f.filePath ? `file:///${f.filePath.replace(/\\/g, '/')}` : ''
+              }));
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, samples: files }));
+            } catch (err) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+          return;
+        }
+
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Endpoint not found' }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+
+    server.listen(6768, '127.0.0.1', () => {
+      console.log('[BridgeServer] Wavely DAW Local Bridge listening on http://127.0.0.1:6768');
+    });
+
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.log('[BridgeServer] Port 6768 in use, sharing active daemon.');
+      } else {
+        console.warn('[BridgeServer] Server error:', err.message);
+      }
+    });
+  } catch (err) {
+    console.warn('[BridgeServer] Failed to initialize local bridge server:', err.message);
+  }
+}
 
 app.whenReady().then(() => {
   initializeAuthSession();
@@ -501,6 +618,9 @@ app.whenReady().then(() => {
   // Run auto-updater check & IPC registration
   registerUpdateIpc(mainWindow);
   checkForUpdates(mainWindow);
+
+  // Start DAW Local Bridge Server on http://127.0.0.1:6768
+  startLocalBridgeServer();
 
   ipcMain.handle('check-for-updates-manual', async () => {
     checkForUpdates(mainWindow);

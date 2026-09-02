@@ -547,14 +547,25 @@ export default function SoundsPage({
     }
   };
 
-  // Triggered when a user drags a downloaded row
+  // Triggered when a user drags a sound row
   const handleDragStart = (e, sound) => {
-    if (!sound.isDownloaded || !sound.filePath) {
+    if (window.electron && !window.electron.isAbletonWebView && sound.filePath) {
       e.preventDefault();
+      window.electron.startDrag(sound.filePath);
       return;
     }
-    e.preventDefault();
-    window.electron.startDrag(sound.filePath);
+
+    // HTML5 native drag for Ableton Live 12 embedded WebView pane
+    if (e.dataTransfer) {
+      const fileName = sound.name ? (sound.name.endsWith('.wav') ? sound.name : `${sound.name}.wav`) : 'sample.wav';
+      const targetUrl = sound.downloadUrl || sound.previewUrl || sound.filePath;
+      if (targetUrl) {
+        e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.setData('DownloadURL', `audio/wav:${fileName}:${targetUrl}`);
+        e.dataTransfer.setData('text/plain', targetUrl);
+        e.dataTransfer.setData('text/uri-list', targetUrl);
+      }
+    }
   };
 
   // Download entire pack organized into subfolders with details file
