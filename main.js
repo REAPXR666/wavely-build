@@ -288,10 +288,15 @@ function createWindow() {
   setMainWindow(mainWindow);
   applyWindowSecurity(mainWindow, isDev);
 
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
+  const distHtml = path.join(__dirname, 'dist/index.html');
+  if (isDev && process.env.VITE_DEV_SERVER === 'true') {
+    mainWindow.loadURL('http://localhost:5173').catch(() => {
+      mainWindow.loadFile(distHtml);
+    });
+  } else if (fs.existsSync(distHtml)) {
+    mainWindow.loadFile(distHtml);
   } else {
-    mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+    mainWindow.loadURL('http://localhost:5173');
   }
 
   // Inject headers for outgoing HTTP requests to bypass hotlink blockages
