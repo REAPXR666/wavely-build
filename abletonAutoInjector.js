@@ -120,11 +120,9 @@ async function autoInjectAbletonLive() {
   console.log('[AbletonInjector] Scanning system for Ableton Live 12 installations...');
   
   // Resolve source dist folder containing Wavely web assets
-  const appPath = app ? app.getAppPath() : path.resolve(__dirname, '..', '..');
-  let distSource = path.join(appPath, 'dist');
-  
-  if (!fs.existsSync(distSource)) {
-    distSource = path.join(__dirname, 'dist');
+  let distSource = path.join(__dirname, 'dist');
+  if (!fs.existsSync(distSource) && app) {
+    distSource = path.join(app.getAppPath(), 'dist');
   }
   if (!fs.existsSync(distSource)) {
     distSource = path.join(process.cwd(), 'dist');
