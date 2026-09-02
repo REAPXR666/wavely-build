@@ -44,7 +44,6 @@ export default function WaveformRenderer({
       normalize: true,
       fillParent: true,
       interact: true,
-      backend: 'WebAudio',
       url: audioUrl
     });
 
@@ -59,6 +58,14 @@ export default function WaveformRenderer({
 
     // Stop all other instances as soon as this one plays
     ws.on('play', () => {
+      // Ensure audio context is unmuted/resumed
+      try {
+        const audioCtx = ws.backend?.audioContext;
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      } catch (e) {}
+
       if (playTimeoutRef.current) {
         clearTimeout(playTimeoutRef.current);
         playTimeoutRef.current = null;
@@ -67,12 +74,9 @@ export default function WaveformRenderer({
         if (instance !== ws) {
           try {
             instance.pause();
-          } catch (err) {
-            console.warn('Failed to pause competing WaveSurfer instance:', err);
-          }
+          } catch (err) {}
         }
       });
-      // Also notify any global pack demo to pause if active
       window.dispatchEvent(new CustomEvent('wavely-sample-played'));
     });
 
@@ -109,9 +113,7 @@ export default function WaveformRenderer({
     if (wavesurferRef.current) {
       try {
         wavesurferRef.current.setVolume(volume);
-      } catch (err) {
-        console.log('Error updating wavesurfer volume:', err);
-      }
+      } catch (err) {}
     }
   }, [volume]);
 
@@ -122,9 +124,7 @@ export default function WaveformRenderer({
         const pitchRatio = Math.pow(2, (pitchSemitones || 0) / 12);
         const effectiveRate = (speedMultiplier || 1.0) * pitchRatio;
         wavesurferRef.current.setPlaybackRate(effectiveRate, false);
-      } catch (err) {
-        console.warn('Error setting pitch/speed:', err);
-      }
+      } catch (err) {}
     }
   }, [pitchSemitones, speedMultiplier]);
 
@@ -134,21 +134,27 @@ export default function WaveformRenderer({
 
     if (active && isPlaying) {
       if (!loading && !error) {
-        wavesurferRef.current.play().catch(err => console.log('Playback error:', err));
+        wavesurferRef.current.play().catch(() => {
+          // Attempt AudioContext resume
+          try {
+            const audioCtx = wavesurferRef.current?.backend?.audioContext;
+            if (audioCtx && audioCtx.state === 'suspended') {
+              audioCtx.resume().then(() => wavesurferRef.current.play()).catch(() => {});
+            }
+          } catch (e) {}
+        });
 
-        // Start the 2-second failure timer if it's not already playing after loading completes
         if (!wavesurferRef.current.isPlaying()) {
           if (playTimeoutRef.current) clearTimeout(playTimeoutRef.current);
           playTimeoutRef.current = setTimeout(() => {
             if (wavesurferRef.current && !wavesurferRef.current.isPlaying()) {
-              console.warn('Playback timed out after 2 seconds');
               setError(true);
               setLoading(false);
               if (onError) {
                 onError(`Playback error: Failed to load preview for "${sampleName || 'sample'}"`);
               }
             }
-          }, 2000);
+          }, 3000);
         }
       }
     } else {
@@ -158,9 +164,7 @@ export default function WaveformRenderer({
       }
       try {
         wavesurferRef.current.pause();
-      } catch (err) {
-        console.log('Pause during loading:', err);
-      }
+      } catch (err) {}
     }
   }, [isPlaying, active, loading, error]);
 

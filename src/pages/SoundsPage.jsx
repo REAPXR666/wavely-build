@@ -419,6 +419,9 @@ export default function SoundsPage({
 
   const getLocalPlaybackUrl = (filePath) => {
     if (!filePath) return '';
+    if (window.electron?.isAbletonWebView) {
+      return `http://127.0.0.1:6768/api/proxy-audio?path=${encodeURIComponent(filePath)}`;
+    }
     return `wavely-media://local/${encodeURI(String(filePath).replace(/\\/g, '/'))}`;
   };
 
@@ -442,7 +445,35 @@ export default function SoundsPage({
 
   // Play/pause trigger for individual row
   const handlePlayToggle = async (sound, e) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
+
+    // Unlock audio context on user gesture
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx && window._wavelySharedAudioCtx && window._wavelySharedAudioCtx.state === 'suspended') {
+        window._wavelySharedAudioCtx.resume();
+      }
+    } catch (err) {}
+
+    // In Ableton Live WebView: all audio streams cleanly through http://127.0.0.1:6768/api/proxy-audio
+    if (window.electron?.isAbletonWebView) {
+      let playUrl = sound.previewUrl;
+      if (!playUrl || playUrl.startsWith('wavely-media://') || playUrl.startsWith('file://') || sound.filePath) {
+        const rawPath = sound.filePath || (playUrl || '').replace(/^wavely-media:\/\/local\/?/, '').replace(/^wavely-media:\/\/\/?/, '').replace(/^file:\/\/\/?/, '');
+        playUrl = `http://127.0.0.1:6768/api/proxy-audio?path=${encodeURIComponent(rawPath)}`;
+      } else if (!playUrl.startsWith('http://127.0.0.1:6768/api/proxy-audio')) {
+        playUrl = `http://127.0.0.1:6768/api/proxy-audio?url=${encodeURIComponent(playUrl)}`;
+      }
+
+      if (currentSound && currentSound.id === sound.id) {
+        setIsPlaying(!isPlaying);
+      } else {
+        setCurrentSound({ ...sound, previewUrl: playUrl });
+        setIsPlaying(true);
+      }
+      return;
+    }
+
     let localPlaybackUrl = getLocalPlaybackUrl(sound.filePath);
     if (sound.filePath && window.electron?.prepareLocalAudio) {
       const prepared = await window.electron.prepareLocalAudio(sound.filePath);
@@ -458,17 +489,14 @@ export default function SoundsPage({
       }
       setIsPlaying(!isPlaying);
       if (!isPlaying && sound.source === 'Splice') {
-        window.electron.trackPlay(sound).catch(err => console.warn('Telemetry play track failed:', err));
+        window.electron.trackPlay?.(sound).catch(() => {});
       }
     } else if (localPlaybackUrl) {
-      // Downloaded samples always audition from the exact local file that is
-      // dragged into the DAW. This keeps playback, copying and drag-and-drop
-      // available after a result has been marked as downloaded.
       setCurrentSound({ ...sound, previewUrl: localPlaybackUrl });
       setIsPlaying(true);
     } else {
       // For Splice samples: capture clean audio via hidden browser
-      if (isSpliceSample(sound) && !sound._capturedFilePath) {
+      if (isSpliceSample(sound) && !sound._capturedFilePath && window.electron?.captureSpliceAudio) {
         setCurrentSound({ ...sound, _descrambling: true });
         setIsPlaying(false);
 
@@ -496,7 +524,7 @@ export default function SoundsPage({
       }
 
       if (sound.source === 'Splice') {
-        window.electron.trackPlay(sound).catch(err => console.warn('Telemetry play track failed:', err));
+        window.electron.trackPlay?.(sound).catch(() => {});
       }
     }
   };
