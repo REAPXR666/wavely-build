@@ -422,6 +422,8 @@ app.on('before-quit', () => {
     audioWorkerPool.close().catch(() => {});
     audioWorkerPool = null;
   }
+});
+
 // --- DAW LOCAL BRIDGE HTTP SERVER (For Ableton Live 12 WebView & Plugins) ---
 function startLocalBridgeServer() {
   try {
