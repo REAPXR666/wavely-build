@@ -275,6 +275,86 @@ if (typeof window !== 'undefined' && !window.electron) {
       return { success: true, filePath: sound.previewUrl };
     },
 
+    searchPacks: async (query, page = 1, limit = 24, sortOption = 'popularity-desc') => {
+      try {
+        const res = await fetch(`${LOCAL_BRIDGE_URL}/api/search-packs`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, page, limit, sortOption })
+        });
+        if (res.ok) return await res.json();
+      } catch (e) {}
+      return { success: true, packs: [] };
+    },
+
+    getPackDemoAudio: async ({ demoUrl, packUuid }) => {
+      try {
+        const res = await fetch(`${LOCAL_BRIDGE_URL}/api/get-pack-demo-audio`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ demoUrl, packUuid })
+        });
+        if (res.ok) return await res.json();
+      } catch (e) {}
+      return { success: true, url: demoUrl };
+    },
+
+    getDownloadedPacks: async () => {
+      try {
+        const res = await fetch(`${LOCAL_BRIDGE_URL}/api/get-downloaded-packs`);
+        if (res.ok) return await res.json();
+      } catch (e) {}
+      return [];
+    },
+
+    downloadEntirePack: async (packData) => {
+      try {
+        const res = await fetch(`${LOCAL_BRIDGE_URL}/api/download-entire-pack`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(packData)
+        });
+        if (res.ok) return await res.json();
+      } catch (e) {}
+      return { success: false, error: 'Desktop daemon required for bulk pack downloads' };
+    },
+
+    separateAudioStems: async (data) => {
+      try {
+        const res = await fetch(`${LOCAL_BRIDGE_URL}/api/separate-audio-stems`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) return await res.json();
+      } catch (e) {}
+      return { success: false, error: 'Local AI stem separator requires Wavely Desktop app' };
+    },
+
+    exportSampleChops: async (data) => {
+      try {
+        const res = await fetch(`${LOCAL_BRIDGE_URL}/api/export-sample-chops`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) return await res.json();
+      } catch (e) {}
+      return { success: false, error: 'Chop export requires Wavely Desktop app' };
+    },
+
+    saveTempRecording: async (data) => {
+      try {
+        const res = await fetch(`${LOCAL_BRIDGE_URL}/api/save-temp-recording`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) return await res.json();
+      } catch (e) {}
+      return { success: false, error: 'Temp recording requires Wavely Desktop app' };
+    },
+
     startDrag: (filePath) => {
       console.log('[BrowserBridge] startDrag requested for:', filePath);
     },
@@ -291,6 +371,8 @@ if (typeof window !== 'undefined' && !window.electron) {
     onSubscriptionStatus: () => () => {},
     onMiniDockStateChanged: () => () => {},
     onUpdateAvailable: () => () => {},
+    onPackDownloadProgress: () => () => {},
+    removePackDownloadProgressListener: () => {},
     checkForUpdates: () => Promise.resolve({ success: true }),
     getActiveDownloads: async () => [],
     cancelPackDownload: () => {}

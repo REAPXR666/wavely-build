@@ -478,24 +478,29 @@ function startLocalBridgeServer() {
           req.on('end', async () => {
             try {
               const parsed = JSON.parse(body || '{}');
-              const query = (parsed.query || '').toLowerCase().trim();
-              const files = db.indexedFiles || [];
-              const matched = files.filter(f => {
-                if (!f || !f.filePath) return false;
-                const nameMatch = (f.name || '').toLowerCase().includes(query);
-                const tagMatch = f.tags && f.tags.some(t => (t || '').toLowerCase().includes(query));
-                const packMatch = (f.pack || '').toLowerCase().includes(query);
-                return nameMatch || tagMatch || packMatch;
-              }).map(f => ({
-                ...f,
-                isDownloaded: true,
-                previewUrl: f.filePath ? `file:///${f.filePath.replace(/\\/g, '/')}` : ''
-              }));
+              const results = await performMasterSoundSearch(parsed.query, parsed.options || parsed.filters || parsed);
               res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify(matched));
+              res.end(JSON.stringify(results));
             } catch (err) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+          return;
+        }
+
+        if (pathname === '/api/search-packs' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => body += chunk);
+          req.on('end', async () => {
+            try {
+              const { query, page, limit, sortOption } = JSON.parse(body || '{}');
+              const packs = await querySplicePacks(query, page || 1, limit || 24, sortOption || 'popularity-desc');
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, packs }));
+            } catch (err) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: err.message, packs: [] }));
             }
           });
           return;
@@ -506,9 +511,9 @@ function startLocalBridgeServer() {
           req.on('data', chunk => body += chunk);
           req.on('end', async () => {
             try {
-              const { packName } = JSON.parse(body || '{}');
+              const { packUuid, packName } = JSON.parse(body || '{}');
               const query = (packName || '').toLowerCase();
-              const files = (db.indexedFiles || []).filter(f => {
+              const localFiles = (db.indexedFiles || []).filter(f => {
                 const p = (f.pack || '').toLowerCase();
                 return p && (p === query || p.includes(query));
               }).map(f => ({
@@ -516,8 +521,17 @@ function startLocalBridgeServer() {
                 isDownloaded: true,
                 previewUrl: f.filePath ? `file:///${f.filePath.replace(/\\/g, '/')}` : ''
               }));
+
+              if (localFiles.length > 0) {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, samples: localFiles }));
+                return;
+              }
+
+              // Query online
+              const onlineSamples = await querySpliceDirect('', false, 1, null, packUuid);
               res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ success: true, samples: files }));
+              res.end(JSON.stringify({ success: true, samples: onlineSamples }));
             } catch (err) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ error: err.message }));
@@ -2249,8 +2263,8 @@ function scrapeSplice(query, isPreset = false, categorySlug = null) {
 // Sound Search In-Memory Cache for ultra-fast repeat searches (< 5ms)
 const soundSearchCache = new Map();
 
-// Master search sounds pipeline
-ipcMain.handle('search-sounds', async (event, query, filters) => {
+// Master sound search function (used by both IPC and Local Bridge HTTP Server)
+async function performMasterSoundSearch(query, filters) {
   // Check remote credentials asynchronously in background without blocking sound search
   fetchRemoteCredentials().catch(() => {});
 
@@ -2270,16 +2284,16 @@ ipcMain.handle('search-sounds', async (event, query, filters) => {
 
   let searchResults = [];
   const localFilesById = new Map(
-    db.indexedFiles
+    (db.indexedFiles || [])
       .filter(file => file && file.id && file.filePath && fs.existsSync(file.filePath))
       .map(file => [file.id, file])
   );
 
   // 1. Search Local Indexed Database
-  const localMatches = db.indexedFiles.filter(file => {
+  const localMatches = (db.indexedFiles || []).filter(file => {
     if (!file.filePath || !fs.existsSync(file.filePath)) return false;
     if (packUuid) return false; // online pack search only
-    const nameMatch = file.name.toLowerCase().includes(normalizedQuery);
+    const nameMatch = file.name && file.name.toLowerCase().includes(normalizedQuery);
     const tagMatch = file.tags && file.tags.some(t => t.toLowerCase().includes(normalizedQuery));
     const packMatch = file.pack && file.pack.toLowerCase().includes(normalizedQuery);
     return nameMatch || tagMatch || packMatch;
@@ -2353,7 +2367,6 @@ ipcMain.handle('search-sounds', async (event, query, filters) => {
         previewUrl: toLocalMediaUrl(localFile.filePath)
       };
     } else {
-      // A stale ID must not disable downloading or pretend it can be dragged.
       item.isDownloaded = false;
       delete item.filePath;
     }
@@ -2408,6 +2421,11 @@ ipcMain.handle('search-sounds', async (event, query, filters) => {
   });
 
   return finalResults;
+}
+
+// Master search sounds IPC handler
+ipcMain.handle('search-sounds', async (event, query, filters) => {
+  return await performMasterSoundSearch(query, filters);
 });
 
 // VST Preset search pipeline
