@@ -409,6 +409,44 @@ function DeviceLicenseCard() {
         </div>
       </div>
 
+      {/* Ableton Live 12 Native Sidebar Integration Card */}
+      <div className="settings-card" style={{ border: '1px solid rgba(139, 92, 246, 0.35)', background: 'rgba(139, 92, 246, 0.03)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <h3 className="settings-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#a78bfa' }}>🎹</span>
+            <span>Ableton Live 12 Native Sidebar Integration</span>
+          </h3>
+          <span style={{ fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', color: '#a78bfa', background: 'rgba(139, 92, 246, 0.15)', border: '1px solid rgba(139, 92, 246, 0.4)', padding: '2px 8px', borderRadius: '9999px' }}>
+            PLACES EXTENSION
+          </span>
+        </div>
+
+        <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '14px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.85rem' }}>
+          <p style={{ margin: 0, color: '#cbd5e1', lineHeight: '1.5' }}>
+            Embeds <strong>Wavely</strong> directly into Ableton Live 12's left sidebar (under <em>Places</em>) with automatic account synchronization, full sample searching, and instant drag-and-drop into Audio Tracks, MIDI Tracks, and Drum Racks.
+          </p>
+
+          <div style={{ display: 'flex', gap: '10px', marginTop: '4px', flexWrap: 'wrap' }}>
+            <button
+              className="settings-btn"
+              style={{ flex: 1, minWidth: '220px', background: 'rgba(139, 92, 246, 0.2)', borderColor: 'rgba(139, 92, 246, 0.5)', color: '#c4b5fd', fontWeight: '700' }}
+              onClick={async () => {
+                if (window.electron?.injectAbletonLive) {
+                  const res = await window.electron.injectAbletonLive();
+                  if (res?.success) {
+                    alert(`✅ Wavely successfully synced with Ableton Live 12!\n\nInjected into ${res.injectedCount} target location(s).\nOpen Ableton Live 12 and click "Wavely" (or "Splice") under Places in the browser sidebar!`);
+                  } else {
+                    alert(`⚠️ Ableton sync notice: ${res?.error || 'No active Ableton Live 12 installation detected on this system.'}`);
+                  }
+                }
+              }}
+            >
+              ⚡ Auto-Sync / Repair Ableton Sidebar
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Device Security Card */}
       <div className="settings-card" style={{ border: '1px solid rgba(124, 58, 237, 0.25)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>

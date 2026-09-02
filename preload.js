@@ -69,6 +69,7 @@ contextBridge.exposeInMainWorld('electron', {
   getVstStatus: () => ipcRenderer.invoke('get-vst-status'),
   installVstPlugin: (customPath) => ipcRenderer.invoke('install-vst-plugin', customPath),
   openVstFolder: () => ipcRenderer.invoke('open-vst-folder'),
+  injectAbletonLive: () => ipcRenderer.invoke('inject-ableton-live'),
 
   // Mini DAW Dock Mode
   setMiniDockMode: (enabled) => ipcRenderer.invoke('set-mini-dock-mode', enabled),
